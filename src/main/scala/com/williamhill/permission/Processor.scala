@@ -81,7 +81,7 @@ object Processor {
 
 
   val collectExclusionContext: ZTransducer[Any, AppError, InputRecord, FacetContextCommittable] =
-    Committable.filterMapCommittableRecordM((event: InputRecord) => ZIO.succeed(InputParser.parse(name="exclusion",event))).mapError(AppError.fromThrowable)
+    Committable.filterMapCommittableRecordM((event: InputRecord) => ZIO.succeed(InputParser.parse(event))).mapError(AppError.fromThrowable)
 
 
   val calculatePermissions: ZTransducer[Any, AppError, FacetContextCommittable, FacetContextCommittable] =

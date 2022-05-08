@@ -1,0 +1,45 @@
+{
+  "header": {
+    "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "100.77.100.167"
+    },
+    "playerId": "1",
+    "source": "exclusion-service",
+    "universe": "wh-eu-dk",
+    "when": "2021-01-06T11:13:12.441799Z",
+    "sessionId": "445b4e38-84c1-11ec-a8a3-0242ac120002",
+    "traceId": "48dac344-84c1-11ec-a8a3-0242ac120002"
+  },
+  "body": {
+    "newValues": {
+      "playerId": "U00004335",
+      "player": {
+        "nationalId": "111111-1111"
+      },
+      "exclusion": {
+        "realizedStart": "2022-02-11T00:00:00Z",
+        "type": "indefinite"
+      },
+      "thirdPartyResponses": [
+        {
+          "source": "Rofus",
+          "response": "<?xml version='1.0' encoding='UTF-8'?>\n<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\">\n            <S:Body>\n              <ns8:GamblerCheckResponse xmlns:ns8=\"http://services.lur.skat.dk\">\n                <Kontekst>\n                  <HovedOplysningerSvar xmlns=\"http://skat.dk/begrebsmodel/xml/schemas/kontekst/2007/05/31/\">\n                    <TransaktionsID>de9992b2-281d-11ec-9621-0242ac130002</TransaktionsID>\n                    <ServiceID>GamblerCheckRequest</ServiceID>\n                    <TransaktionsTid>2022-01-24T14:53:08.566903Z</TransaktionsTid>\n                  </HovedOplysningerSvar>\n                </Kontekst>\n                <ExclusionStatus>\n                  <GamblerExclusionStatus>PersonIsRegisteredTemporarily</GamblerExclusionStatus>\n                </ExclusionStatus>\n              </ns8:GamblerCheckResponse>\n            </S:Body>\n          </S:Envelope>",
+          "parsedResponse": {
+            "TransaktionsID": "de9992b2-281d-11ec-9621-0242ac130002",
+            "ServiceID": "GamblerCheckRequest",
+            "TransaktionsTid": "2022-01-24T14:53:08.566903Z",
+            "GamblerExclusionStatus": "PersonIsRegisteredTemporarily"
+          }
+        }
+      ],
+      "initiator": {
+        "type": "system"
+      }
+    },
+    "type": "excluded"
+  }
+}

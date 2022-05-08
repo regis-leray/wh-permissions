@@ -7,10 +7,7 @@ import io.circe.generic.semiauto.*
 
 final case class Header(
     id: String,
-    playerId: String,
     who: Who,
-    subject: String,
-    source: String,
     universe: String,
     when: Instant,
     sessionId: Option[String],
@@ -18,15 +15,13 @@ final case class Header(
 )
 
 object Header {
-
   implicit val codec: Codec[Header] = {
     val codec = deriveCodec[Header]
     Codec.from(codec, codec.mapJson(_.dropNullValues))
   }
-
 }
 
-case class Who(id: String, name: String, `type`: String, ip: Option[String])
+final case class Who(id: String, name: String, `type`: String, ip: Option[String])
 
 object Who {
   implicit val codec: Codec[Who] = {

@@ -1,7 +1,7 @@
 package com.williamhill.permission
 
 import cats.syntax.either.*
-
+import cats.syntax.option.*
 import com.typesafe.scalalogging.LazyLogging
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.logging.*
@@ -15,58 +15,70 @@ object InputParser extends LazyLogging {
   val parseUniverse: Parser[Universe] =
     record => Universe(record.value.header.universe)
 
-  val parseEventType: Parser[String] = event => {
+  private val parseEventType: Parser[String] =
+    _.record.value().body.hcursor.downField("type").as[String].leftMap(AppError.fromDecodingFailure)
 
-    val json = event.record.value().body
-
-    json.hcursor.downField("type").as[String].leftMap(AppError.fromDecodingFailure)
+  private val parsePlayerId: String => Parser[PlayerId] = { eventType => record =>
+    val jsonBody = record.record.value().body
+    (eventType match {
+      case "excluded" =>
+        jsonBody.hcursor.downField("newValues").downField("playerId").as[String].leftMap(AppError.fromDecodingFailure)
+      case "Dormancy" | "Prohibition" =>
+        jsonBody.hcursor.downField("newValues").downField("id").as[String].leftMap(AppError.fromDecodingFailure)
+      case et =>
+        Left(AppError.fromMessage(s"Unrecognised input event type $et"))
+    }).flatMap(PlayerId.apply)
   }
 
-  private val parsePlayerId: Parser[PlayerId] =
-    record => PlayerId(record.record.value().header.playerId)
+  private val newPermissionStatus: String => Parser[PermissionStatus] = eventType =>
+    event =>
+      event.record
+        .value()
+        .body
+        .hcursor
+        .downField("newValues")
+        .as[Json]
+        .leftMap(AppError.fromDecodingFailure)
+        .flatMap(PermissionStatus.fromJsonBodyValues(eventType))
 
-  private val permissionStatus: Parser[PermissionStatus] = event => {
+  private val previousPermissionStatus: String => Parser[Option[PermissionStatus]] = eventType =>
+    event =>
+      event.record
+        .value()
+        .body
+        .hcursor
+        .downField("previousValues")
+        .as[Option[Json]]
+        .leftMap(AppError.fromDecodingFailure)
+        .flatMap {
+          case None         => none.asRight
+          case Some(values) => PermissionStatus.fromJsonBodyValues(eventType)(values).map(_.some)
+        }
 
-    //TODO check if we can merge this function with `PermissionStatus.mk`
-    val json = event.record.value().body
-
-    parseEventType(event).toOption match {
-      case Some("excluded") =>
-        for {
-
-          newValues <- json.hcursor.downField("newValues").as[Json].leftMap(AppError.fromDecodingFailure)
-          result    <- PermissionStatus.mk("excluded", newValues)
-        } yield result
-
-      case _ =>
-        Left(AppError.fromMessage("Type is not excluded"))
-    }
-  }
-
-  private val parseFacetContext: String => Parser[FacetContext] = name =>
+  private val parseFacetContext: Parser[FacetContext] =
     event =>
       for {
-        status   <- permissionStatus(event)
-        playerId <- parsePlayerId(event)
-        universe <- parseUniverse(event)
+        eventType      <- parseEventType(event)
+        playerId       <- parsePlayerId(eventType)(event)
+        universe       <- parseUniverse(event)
+        newStatus      <- newPermissionStatus(eventType)(event)
+        previousStatus <- previousPermissionStatus(eventType)(event)
       } yield FacetContext(
         header = event.value.header,
         actions = Nil,
         playerId = playerId,
         universe = universe,
-        name = name,
-        status = status,
+        name = eventType,
+        newStatus = newStatus,
+        previousStatus = previousStatus,
       )
 
-  def parse(name: String, event: InputRecord): Option[FacetContext] = {
-    val resultEither = parseFacetContext(name)(event)
-
-    resultEither match {
+  def parse(event: InputRecord): Option[FacetContext] =
+    parseFacetContext(event) match {
       case Left(error) =>
         logger.error(error, s"Failed to parse event: $event")
         None
       case Right(result) => Some(result)
     }
-  }
 
 }

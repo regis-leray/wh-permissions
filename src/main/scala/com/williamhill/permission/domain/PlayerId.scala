@@ -10,7 +10,9 @@ case class PlayerId private (value: String) {
 
 object PlayerId {
   private val allowedPrefix       = "[A-Z0-9]"
-  private val unityIdRegex: Regex = s"($allowedPrefix[A-HJKMNP-TV-Z0-9]{9})".r
+  // TODO: is this regex correct?
+  // private val unityIdRegex: Regex = s"($allowedPrefix[A-HJKMNP-TV-Z0-9]{9})".r
+  private val unityIdRegex: Regex = s"($allowedPrefix{9})".r
   def apply(value: String): Either[AppError, PlayerId] =
     Either.cond(
       unityIdRegex.matches(value),

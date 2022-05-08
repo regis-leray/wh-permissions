@@ -1,0 +1,33 @@
+{
+  "header": {
+    "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "100.77.100.167"
+    },
+    "playerId": "1",
+    "source": "exclusion-service",
+    "universe": "wh-mga",
+    "when": "2021-01-06T11:13:12.441799Z",
+    "sessionId": "445b4e38-84c1-11ec-a8a3-0242ac120002",
+    "traceId": "48dac344-84c1-11ec-a8a3-0242ac120002"
+  },
+  "body": {
+    "newValues": {
+      "playerId": "U00005335",
+      "initiator": {
+        "type": "system"
+      },
+      "exclusion": {
+        "type": "temporary",
+        "start": "2021-01-06T11:13:11.993Z",
+        "realizedStart": "2021-01-06T11:13:11.993Z",
+        "end": "2021-12-06T11:13:11.993Z",
+        "realizedEnd": "2021-12-06T11:13:11.993Z"
+      }
+    },
+    "type": "excluded"
+  }
+}
