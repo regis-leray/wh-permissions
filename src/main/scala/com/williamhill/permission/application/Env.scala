@@ -1,44 +1,41 @@
 package com.williamhill.permission.application
 
+import com.github.mlangc.slf4zio.api.Logging
+import com.williamhill.permission.{Processor}
+import com.williamhill.permission.application.config.{ActionsConfig, AppConfig}
+import com.williamhill.permission.kafka.{EventPublisher, EventPublisherLive}
+import org.http4s.server.Server
 import zio.*
-import zio.kafka.consumer.{Consumer, ConsumerSettings}
-import zio.kafka.producer.{Producer, ProducerSettings}
+import zio.kafka.consumer.Consumer
+import zio.kafka.producer.Producer
 import zio.magic.*
 
-import com.github.mlangc.slf4zio.api.Logging
-import com.williamhill.permission.kafka.EventPublisherLive
-import com.williamhill.permission.{Env, Processor}
-import com.williamhill.platform.kafka.consumer.settings as cSettings
-import com.williamhill.platform.kafka.producer.settings as pSettings
-
-import pureconfig.generic.semiauto.deriveReader
-import pureconfig.{ConfigReader, ConfigSource}
-
 object Env {
-  final case class Config(
-      healthcheck: HealthcheckApi.Config,
-      consumerSettings: ConsumerSettings,
-      producerSettings: ProducerSettings,
-      processorSettings: Processor.Config
-  )
-  object Config {
-    implicitly[ConfigReader[ConsumerSettings]]
-    implicitly[ConfigReader[ProducerSettings]]
 
-    implicit val reader: ConfigReader[Config] =
-      deriveReader[Config]
+  type Main = Has[Consumer] &
+    Has[Producer] &
+    Has[Server] &
+    Has[Processor.Config] &
+    Has[EventPublisher] &
+    Has[ActionsConfig] &
+    ZEnv &
+    Logging
 
-    val load: Task[Config] = Task { ConfigSource.default.loadOrThrow[Config] }
-  }
+  type Processor = Has[Processor.Config] &
+    Has[EventPublisher] &
+    Has[ActionsConfig] &
+    ZEnv &
+    Logging
 
-  val layer: RLayer[ZEnv, Env] =
-    ZLayer.wireSome[ZEnv, Env](
+  val layer: RLayer[ZEnv, Main] =
+    ZLayer.wireSome[ZEnv, Main](
       Logging.global,
-      Config.load.toManaged_.toLayer,
-      ZManaged.service[Config].flatMap { cfg => Consumer.make(cfg.consumerSettings) }.toLayer,
-      ZManaged.service[Config].flatMap { cfg => Producer.make(cfg.producerSettings) }.toLayer,
-      ZManaged.service[Config].flatMap { cfg => HealthcheckApi.asResource(cfg.healthcheck) }.toLayer,
-      ZIO.service[Config].map { cfg => cfg.processorSettings }.toLayer,
-      EventPublisherLive.layer
+      AppConfig.layer,
+      ActionsConfig.layer,
+      ZManaged.service[AppConfig].flatMap(cfg => Consumer.make(cfg.consumerSettings)).toLayer,
+      ZManaged.service[AppConfig].flatMap(cfg => Producer.make(cfg.producerSettings)).toLayer,
+      ZManaged.service[AppConfig].flatMap(cfg => HealthcheckApi.asResource(cfg.healthcheck)).toLayer,
+      ZIO.service[AppConfig].map(cfg => cfg.processorSettings).toLayer,
+      EventPublisherLive.layer,
     )
 }

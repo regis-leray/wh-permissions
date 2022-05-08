@@ -1,6 +1,7 @@
 package com.williamhill.permission.application
 
 import cats.syntax.either.*
+
 //TODO check if we want error status
 case class AppError(message: String, cause: Option[Throwable] = None) {
   def logMessage: String = Either.catchNonFatal(message.replaceAll("\n", " ")).getOrElse("")

@@ -65,5 +65,5 @@ ThisBuild / scalacOptions ++= List(
   "-Xsource:3", // Enable simpler smart constructor - https://gist.github.com/tpolecat/a5cb0dc9adeacc93f846835ed21c92d2#gistcomment-3386246
 )
 
-lazy val root = project in file(".")
+lazy val root = project.in(file("."))
 Global / onChangedBuildSource := ReloadOnSourceChanges

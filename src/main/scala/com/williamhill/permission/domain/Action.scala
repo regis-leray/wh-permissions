@@ -1,11 +1,11 @@
 package com.williamhill.permission.domain
 
-import java.time.Instant
-
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
 
-case class Action(
+import java.time.Instant
+
+final case class Action(
     name: String,
     reason: String,
     deniedPermissions: List[String],
@@ -17,5 +17,4 @@ case class Action(
 
 object Action {
   implicit val codec: Codec[Action] = deriveCodec[Action]
-  def fromConfig: List[Action]      = ??? //TODO load from config
 }

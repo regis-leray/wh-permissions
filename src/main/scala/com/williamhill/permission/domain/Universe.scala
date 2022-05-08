@@ -4,7 +4,7 @@ import scala.util.matching.Regex
 
 import com.williamhill.permission.application.AppError
 
-case class Universe private (value: String) {
+final case class Universe private (value: String) {
   override def toString: String = value
 }
 

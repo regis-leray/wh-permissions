@@ -2,7 +2,7 @@ package com.williamhill.permission.domain
 
 import com.williamhill.permission.kafka.events.generic.Header
 
-case class FacetContext(
+final case class FacetContext(
     header: Header,
     actions: List[Action], // TODO check if this needs to be a list or can be a single action
     playerId: PlayerId,

@@ -15,7 +15,7 @@ final case class PermissionStatus(
 
 object PermissionStatus {
 
-  // should this logic be moved into InputParser?
+  // TODO: should this logic be moved into InputParser?
   def fromJsonBodyValues(eventType: String)(values: Json): Either[AppError, PermissionStatus] =
     eventType match {
       case "excluded" =>
