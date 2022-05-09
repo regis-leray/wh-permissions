@@ -11,9 +11,9 @@ object Dependencies {
 
     val magic             = "io.github.kitlangton" %% "zio-magic"           % "0.3.11"
     val stream            = "dev.zio"              %% "zio-streams"         % version
-    val test              = "dev.zio"              %% "zio-test"            % version % "it,test"
-    val `test-sbt`        = "dev.zio"              %% "zio-test-sbt"        % version % "it,test"
-    val `test-scalacheck` = "dev.zio"              %% "zio-test-scalacheck" % version % "it,test"
+    val test              = "dev.zio"              %% "zio-test"            % version % Test
+    val `test-sbt`        = "dev.zio"              %% "zio-test-sbt"        % version % Test
+    val `test-scalacheck` = "dev.zio"              %% "zio-test-scalacheck" % version % Test
 
     val slf4zio = "com.github.mlangc" %% "slf4zio" % "1.0.0"
   }

@@ -36,7 +36,7 @@ object PermissionStatus {
                 maybeRealizedEnd <- values.hcursor
                   .downField("exclusion")
                   .downField("realizedEnd")
-                  .as[Option[Instant]] //TODO check why realizedEnd is optional
+                  .as[Option[Instant]] // TODO check why realizedEnd is optional
                 start = maybeStart.getOrElse(realizedStart)
                 end   = maybeEnd.orElse(maybeRealizedEnd)
               } yield PermissionStatus(status, Some(start), end)).leftMap(AppError.fromDecodingFailure)

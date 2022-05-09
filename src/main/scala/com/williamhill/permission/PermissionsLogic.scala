@@ -11,8 +11,7 @@ object PermissionsLogic {
 
   def enrichWithActions(fc: FacetContext): URIO[Has[ActionsConfig] & Clock, FacetContext] =
     ZIO.service[ActionsConfig].zip(ZIO.serviceWith[Clock.Service](_.instant)).map { case (actionConfig, now) =>
-      val applicableActions = actionConfig
-        .bindings
+      val applicableActions = actionConfig.bindings
         .find(x => x.universe == fc.universe.value && x.eventType == fc.name && x.status == fc.newStatus.status)
         .toList
         .flatMap(_.actions)

@@ -25,7 +25,7 @@ object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]]
       host: String,
       port: Int,
       bootstrapServers: CommaSeparatedList,
-      maxBlockTimeout: scala.concurrent.duration.FiniteDuration
+      maxBlockTimeout: scala.concurrent.duration.FiniteDuration,
   )
   object Config {
     implicit val reader: ConfigReader[Config] = deriveReader[Config]
@@ -35,7 +35,7 @@ object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]]
     new HealthCheckRoutes(
       config.identifier,
       new OkHealthCheck(config.identifier),
-      KafkaHealthCheck.withDefaults(config.bootstrapServers.toString(), Duration.fromScala(config.maxBlockTimeout))
+      KafkaHealthCheck.withDefaults(config.bootstrapServers.toString(), Duration.fromScala(config.maxBlockTimeout)),
     ).routes
 
   def asResource(cfg: Config): RManaged[Blocking & Clock & Logging, Server] =
@@ -49,8 +49,8 @@ object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]]
         server =>
           Log
             .infoIO(
-              s"healthcheck API started for ${cfg.identifier} on ${server.address.getHostString()}:${server.address.getPort()}"
+              s"healthcheck API started for ${cfg.identifier} on ${server.address.getHostString()}:${server.address.getPort()}",
             )
-            .toManaged_
+            .toManaged_,
       )
 }

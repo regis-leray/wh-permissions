@@ -9,7 +9,7 @@ final case class PlayerId private (value: String) {
 }
 
 object PlayerId {
-  private val allowedPrefix       = "[A-Z0-9]"
+  private val allowedPrefix = "[A-Z0-9]"
   // TODO: is this regex correct?
   // private val unityIdRegex: Regex = s"($allowedPrefix[A-HJKMNP-TV-Z0-9]{9})".r
   private val unityIdRegex: Regex = s"($allowedPrefix{9})".r

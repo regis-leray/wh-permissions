@@ -3,3 +3,11 @@
 /.bsp/
 target/
 /.idea/
+
+#VSCode specific
+.metals
+.vscode
+.history
+metals.sbt
+.bloop
+.lh
