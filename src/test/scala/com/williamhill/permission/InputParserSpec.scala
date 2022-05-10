@@ -1,8 +1,9 @@
 package com.williamhill.permission
 
-import com.williamhill.permission.domain.{FacetContext, PermissionStatus, PlayerId, Universe}
+import com.williamhill.permission.domain.Fixtures.*
+import com.williamhill.permission.domain.{FacetContext, PermissionStatus}
 import com.williamhill.permission.kafka.Record.InputRecord
-import com.williamhill.permission.kafka.events.generic.{Header, InputEvent, Who}
+import com.williamhill.permission.kafka.events.generic.{Header, InputEvent}
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -15,8 +16,6 @@ import java.time.Instant
 class InputParserSpec extends AnyFlatSpec with Matchers with TableDrivenPropertyChecks {
 
   behavior of "InputParser"
-
-  val who = Who("-1", "anonymous", "program", Some("100.77.100.167"))
 
   val scenarios: TableFor3[String, String, FacetContext] =
     Table(
@@ -157,7 +156,4 @@ class InputParserSpec extends AnyFlatSpec with Matchers with TableDrivenProperty
       _ => ZIO.unit,
       None,
     )
-
-  def playerId(playerIdString: String): PlayerId = PlayerId(playerIdString).getOrElse(throw new RuntimeException())
-  def universe(universeString: String): Universe = Universe(universeString).getOrElse(throw new RuntimeException())
 }

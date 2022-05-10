@@ -7,7 +7,9 @@ import zio.{Has, RLayer, ZIO}
 
 final case class ActionDefinition(
     name: String,
-    reason: String,
+    `type`: String,
+    reasonCode: String,
+    denialDescription: String,
     deniedPermissions: List[String],
 )
 

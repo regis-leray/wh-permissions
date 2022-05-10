@@ -28,9 +28,9 @@ object PermissionsLogic {
 
   implicit final private class ActionDefinitionSyntax(private val ad: ActionDefinition) extends AnyVal {
     def toDomain: Action =
-      Action(ad.name, ad.reason, ad.deniedPermissions)
+      Action(ad.`type`, ad.name, ad.reasonCode, ad.denialDescription, ad.deniedPermissions)
 
     def toDomainWithDeadline(deadline: Instant): Action =
-      Action(ad.name, ad.reason, ad.deniedPermissions, Some(deadline))
+      Action(ad.`type`, ad.name, ad.reasonCode, ad.denialDescription, ad.deniedPermissions, Some(deadline))
   }
 }

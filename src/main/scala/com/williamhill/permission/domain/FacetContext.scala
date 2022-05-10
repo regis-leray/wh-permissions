@@ -12,11 +12,11 @@ final case class FacetContext(
     previousStatus: Option[PermissionStatus],// extracted from previousValues
 ) {
 
-  val denials: List[PermissionDenial] = actions.flatMap { case Action(_, reason, perms, _, denialDescription) =>
-    perms.map { perm =>
+  val denials: List[PermissionDenial] = actions.flatMap { action =>
+    action.deniedPermissions.map { perm =>
       PermissionDenial(
-        reason = reason,
-        description = denialDescription.getOrElse(s"Permission not granted because of: $reason"),
+        reason = action.reasonCode,
+        description = action.denialDescription,
         permissionName = perm,
       )
     }
