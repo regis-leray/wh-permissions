@@ -71,17 +71,17 @@ object Processor {
       } yield maybeSupportedEvent
     }
 
-  val collectExclusionContext: ZTransducer[Any, AppError, InputRecord, FacetContextCommittable] =
+  val inputToFacetContext: ZTransducer[Any, AppError, InputRecord, FacetContextCommittable] =
     Committable
       .filterMapCommittableRecordM((event: InputRecord) => ZIO.succeed(InputParser.parse(event)))
       .mapError(AppError.fromThrowable)
 
-  val calculatePermissions: ZTransducer[Has[ActionsConfig] & Clock, AppError, FacetContextCommittable, FacetContextCommittable] =
+  val calculateActionsAndPermisions: ZTransducer[Has[ActionsConfig] & Clock, AppError, FacetContextCommittable, FacetContextCommittable] =
     Committable
       .mapValueThrowable(PermissionsLogic.enrichWithActions)
       .mapError(AppError.fromThrowable)
 
-  val convertToFacetEvent: ZTransducer[ZEnv, AppError, FacetContextCommittable, OutputCommittable] =
+  val facetContextToOutput: ZTransducer[ZEnv, AppError, FacetContextCommittable, OutputCommittable] =
     Committable
       .mapValueThrowable((facetContext: FacetContext) => ZIO.succeed(OutputEvent(facetContext)))
       .mapError(AppError.fromThrowable)
@@ -110,7 +110,7 @@ object Processor {
       .mapError(AppError.fromThrowable)
 
   val pipeline: ZSink[Env.Processor, AppError, InputRecord, OutputCommittable, Unit] =
-    filterEventsFromSupportedUniverses >>> collectExclusionContext >>> calculatePermissions >>> convertToFacetEvent >>> publishEvent >>> commit
+    filterEventsFromSupportedUniverses >>> inputToFacetContext >>> calculateActionsAndPermisions >>> facetContextToOutput >>> publishEvent >>> commit
 
   val run: ZIO[Env.Main, AppError, Unit] =
     selfExclusionEventsSource >>> pipeline
