@@ -1,7 +1,7 @@
 package com.williamhill.permission.application
 
 import com.github.mlangc.slf4zio.api.Logging
-import com.williamhill.permission.Processor
+import com.williamhill.permission.{PermissionLogic, Processor}
 import com.williamhill.permission.application.config.{ActionsConfig, AppConfig}
 import com.williamhill.permission.kafka.{EventPublisher, EventPublisherLive}
 import org.http4s.server.Server
@@ -18,12 +18,14 @@ object Env {
     Has[Processor.Config] &
     Has[EventPublisher] &
     Has[ActionsConfig] &
+    Has[PermissionLogic] &
     ZEnv &
     Logging
 
   type Processor = Has[Processor.Config] &
     Has[EventPublisher] &
     Has[ActionsConfig] &
+    Has[PermissionLogic] &
     ZEnv &
     Logging
 
@@ -32,6 +34,7 @@ object Env {
       Logging.global,
       AppConfig.layer,
       ActionsConfig.layer,
+      PermissionLogic.layer,
       ZManaged.service[AppConfig].flatMap(cfg => Consumer.make(cfg.consumerSettings)).toLayer,
       ZManaged.service[AppConfig].flatMap(cfg => Producer.make(cfg.producerSettings)).toLayer,
       ZManaged.service[AppConfig].flatMap(cfg => HealthcheckApi.asResource(cfg.healthcheck)).toLayer,

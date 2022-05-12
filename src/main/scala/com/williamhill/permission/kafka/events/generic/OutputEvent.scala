@@ -9,6 +9,7 @@ import json.schema.Version.*
 import json.{Schema, Json as JsonSchema}
 
 import com.whbettingengine.kafka.serialization.json.schema.HasSchema
+import com.williamhill.permission.domain.PermissionStatus
 
 final case class OutputEvent(header: Header, body: OutputBody)
 
@@ -49,7 +50,7 @@ object OutputBody {
     newValues = NewValues(
       id = facetContext.header.id,
       universe = facetContext.universe.toString.toLowerCase,
-      data = Data(permissionDenials = facetContext.denials, actions = facetContext.actions),
+      data = Data(status = facetContext.newStatus, permissionDenials = facetContext.denials, actions = facetContext.actions),
     ),
   )
 
@@ -66,13 +67,12 @@ object NewValues {
 
 }
 case class Data(
+    status: PermissionStatus,
     permissionDenials: List[PermissionDenial],
     actions: List[Action],
 )
 object Data {
-
   implicit val codec: Codec[Data] = deriveCodec
-
 }
 case class Details(
     reason: String,
@@ -82,36 +82,3 @@ object Details {
   implicit val codec: Codec[OutputEvent] = deriveCodec
 
 }
-
-/** {
-  *    "type": "SelfExclusion",
-  *    "newValues": {
-  *      "id": "U00000001",
-  *      "universe": "wh-eu-de",
-  *      "data": {
-  *         "permissionDenials": {
-  *          "canWithdraw": [
-  *            {
-  *              "reasonCode": "account-not-verified",
-  *              "description": "The account is not verified",
-  *              "details": {
-  *                "reason": "unverified"
-  *              }
-  *            }
-  *          ]
-  *        },
-  *        "actions": [
-  *          {
-  *            "name": "sendVerificationFulfillmentReminder",
-  *            "reason": "sendVerificationFulfillmentReminder",
-  *            "relatesToPermissions": [
-  *              "canWithdraw"
-  *            ],
-  *            "type": "notification",
-  *            "deadline": "2022-12-12T20:19:26.117829Z"
-  *          }
-  *        ]
-  *      }
-  *    }
-  * }
-  */

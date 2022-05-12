@@ -76,9 +76,12 @@ object Processor {
       .filterMapCommittableRecordM((event: InputRecord) => ZIO.succeed(InputParser.parse(event)))
       .mapError(AppError.fromThrowable)
 
-  val calculateActionsAndPermisions: ZTransducer[Has[ActionsConfig] & Clock, AppError, FacetContextCommittable, FacetContextCommittable] =
+  val calculateActionsAndPermisions
+      : ZTransducer[Has[ActionsConfig] & Has[PermissionLogic] & Clock, AppError, FacetContextCommittable, FacetContextCommittable] =
     Committable
-      .mapValueThrowable(PermissionsLogic.enrichWithActions)
+      .mapValueThrowable((facetContext: FacetContext) =>
+        ZIO.service[PermissionLogic].flatMap(service => service.enrichWithActions(facetContext)),
+      )
       .mapError(AppError.fromThrowable)
 
   val facetContextToOutput: ZTransducer[ZEnv, AppError, FacetContextCommittable, OutputCommittable] =

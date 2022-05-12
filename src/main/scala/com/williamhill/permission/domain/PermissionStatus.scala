@@ -2,8 +2,9 @@ package com.williamhill.permission.domain
 
 import java.time.Instant
 
-import io.circe.Json
 import cats.syntax.either.*
+import io.circe.*
+import io.circe.generic.semiauto.deriveCodec
 
 import com.williamhill.permission.application.AppError
 
@@ -14,7 +15,7 @@ final case class PermissionStatus(
 )
 
 object PermissionStatus {
-
+  implicit val codec: Codec[PermissionStatus] = deriveCodec
   // TODO: should this logic be moved into InputParser?
   def fromJsonBodyValues(eventType: String)(values: Json): Either[AppError, PermissionStatus] =
     eventType match {

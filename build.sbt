@@ -47,6 +47,7 @@ ThisBuild / libraryDependencies ++= List(
 )
 
 ThisBuild / credentials ++= WHNexus.optionalCredentialsFromEnv()
+
 ThisBuild / credentials += Credentials(
   "Sonatype Nexus Repository Manager",
   "dev-jenkins-wh-01.whbettingengine.com",
@@ -65,5 +66,23 @@ ThisBuild / scalacOptions ++= List(
   "-Xsource:3", // Enable simpler smart constructor - https://gist.github.com/tpolecat/a5cb0dc9adeacc93f846835ed21c92d2#gistcomment-3386246
 )
 
-lazy val root = project.in(file("."))
+lazy val testSettings = Seq(
+  Test / logBuffered        := false,
+  Test / fork               := true,
+  Test / testForkedParallel := true,
+  Test / parallelExecution  := true,
+  Test / javaOptions ++= Seq(
+    "-Dconfig.resource=/test.conf",
+    // ZIO Interop Log4j2
+    "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
+    "-Dsbt.io.implicit.relative.glob.conversion=allow",
+  ),
+  testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+  coverageDataDir := crossTarget.value / "scoverage-report",
+)
+
+lazy val root = project
+  .in(file("."))
+  .settings(testSettings: _*)
+
 Global / onChangedBuildSource := ReloadOnSourceChanges
