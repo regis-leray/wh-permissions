@@ -36,7 +36,6 @@ final case class ActionsConfig(
 object ActionsConfig {
   implicit val reader: ConfigReader[ActionsConfig] = deriveReader
 
-  val layer: RLayer[Blocking, Has[ActionsConfig]] = blocking(
-    ZIO.effect(ConfigSource.resources("actions.conf").loadOrThrow[ActionsConfig]),
-  ).orDie.toLayer
+  val layer: RLayer[Blocking, Has[ActionsConfig]] =
+    blocking(ZIO.effect(ConfigSource.resources("actions.conf").loadOrThrow[ActionsConfig])).orDie.toLayer
 }

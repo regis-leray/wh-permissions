@@ -24,5 +24,6 @@ object AppConfig {
 
   implicit val reader: ConfigReader[AppConfig] = deriveReader[AppConfig]
 
-  val layer: RLayer[Blocking, Has[AppConfig]] = blocking(ZIO.effect(ConfigSource.default.loadOrThrow[AppConfig])).orDie.toLayer
+  val layer: RLayer[Blocking, Has[AppConfig]] =
+    blocking(ZIO.effect(ConfigSource.default.loadOrThrow[AppConfig])).orDie.toLayer
 }

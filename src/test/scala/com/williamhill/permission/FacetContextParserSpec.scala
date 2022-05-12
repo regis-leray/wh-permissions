@@ -1,21 +1,19 @@
 package com.williamhill.permission
 
+import com.williamhill.permission.application.config.MappingsConfig
 import com.williamhill.permission.domain.Fixtures.*
 import com.williamhill.permission.domain.{FacetContext, PermissionStatus}
-import com.williamhill.permission.kafka.Record.InputRecord
 import com.williamhill.permission.kafka.events.generic.{Header, InputEvent}
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
-import zio.ZIO
-import zio.kafka.consumer.CommittableRecord
+import pureconfig.ConfigSource
 
 import java.time.Instant
 
-class InputParserSpec extends AnyFlatSpec with Matchers with TableDrivenPropertyChecks {
+class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenPropertyChecks {
 
-  behavior of "InputParser"
+  behavior of "FacetContextParser"
 
   val scenarios: TableFor3[String, String, FacetContext] =
     Table(
@@ -142,18 +140,12 @@ class InputParserSpec extends AnyFlatSpec with Matchers with TableDrivenProperty
       ),
     )
 
+  val parser: FacetContextParser = new FacetContextParser(ConfigSource.resources("mappings.conf").loadOrThrow[MappingsConfig])
+
   forAll(scenarios) { case (scenario, path, expectedResult) =>
     it should s"convert $scenario input event to FacetContext" in {
       val inputEvent = FileReader.fromResources[InputEvent](path)
-
-      InputParser.parse(committableRecord(inputEvent)) shouldBe Some(expectedResult)
+      parser.parse(inputEvent) shouldBe Right(expectedResult)
     }
   }
-
-  def committableRecord(inputEvent: InputEvent): InputRecord =
-    CommittableRecord(
-      new ConsumerRecord[String, InputEvent]("topic", 1, 1, "key", inputEvent),
-      _ => ZIO.unit,
-      None,
-    )
 }

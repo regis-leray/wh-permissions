@@ -1,8 +1,8 @@
 package com.williamhill.permission.domain
 
 import scala.util.matching.Regex
-
 import com.williamhill.permission.application.AppError
+import io.circe.Decoder
 
 final case class PlayerId private (value: String) {
   override def toString: String = value
@@ -19,4 +19,6 @@ object PlayerId {
       new PlayerId(value),
       AppError(s"Id value: '$value' does not match unity id regular expression pattern: $unityIdRegex"),
     )
+
+  implicit val decoder: Decoder[PlayerId] = Decoder.decodeString.emap(s => apply(s).left.map(_.message))
 }

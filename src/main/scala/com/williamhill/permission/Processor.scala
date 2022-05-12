@@ -24,30 +24,29 @@ import zio.clock.Clock
 object Processor {
   // TODO: should we move all configs in application.config package?
   final case class Config(
-      selfExclusionEvents: TopicConfig,
+      inputEvents: TopicConfig,
+      outputEvents: TopicConfig,
       configuredUniverses: CommaSeparatedList,
-      playerFacetEvents: TopicConfig,
       tracingIdentifiers: Config.TracingIdentifiers,
   )
+
   object Config {
     final case class TracingIdentifiers(groupId: String, clientId: String)
-    object TracingIdentifiers {
-      implicit val reader: ConfigReader[TracingIdentifiers] = deriveReader
-    }
-    implicit val reader: ConfigReader[Config] = deriveReader
+    implicit val tracingIdentifiersReader: ConfigReader[TracingIdentifiers] = deriveReader
+    implicit val reader: ConfigReader[Config]                               = deriveReader
   }
 
-  val selfExclusionEventsSource: ZStream[Has[Config] & Has[Consumer], AppError, InputRecord] =
+  val inputRecordEvents: ZStream[Has[Config] & Has[Consumer], AppError, InputRecord] =
     ZStream
       .service[Config]
       .flatMap { cfg =>
         ZStream
           .fromEffect(
-            JsonSerialization.valueDeserializer[InputEvent](cfg.selfExclusionEvents.schemaRegistrySettings),
+            JsonSerialization.valueDeserializer[InputEvent](cfg.inputEvents.schemaRegistrySettings),
           )
           .flatMap { valueDes =>
             Consumer
-              .subscribeAnd(Subscription.topics(cfg.selfExclusionEvents.topics.head, cfg.selfExclusionEvents.topics.tail*))
+              .subscribeAnd(Subscription.topics(cfg.inputEvents.topics.head, cfg.inputEvents.topics.tail*))
               .plainStream(Serde.string, valueDes)
               .tap { rec =>
                 Task {
@@ -65,18 +64,19 @@ object Processor {
   val filterEventsFromSupportedUniverses: ZTransducer[Has[Config] & Clock, AppError, InputRecord, InputRecord] =
     Kafka.filterMapM { event =>
       for {
-        universe            <- ZIO.fromEither(InputParser.parseUniverse(event))
-        maybeSupportedEvent <- ZIO.service[Config].map(_.configuredUniverses.unwrap.find(_ == universe.value).map(_ => event))
+        maybeSupportedEvent <- ZIO.service[Config].map(_.configuredUniverses.unwrap.find(_ == event.value.header.universe).map(_ => event))
         _                   <- ZIO.when(maybeSupportedEvent.isEmpty)(event.offset.commit).mapError(AppError.fromThrowable)
       } yield maybeSupportedEvent
     }
 
-  val inputToFacetContext: ZTransducer[Any, AppError, InputRecord, FacetContextCommittable] =
+  val inputToFacetContext: ZTransducer[Has[FacetContextParser], AppError, InputRecord, FacetContextCommittable] = {
     Committable
-      .filterMapCommittableRecordM((event: InputRecord) => ZIO.succeed(InputParser.parse(event)))
+      // todo: this is ignoring all parser errors, revisit
+      .filterMapCommittableRecordM((event: InputRecord) => ZIO.service[FacetContextParser].map(_.parse(event.value).toOption))
       .mapError(AppError.fromThrowable)
+  }
 
-  val calculateActionsAndPermisions
+  val calculateActionsAndPermissions
       : ZTransducer[Has[ActionsConfig] & Has[PermissionLogic] & Clock, AppError, FacetContextCommittable, FacetContextCommittable] =
     Committable
       .mapValueThrowable((facetContext: FacetContext) =>
@@ -96,7 +96,7 @@ object Processor {
         for {
           publisher <- ZIO.service[EventPublisher]
           cfg       <- ZIO.service[Config]
-          _         <- publisher.publish(cfg.playerFacetEvents.topics.head, event)
+          _         <- publisher.publish(cfg.outputEvents.topics.head, event)
         } yield event.asRight[AppError],
       )
       .mapError(AppError.fromThrowable)
@@ -113,8 +113,8 @@ object Processor {
       .mapError(AppError.fromThrowable)
 
   val pipeline: ZSink[Env.Processor, AppError, InputRecord, OutputCommittable, Unit] =
-    filterEventsFromSupportedUniverses >>> inputToFacetContext >>> calculateActionsAndPermisions >>> facetContextToOutput >>> publishEvent >>> commit
+    filterEventsFromSupportedUniverses >>> inputToFacetContext >>> calculateActionsAndPermissions >>> facetContextToOutput >>> publishEvent >>> commit
 
   val run: ZIO[Env.Main, AppError, Unit] =
-    selfExclusionEventsSource >>> pipeline
+    inputRecordEvents >>> pipeline
 }

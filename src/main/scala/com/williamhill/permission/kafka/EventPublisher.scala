@@ -21,7 +21,7 @@ class EventPublisherLive(producer: Producer, config: Processor.Config) extends E
     import HasKey.*
     for {
       valueSerializer <- kafka.JsonSerialization.valueSerializer[T](
-        config.playerFacetEvents.schemaRegistrySettings,
+        config.outputEvents.schemaRegistrySettings,
       )
       producerRecord = new ProducerRecord(topic, value.stringKey, value)
       _ <- producer.produce(producerRecord, Serde.string, valueSerializer)

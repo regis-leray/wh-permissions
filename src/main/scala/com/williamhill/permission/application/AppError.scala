@@ -10,7 +10,8 @@ case class AppError(message: String, cause: Option[Throwable] = None) {
 }
 
 object AppError {
-  def fromMessage(message: String): AppError = AppError(message, None)
+  def fromMessage(message: String): AppError      = AppError(message, None)
+  def missingMapping(eventType: String): AppError = AppError(s"Missing mapping configuration for event type: `$eventType`")
 
   def fromThrowable(throwable: Throwable): AppError                             = AppError(throwable.getMessage, Some(throwable))
   def fromThrowableWithMessage(message: String, throwable: Throwable): AppError = AppError(message, Some(throwable))
