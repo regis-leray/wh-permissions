@@ -3,17 +3,38 @@ package com.williamhill.permission
 import com.williamhill.permission.application.config.{ActionDefinition, ActionsConfig}
 import com.williamhill.permission.domain.{Action, FacetContext}
 import zio.clock.Clock
-import zio.{Has, ULayer, URIO, ZIO}
+import zio.{Has, Task, URLayer, ZIO}
 
 import java.time.Instant
 
 trait PermissionLogic {
-  def enrichWithActions(facetContext: FacetContext): URIO[Has[ActionsConfig] & Has[Clock.Service], FacetContext]
+  def enrichWithActions(facetContext: FacetContext): Task[FacetContext]
+}
+
+class PermissionLogicLive(actionsConfig: ActionsConfig, clock: Clock.Service) extends PermissionLogic {
+  import com.williamhill.permission.PermissionLogic.*
+
+  override def enrichWithActions(fc: FacetContext): Task[FacetContext] =
+    clock.instant.map { now =>
+      val applicableActions = actionsConfig.bindings
+        .find(x => x.universe == fc.universe.value && x.eventType == fc.name && x.status == fc.newStatus.status)
+        .toList
+        .flatMap(_.actions)
+        .flatMap(actionName => actionsConfig.definitions.filter(_.name == actionName))
+
+      applicableActions.foldLeft(fc) { (context, actionDefinition) =>
+        context.newStatus.endDate match {
+          case Some(endDate) if endDate.isBefore(now) =>
+            context.addAction(actionDefinition.toDomainWithDeadline(endDate))
+          case _ => context.addAction(actionDefinition.toDomain)
+        }
+      }
+    }
+
 }
 
 object PermissionLogic {
-
-  implicit final private class ActionDefinitionSyntax(private val ad: ActionDefinition) extends AnyVal {
+  implicit final class ActionDefinitionSyntax(private val ad: ActionDefinition) extends AnyVal {
     def toDomain: Action =
       Action(ad.`type`, ad.name, ad.reasonCode, ad.denialDescription, ad.deniedPermissions)
 
@@ -21,27 +42,10 @@ object PermissionLogic {
       Action(ad.`type`, ad.name, ad.reasonCode, ad.denialDescription, ad.deniedPermissions, Some(deadline))
   }
 
-  val layer: ULayer[Has[PermissionLogic]] = ZIO
-    .succeed(new PermissionLogic() {
-      override def enrichWithActions(fc: FacetContext): URIO[Has[ActionsConfig] & Has[Clock.Service], FacetContext] =
-        ZIO
-          .service[ActionsConfig]
-          .zip(ZIO.serviceWith[Clock.Service](_.instant))
-          .map { case (actionConfig, now) =>
-            val applicableActions = actionConfig.bindings
-              .find(x => x.universe == fc.universe.value && x.eventType == fc.name && x.status == fc.newStatus.status)
-              .toList
-              .flatMap(_.actions)
-              .flatMap(actionName => actionConfig.definitions.filter(_.name == actionName))
-
-            applicableActions.foldLeft(fc) { (context, actionDefinition) =>
-              context.newStatus.endDate match {
-                case Some(endDate) if endDate.isBefore(now) =>
-                  context.addAction(actionDefinition.toDomainWithDeadline(endDate))
-                case _ => context.addAction(actionDefinition.toDomain)
-              }
-            }
-          }
-    })
-    .toLayer
+  val layer: URLayer[Has[ActionsConfig] & Has[Clock.Service], Has[PermissionLogic]] = (
+    for {
+      clock <- ZIO.service[Clock.Service]
+      cfg   <- ZIO.service[ActionsConfig]
+    } yield new PermissionLogicLive(cfg, clock)
+  ).toLayer
 }
