@@ -1,0 +1,10 @@
+permission-service:
+  values:
+    base:
+      services:
+        permission-service:
+          enabled: true
+          envVars:
+            KAFKA_SERVERS: "kafka-service:9092"
+            ZOOKEEPER_SERVERS: "zookeeper-service:2181"
+            SCHEMA_REGISTRY_URL: "http://schema-registry-service:8081"

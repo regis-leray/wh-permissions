@@ -1,0 +1,14 @@
+apiVersion: v2
+name: permission-service
+version: 0.0.1
+description: |
+  Application consuming facet events to compute and publish permissions
+home: https://conf.willhillatlas.com/display/UNITY/UNITY+Home
+sources:
+  - https://gitlab.com/williamhillplc/platform-engineering/unity/services/permission/permission-service
+keywords:
+  - self-exclusion
+dependencies:
+  - name: base
+    version: 0.0.33
+    repository: "@be"

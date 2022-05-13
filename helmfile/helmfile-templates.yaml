@@ -1,0 +1,28 @@
+repositories:
+  - name: nexus
+    url: https://nexus.dtc.prod.williamhill.plc:8443/repository/be-helm/
+
+helmDefaults:
+  wait: true
+  waitForJobs: true
+  timeout: 300
+  atomic: true
+  historyMax: 1
+  createNamespace: true
+  kubeContext: ""
+  cleanupOnFail: true
+
+templates:
+  generic: &generic
+    missingFileHandler: Warn
+    namespace: '{{ .Values | getOrNil .Release.Name | getOrNil "namespace" | default .Values.namespace }}'
+    hooks:
+      - events: [ "postsync" ]
+        showlogs: true
+        command: "./scripts/notify.sh"
+        args:
+          - '{{ if .Event.Error }}failure{{ else }}success{{ end }}'
+          - '{{ .Release.Name }}'
+          - '{{ .Release.Labels.slack_url_var }}'
+    valuesTemplate:
+      - './templates/{{ .Release.Name }}.yaml.gotmpl'

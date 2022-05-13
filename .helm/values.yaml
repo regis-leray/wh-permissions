@@ -1,0 +1,15 @@
+base:
+  serviceName: permission-service
+  version: develop
+  registry: docker-registry.prod.williamhill.plc/platform
+
+  services:
+    permission-service:
+      enabled: true
+      isLocal: false
+      replicaCount: 1
+      image: permission-service
+      port: 8080
+      network:
+        routes:
+          - /permission-service/

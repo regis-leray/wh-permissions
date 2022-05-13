@@ -144,17 +144,17 @@ Add extra docker tags and mirror for git tag:
   only: [tags]
 
 # publish
-#Publish Helm to Nexus:
-#  extends:
-#    - .helm-push-nexus-v1-k8s
-#    - .eks-dev-gitlab-runner
-#  stage: publish
-#
-#Publish Helm to Nexus Tag:
-#  extends:
-#    - .helm-push-nexus-v1-tags-k8s
-#    - .eks-dev-gitlab-runner
-#  stage: publish
+Publish Helm to Nexus:
+  extends:
+    - .helm-push-nexus-v1-k8s
+    - .eks-dev-gitlab-runner
+  stage: publish
+
+Publish Helm to Nexus Tag:
+  extends:
+    - .helm-push-nexus-v1-tags-k8s
+    - .eks-dev-gitlab-runner
+  stage: publish
 
 # plan
 

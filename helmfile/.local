@@ -1,0 +1,2 @@
+export Environment='sit'
+export Namespace='sit'

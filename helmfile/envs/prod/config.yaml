@@ -1,0 +1,24 @@
+environment: prod
+namespace: prod
+host: unity.aws-eu-west-1.prod.williamhill.plc
+kafka:
+  kafka_servers: ref+awsssm:///prod/msk/unity-prod-msk-prod/brokers_plaintext_connection_string?region=eu-west-1
+  schema_registry: http://cp-schema-registry:8081
+  serviceentry: true
+  zookeeper_servers: ref+awsssm:///prod/msk/unity-prod-msk-prod/zookeeper_plaintext_connection_string?region=eu-west-1
+hpa:
+  enabled: true
+autoscaling:
+  enabled: true
+pdb:
+  enabled: true
+permission-service:
+  values:
+    base:
+      services:
+        permission-service:
+          enabled: true
+          envVars:
+            KAFKA_SERVERS: ref+awsssm:///prod/msk/unity-prod-msk-prod/brokers_plaintext_connection_string?region=eu-west-1
+            SCHEMA_REGISTRY_URL: http://cp-schema-registry:8081
+            ZOOKEEPER_SERVERS: ref+awsssm:///prod/msk/unity-prod-msk-prod/zookeeper_plaintext_connection_string?region=eu-west-1

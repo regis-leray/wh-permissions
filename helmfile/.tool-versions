@@ -1,0 +1,3 @@
+helmfile 0.139.7
+helm 3.5.1
+sops 3.6.1

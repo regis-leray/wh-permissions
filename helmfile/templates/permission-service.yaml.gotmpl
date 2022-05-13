@@ -1,0 +1,83 @@
+base:
+  env: {{ .Values | get "environment" "{{ .Environment.Name }}" }}
+  registry: {{ .Values | get "registry" "nexus-aws.dtc.prod.williamhill.plc/betting-engine" }}
+  privateHost: {{ .Values | get "host" "uat.unity.aws-eu-west-1.dev.williamhill.plc" }}
+  {{- with .Values.tolerations }}
+  tolerations:
+    {{- toYaml . | nindent 6 }}
+  {{- end }}
+
+  pullPolicy: Always
+
+  {{- with .Values.universes }}
+  universes:
+    {{- toYaml . | nindent 6 }}
+  {{- end }}
+
+  globalVars:
+    common:
+      PROXY_HOST: {{ .Values | getOrNil "proxy" | getOrNil "host" }}
+      PROXY_PORT: {{ .Values | getOrNil "proxy" | getOrNil "port" }}
+      PROFILE: dev
+      UNIVERSE: wh-test
+      LOG4J_FORMAT_MSG_NO_LOOKUPS: true
+    kafka:
+      KAFKA_SERVERS: {{ .Values | getOrNil "kafka" | getOrNil "kafka_servers" | default "kafka-service:9092" }}
+      SCHEMA_REGISTRY_URL: {{ .Values | getOrNil "kafka" | getOrNil "schema_registry" | default "http://schema-registry-service:8081" }}
+    newRelic:
+      NEW_RELIC_ENABLED: {{ .Values | getOrNil "newrelic" | getOrNil "enabled" | default false }}
+      NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: {{ .Values | getOrNil "newrelic" | getOrNil "distributed_tracing_enabled" | default false }}
+      NEW_RELIC_PROXY_URL: {{ .Values | getOrNil "newrelic" | getOrNil "proxy_url" | default "http://webproxy:3128" }}
+      NEW_RELIC_PROXY_HOST: {{ .Values | getOrNil "newrelic" | getOrNil "proxy_host" | default "ext-api-forwardproxy-tig-01" }}
+      NEW_RELIC_PROXY_PORT: {{ .Values | getOrNil "newrelic" | getOrNil "proxy_port" | default "3129" }}
+      NEW_RELIC_PROXY_SCHEME: {{ .Values | getOrNil "newrelic" | getOrNil "proxy_scheme" | default "http" }}
+      NEW_RELIC_TRACE_OBSERVER_URL: {{ .Values | getOrNil "newrelic" | getOrNil "traceObserverUrl" | default "" }}
+  globalSecrets:
+    secrets:
+      NEW_RELIC_LICENSE_KEY: {{ $.Values.newrelic.licenceKeyBase64 | default "" }}
+      NEW_RELIC_INSIGHTS_INSERT_KEY: {{ $.Values.newrelic.insightsKeyBase64 | default "" }}
+
+  hpa:
+    enabled: {{ .Values | getOrNil "hpa" | getOrNil "enabled" | default false }}
+  pdb:
+    enabled: {{ .Values | getOrNil "pdb" | getOrNil "enabled" | default false }}
+  autoscaling:
+    enabled: {{ .Values | getOrNil "autoscaling" | getOrNil "enabled" | default false }}
+    minReplicas: {{ .Values | getOrNil "minReplicas" | default 2 }}
+    maxReplicas: {{ .Values | getOrNil "maxReplicas" | default 3 }}
+    cpuAverageUtilization: {{ .Values | getOrNil "cpuAverageUtilization" | default 80 }}
+    memoryAverageUtilization: {{ .Values | getOrNil "memoryAverageUtilization" | default 80 }}
+
+  resources:
+    limits:
+      memory: 2048Mi
+      cpu: 1000m
+    requests:
+      memory: 1024Mi
+      cpu: 100m
+
+  livenessProbe:
+    httpGet:
+      path: /permission-service/meta/health
+      port: 8080
+    initialDelaySeconds: 3
+    periodSeconds: 3
+  readinessProbe:
+    httpGet:
+      path: /permission-service/meta/health/readiness
+      port: 8080
+    initialDelaySeconds: 3
+    periodSeconds: 3
+  readinessProperties:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 6
+    periodSeconds: 10
+  livenessProperties:
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 9
+    periodSeconds: 10
+
+  custom_annotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: "false"

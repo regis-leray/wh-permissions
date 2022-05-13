@@ -1,0 +1,18 @@
+creation_rules:
+  - path_regex: '.*uat/secrets.yaml'
+    kms: 'arn:aws:kms:eu-west-1:858716511135:alias/applications'
+
+  - path_regex: '.*usd/secrets.yaml'
+    kms: 'arn:aws:kms:us-east-1:440010832978:alias/applications'
+
+  - path_regex: '.*sit/secrets.yaml'
+    kms: 'arn:aws:kms:eu-west-1:858716511135:alias/applications'
+
+  - path_regex: '.*unitynonprod/secrets.yaml'
+    kms: 'arn:aws:kms:eu-west-1:149591455505:alias/applications'
+
+  - path_regex: '.*oat/secrets.yaml'
+    kms: 'arn:aws:kms:eu-west-1:149591455505:alias/applications'
+
+  - path_regex: '.*prod/secrets.yaml'
+    kms: 'arn:aws:kms:eu-west-1:491326712076:alias/applications'

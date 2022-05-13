@@ -1,0 +1,25 @@
+environment: oat
+namespace: oat
+host: oat.unity.aws-eu-west-1.nonprod.williamhill.plc
+kafka:
+  # MSK is used by SDP team as well, so any changes to MSK (Downtime or change in endpoints) should be communicated to them on SdpOperationalSupport@williamhill.com
+  kafka_servers: ref+awsssm:///oat-new/msk/unity-oat-new-msk-oat-new/brokers_plaintext_connection_string?region=eu-west-1
+  schema_registry: http://cp-schema-registry:8081
+  serviceentry: true
+  zookeeper_servers: ref+awsssm:///oat-new/msk/unity-oat-new-msk-oat-new/zookeeper_plaintext_connection_string?region=eu-west-1
+hpa:
+  enabled: true
+pdb:
+  enabled: true
+autoscaling:
+  enabled: true
+permission-service:
+  values:
+    base:
+      services:
+        permission-service:
+          enabled: true
+          envVars:
+            KAFKA_SERVERS: ref+awsssm:///oat-new/msk/unity-oat-new-msk-oat-new/brokers_plaintext_connection_string?region=eu-west-1
+            SCHEMA_REGISTRY_URL: http://cp-schema-registry:8081
+            ZOOKEEPER_SERVERS: ref+awsssm:///oat-new/msk/unity-oat-new-msk-oat-new/zookeeper_plaintext_connection_string?region=eu-west-1

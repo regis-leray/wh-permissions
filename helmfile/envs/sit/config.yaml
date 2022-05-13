@@ -1,0 +1,22 @@
+environment: sit
+namespace: sit
+host: sit.unity.aws-eu-west-1.dev.williamhill.plc
+kafka:
+  kafka_servers: ref+awsssm:///sit-new/msk/unity-sit-new-msk-sit-new/brokers_plaintext_connection_string?region=eu-west-1
+  schema_registry: http://cp-schema-registry:8081
+  serviceentry: true
+  zookeeper_servers: ref+awsssm:///sit-new/msk/unity-sit-new-msk-sit-new/zookeeper_plaintext_connection_string?region=eu-west-1
+hpa:
+  enabled: true
+minReplicas: 1
+maxReplicas: 2
+permission-service:
+  values:
+    base:
+      services:
+        permission-service:
+          enabled: true
+          envVars:
+            KAFKA_SERVERS: ref+awsssm:///sit-new/msk/unity-sit-new-msk-sit-new/brokers_plaintext_connection_string?region=eu-west-1
+            ZOOKEEPER_SERVERS: ref+awsssm:///sit-new/msk/unity-sit-new-msk-sit-new/zookeeper_plaintext_connection_string?region=eu-west-1
+            SCHEMA_REGISTRY_URL: http://cp-schema-registry:8081

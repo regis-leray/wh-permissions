@@ -1,0 +1,49 @@
+environments:
+  default:
+    values:
+      - ./envs/default/config.yaml
+
+  templated-environment: &templated-environment
+    values:
+      - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/default/config.yaml?ref=master
+      - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/{{ .Environment.Name }}/config.yaml?ref=master
+      - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/default/universes.yaml?ref=master
+      - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/{{ .Environment.Name }}/universes.yaml?ref=master
+      - ./envs/default/config.yaml
+      - ./envs/{{ .Environment.Name }}/config.yaml
+
+  uat:
+    <<: *templated-environment
+
+  usd:
+    <<: *templated-environment
+
+  sit:
+    <<: *templated-environment
+
+  mtt-sit:
+    <<: *templated-environment
+
+  oat:
+    <<: *templated-environment
+
+  prod:
+    <<: *templated-environment
+
+---
+
+{{ readFile "./helmfile-templates.yaml" }}
+
+releases:
+  - name: permission-service
+    installed: {{ .Values | getOrNil "permission-service.installed" | default "false" }}
+    <<: *generic
+    version: '{{ env "RELEASE_VERSION" | default (.Values | getOrNil "permission-service.version") | default "0.0.0-develop" | replace "/" "-" | lower }}'
+    chart: 'nexus/permission-service'
+    labels:
+      project: unity
+      slack_url_var: UNITY_TEAM_A_SLACK_HOOK_URL
+    {{- with (.Values | getOrNil "permission-service" | getOrNil "values") }}
+    values:
+      - {{- toYaml . | nindent 8 }}
+    {{- end}}

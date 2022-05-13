@@ -1,0 +1,40 @@
+tolerations: []
+environment: default
+namespace: default
+host: default
+hpa:
+  enabled: false
+pdb:
+  enabled: false
+proxy:
+  host: webproxy
+  port: 3128
+registry: nexus-aws.dtc.prod.williamhill.plc/betting-engine
+newrelic:
+  enabled: true
+  distributed_tracing_enabled: true
+  proxy_host: webproxy
+  proxy_port: 3128
+  traceObserverUrl: https://0c96e136-3cd3-4d47-b23d-45f01f154601.aws-us-east-1.tracing.edge.nr-data.net:443/trace/v1
+  licenceKey: ref+awsssm:///common/newrelic_license_key?region=eu-west-1
+  licenceKeyBase64: ref+awsssm:///common/newrelic_license_key_base64?region=eu-west-1
+  insightsKeyBase64: ref+awsssm:///common/newrelic_insights_key_base64?region=eu-west-1
+permission-service:
+  installed: true
+  values:
+    base:
+      custom_annotations:
+        sidecar-injector-webhook.williamhill.opentelemetry/inject: true
+      registry: docker-registry.prod.williamhill.plc/platform
+      services:
+        permission-service:
+          envVars:
+            JAVA_TOOL_OPTIONS: "-Dhttps.proxyHost=webproxy -Dhttps.proxyPort=3128 -Dhttps.nonProxyHosts=.plc|.local|127.0.0.1|10.100.0.1/16|.svc -Dhttp.nonProxyHosts=.plc|.local|127.0.0.1|10.100.0.1/16|.svc"
+          enabled: true
+          resources:
+            requests:
+              memory: "1024Mi"
+              cpu: "100m"
+            limits:
+              memory: "2048Mi"
+              cpu: "1000m"
