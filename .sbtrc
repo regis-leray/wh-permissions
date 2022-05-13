@@ -1,5 +1,5 @@
 alias all-tests = ; test
-alias fmtcheck = ; scalafmtCheck ; test:scalafmtCheck; scalafmtSbtCheck
-alias fixcheck = ; scalafixAll --check ; test:scalafixAll --check
-alias all-checks = ; fmtcheck
-alias lint = ; scalafmtSbt; scalafmt
+alias fmt-check = ; scalafmtCheck ; test:scalafmtCheck; scalafmtSbtCheck
+alias fix-check = ; scalafixAll --check ; test:scalafixAll --check
+alias all-checks = ; fmt-check
+alias lint = ; scalafmtSbt; scalafmt; scalafixAll

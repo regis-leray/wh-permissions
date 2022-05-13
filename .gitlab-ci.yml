@@ -5,43 +5,41 @@ default:
 stages:
   - test
   - build
-  # - security-test
-  # - distribute
-  # - publish
-  # - plan
-  # - apply
-  # - integration-test
+  - security-test
+  - distribute
+  - publish
+  - plan
+  - apply
+  - integration-test
   - notify
 
 include:
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.1.0
+    ref: main
     file: parts/scala-app.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.1.0
+    ref: main
     file: parts/tasks/ISpec-template.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.1.0
+    ref: main
     file: parts/tasks/cd-templates.yaml
-  # - project: williamhillplc/infosec/devsecops/gitlabci-templates
-  #   ref: 1.5.1
-  #   file: security/basic.yml
-  # - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-  #   ref: 2.1.0
-  #   file: parts/tasks/standard-version.yaml
-  # - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-  #   ref: 2.1.0
-  #   file: parts/unity-service-cd-tasks.yaml
+  - project: williamhillplc/infosec/devsecops/gitlabci-templates
+    ref: 1.5.1
+    file: security/basic.yml
+#  - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
+#    ref: main
+#    file: parts/unity-service-cd-tasks.yaml
+  - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
+    ref: main
+    file: gitlab/runners.yaml
 
 variables:
   PushImageRegistry: nexus-uploads.dtc.prod.williamhill.plc
   PullImageRegistry: nexus-aws.dtc.prod.williamhill.plc
   Docker_Namespace: platform
-  ECRRepo: 491326712076.dkr.ecr.eu-west-1.amazonaws.com/pam
-  SAST_EXCLUDED_ANALYZERS: "spotbugs"
+  IMAGE_NAME: $PushImageRegistry/$Docker_Namespace/permission-service:$CI_COMMIT_SHORT_SHA
   Source_Images_List: |
-    $ECRRepo/permission-service:$CI_COMMIT_SHORT_SHA
-
+      $IMAGE_NAME
   HELMFILE_IMAGE: nexus-aws.dtc.prod.williamhill.plc/unity/helmfile:0.140.0-3.7.0
   KUBERNETES_CPU_REQUEST: 1
   KUBERNETES_CPU_LIMIT: 3
@@ -54,7 +52,43 @@ variables:
     description: "Boolean variable whether to show Prod deployment stage."
     value: "false"
 
-# test
+# security scanning
+container_scanning:
+  variables:
+    CONTAINER_SCANNING_DISABLED: "true"
+  rules:
+    - if: $CONTAINER_SCANNING_DISABLED == "true"
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+spotbugs-sast:
+  extends:
+    - .sast-analyzer
+    - .eks-dev-gitlab-runner
+
+secret_detection:
+  extends:
+    - .secret-analyzer
+    - .eks-dev-gitlab-runner
+
+license_scanning:
+  extends:
+    - .eks-dev-gitlab-runner
+
+dependency_scanning:
+  extends:
+    - .eks-dev-gitlab-runner
+
+scan-permission-service-container:
+  extends:
+    - container_scanning
+    - .eks-dev-gitlab-runner
+  variables:
+    DOCKER_IMAGE: $PullImageRegistry/$Docker_Namespace/permission-service:$CI_COMMIT_SHORT_SHA
+    CONTAINER_SCANNING_DISABLED: "false"
+
+
+# lint check
 Run scalafmt and scalafix checks:
   extends: .execute-sbt-task-v3
   stage: test
@@ -63,6 +97,7 @@ Run scalafmt and scalafix checks:
     Sbt_Tasks: "all-checks"
   except: [tags, triggers]
 
+# test
 Run unit tests:
   extends: .execute-sbt-tasks-with-docker-v3
   stage: test
@@ -78,117 +113,95 @@ Run unit tests:
   dependencies: [Run scalafmt and scalafix checks]
 
 # build
-# Build docker images:
-#   extends: .execute-sbt-tasks-with-docker-v4
-#   stage: build
-#   variables:
-#     Sbt_Java_Version: 11
-#     Sbt_Tasks: >-
-#       docker
-#   before_script:
-#     - export Images_To_Push_After=$Source_Images_List
-#     - export ECRRepository=$ECRRepo
-#   except: [tags]
-#   dependencies: []
+Build docker images:
+  extends: .execute-sbt-tasks-with-docker-v3 #see https://gitlab.com/williamhillplc/usa/betting-engine/infra/be-ci/blob/main-v3/parts/tasks/sbt-tasks.yaml
+  stage: build
+  variables:
+    Sbt_Java_Version: 11
+    Sbt_Tasks: >-
+      -mem 2048 docker
+  before_script:
+    - export Images_To_Push_After=$Source_Images_List
+  except: [tags, schedules]
+  dependencies: []
 
-# TODO: will we even need it later?
-# Publish test results:
-#   extends: .execute-sbt-task-v3
-#   stage: build
-#   script:
-#     - |
-#       echo "Uploading service test results"
-#       for f in ./target/test-reports/*.xml
-#       do
-#         echo export results from file $f
-#         curl -H "Content-Type: multipart/form-data" -u $jira_user:$jira_password -F "file=@$f" "https://jira.willhillatlas.com/rest/raven/1.0/import/execution/junit?projectKey=UNITY"
-#       done
-#   except: [tags]
-
-# security-test
-# scan-permission-service-container:
-#   extends: container_scanning
-#   variables:
-#     DOCKER_IMAGE: $ECRRepo/permission-service:$CI_COMMIT_SHORT_SHA
 
 # distribute
-# Add extra docker tags and mirror:
-#   extends: .add-extra-docker-tags-v2
-#   stage: distribute
-#   before_script:
-#     - export Input_Images=$Source_Images_List
-#     - export Extra_Retag_Args="--target-tag $CI_BUILD_REF_SLUG --target-registry $ECRRepo"
-#   dependencies: []
+Add extra docker tags and mirror:
+  extends: .add-extra-docker-tags-v2
+  before_script:
+    - export Input_Images=$Source_Images_List
+    - export Extra_Retag_Args="--target-tag $CI_BUILD_REF_SLUG"
+  stage: distribute
+  except: [tags, schedules]
 
-# Add extra docker tags and mirror for git tag:
-#   extends: .add-extra-docker-tags-v2
-#   stage: distribute
-#   before_script:
-#     - export Input_Images=$Source_Images_List
-#     - export Extra_Retag_Args="--target-tag $CI_COMMIT_TAG --target-registry $ECRRepo"
-#   except: []
-#   only: [tags]
-#   dependencies: []
+Add extra docker tags and mirror for git tag:
+  extends: .add-extra-docker-tags-v2
+  before_script:
+    - export Input_Images=$Source_Images_List
+    - export Extra_Retag_Args="--target-tag $CI_COMMIT_TAG"
+  stage: distribute
+  only: [tags]
 
 # publish
-# Publish Helm to Nexus:
-#   extends: .helm-push-nexus-v1
-#   stage: publish
-
-# Publish Helm to Nexus Tag:
-#   extends: .helm-push-nexus-v1-tags
-#   stage: publish
-
-# Publish Snapshots - wallet-messaging-model wallet-api-model wallet-testkit:
-#   extends: .execute-sbt-task-v3
-#   stage: publish
-#   environment: NEXUS_DTC_PUBLISH
-#   variables:
-#     Sbt_Java_Version: 11
-#     Sbt_Tasks: "+wallet-messaging-model/publish +wallet-api-model/publish +wallet-testkit/publish"
-#   except: [develop, tags]
-
-# Publish Releases - wallet-messaging-model wallet-api-model wallet-testkit:
-#   extends: .execute-sbt-task-v3
-#   stage: publish
-#   environment: NEXUS_DTC_PUBLISH
-#   variables:
-#     Sbt_Java_Version: 11
-#     Sbt_Tasks: "'set ThisBuild / isSnapshot := false' 'set ThisBuild / isVersionStable := true' +wallet-messaging-model/publish +wallet-api-model/publish +wallet-testkit/publish"
-#   # we only want this to run on the tag created by conventional commits post merge to develop
-#   rules:
-#     - if: '$CI_COMMIT_TAG =~ /^v[0-9]*\.[0-9]*\.[0-9]*.*/'
+#Publish Helm to Nexus:
+#  extends:
+#    - .helm-push-nexus-v1-k8s
+#    - .eks-dev-gitlab-runner
+#  stage: publish
+#
+#Publish Helm to Nexus Tag:
+#  extends:
+#    - .helm-push-nexus-v1-tags-k8s
+#    - .eks-dev-gitlab-runner
+#  stage: publish
 
 # plan
-# .helmfile_diff:
-#   image: ${HELMFILE_IMAGE}
-#   stage: plan
-#   script:
-#     - env
-#     - cd helmfile
-#     - helmfile -e $Environment -n $Namespace $SELECTOR diff
 
-# apply
-# .helmfile_apply:
-#   image: ${HELMFILE_IMAGE}
-#   stage: apply
-#   script:
-#     - env
-#     - cd helmfile
-#     - helmfile -e $Environment -n $Namespace $SELECTOR sync
-#   after_script:
-#     - ./helmfile/scripts/helm-version.sh $Namespace $xInsertKey $newRelicAccount
+#temp_sit_diff:
+#  extends:
+#    - .sit
+#    - .helmfile_diff
+#  when: manual
+#
+#temp_sit_apply:
+#  extends:
+#    - .sit
+#    - .helmfile_apply
+#  when: manual
+#  resource_group: sit_apply
+#  needs:
+#    - temp_sit_diff
 
-# integration-test
-# .trigger_tests:
-#   variables:
-#     UPSTREAM_BRANCH: $UPSTREAM_BRANCH
-#     UPSTREAM_PROJECT: $UPSTREAM_PROJECT
-#     UPSTREAM_COMMIT_AUTHOR: $UPSTREAM_COMMIT_AUTHOR
-#     UPSTREAM_USER_NAME: $UPSTREAM_USER_NAME
-#   stage: integration-test
-#   trigger:
-#     strategy: depend
+## unity release steps
+.helmfile_diff:
+  image: ${HELMFILE_IMAGE}
+  stage: plan
+  script:
+    - env
+    - cd helmfile
+    - helmfile -e $Environment -n $Namespace $SELECTOR diff
+    -
+.helmfile_apply:
+  image: ${HELMFILE_IMAGE}
+  stage: apply
+  script:
+    - env
+    - cd helmfile
+    - helmfile -e $Environment -n $Namespace $SELECTOR sync
+  after_script:
+    - ./helmfile/scripts/helm-version.sh $Namespace $xInsertKey $newRelicAccount
+
+# e2e
+.trigger_tests:
+  variables:
+    UPSTREAM_BRANCH: $UPSTREAM_BRANCH
+    UPSTREAM_PROJECT: $UPSTREAM_PROJECT
+    UPSTREAM_COMMIT_AUTHOR: $UPSTREAM_COMMIT_AUTHOR
+    UPSTREAM_USER_NAME: $UPSTREAM_USER_NAME
+  stage: integration-test
+  trigger:
+    strategy: depend
 
 # notify
 notify:
