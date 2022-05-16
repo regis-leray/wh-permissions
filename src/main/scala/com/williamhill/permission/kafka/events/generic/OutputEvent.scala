@@ -19,9 +19,7 @@ object OutputEvent {
 
   val schema: Schema[OutputEvent] = {
     @scala.annotation.nowarn("msg=never used")
-    implicit val metaSchema =
-      json.Schema.`object`.Free[JsonObject]().toDefinition("json-object")
-
+    implicit val metaSchema: Schema[JsonObject] = json.Schema.`object`.Free[JsonObject]().toDefinition("json-object")
     JsonSchema.schema[OutputEvent]
   }
 
@@ -53,7 +51,6 @@ object OutputBody {
       data = Data(status = facetContext.newStatus, permissionDenials = facetContext.denials, actions = facetContext.actions),
     ),
   )
-
 }
 
 case class NewValues(
@@ -61,24 +58,17 @@ case class NewValues(
     universe: String,
     data: Data,
 )
+
 object NewValues {
-
   implicit val codec: Codec[NewValues] = deriveCodec
-
 }
+
 case class Data(
     status: PermissionStatus,
     permissionDenials: List[PermissionDenial],
     actions: List[Action],
 )
+
 object Data {
   implicit val codec: Codec[Data] = deriveCodec
-}
-case class Details(
-    reason: String,
-)
-object Details {
-
-  implicit val codec: Codec[OutputEvent] = deriveCodec
-
 }

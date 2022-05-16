@@ -1,0 +1,52 @@
+{
+  "header": {
+    "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "100.77.100.167"
+    },
+    "sessionId": "5848afcd-8020-11ec-a1d6-5057d25f6201",
+    "universe": "wh-eu-de",
+    "when": "2022-02-28T14:22:41.433Z"
+  },
+  "body": {
+    "type": "Dormancy",
+    "newValues": {
+      "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+      "universe": "wh-eu-de",
+      "data": {
+        "status": {
+          "status": "Dormant"
+        },
+        "permissionDenials": [
+          {
+            "reason": "closed-dormant",
+            "description": "The account is closed as dormant",
+            "permissionName": "canLogin"
+          },
+          {
+            "reason": "closed-dormant",
+            "description": "The account is closed as dormant",
+            "permissionName": "canBet"
+          },
+          {
+            "reason": "closed-dormant",
+            "description": "The account is closed as dormant",
+            "permissionName": "canGame"
+          }
+        ],
+        "actions": [
+          {
+            "type": "notification",
+            "name": "sendDormancyNotification",
+            "reasonCode": "closed-dormant",
+            "denialDescription": "The account is closed as dormant",
+            "deniedPermissions": ["canLogin", "canBet", "canGame"]
+          }
+        ]
+      }
+    }
+  }
+}

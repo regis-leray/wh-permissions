@@ -42,7 +42,7 @@ object PermissionLogic {
       Action(ad.`type`, ad.name, ad.reasonCode, ad.denialDescription, ad.deniedPermissions, Some(deadline))
   }
 
-  val layer: URLayer[Has[ActionsConfig] & Has[Clock.Service], Has[PermissionLogic]] = (
+  val layer: URLayer[Has[ActionsConfig] & Clock, Has[PermissionLogic]] = (
     for {
       clock <- ZIO.service[Clock.Service]
       cfg   <- ZIO.service[ActionsConfig]

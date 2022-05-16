@@ -1,17 +1,11 @@
 package com.williamhill.permission
 
 import cats.implicits.catsSyntaxEitherId
-import zio.*
-import zio.kafka.consumer.{Consumer, Subscription}
-import zio.kafka.serde.Serde
-import zio.stream.*
 import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
 import com.williamhill.permission.application.{AppError, Env}
-import com.williamhill.permission.application.config.ActionsConfig
-import com.williamhill.permission.domain.FacetContext
-import com.williamhill.permission.kafka.{EventPublisher, HasKey}
-import com.williamhill.permission.kafka.Record.{FacetContextCommittable, InputRecord, OutputCommittable}
+import com.williamhill.permission.kafka.Record.{InputRecord, OutputCommittable}
 import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
+import com.williamhill.permission.kafka.{EventPublisher, HasKey}
 import com.williamhill.platform.kafka as Kafka
 import com.williamhill.platform.kafka.JsonSerialization
 import com.williamhill.platform.kafka.config.{CommaSeparatedList, TopicConfig}
@@ -19,7 +13,11 @@ import com.williamhill.platform.kafka.consumer.Committable
 import com.williamhill.platform.library.kafka.TracingConsumer
 import pureconfig.ConfigReader
 import pureconfig.generic.semiauto.deriveReader
+import zio.*
 import zio.clock.Clock
+import zio.kafka.consumer.{CommittableRecord, Consumer, Subscription}
+import zio.kafka.serde.Serde
+import zio.stream.*
 
 object Processor {
   // TODO: should we move all configs in application.config package?
@@ -69,24 +67,14 @@ object Processor {
       } yield maybeSupportedEvent
     }
 
-  val inputToFacetContext: ZTransducer[Has[FacetContextParser], AppError, InputRecord, FacetContextCommittable] = {
+  val inputToOutput: ZTransducer[Has[EventProcessor], AppError, CommittableRecord[String, InputEvent], OutputCommittable] =
     Committable
-      // todo: this is ignoring all parser errors, revisit
-      .filterMapCommittableRecordM((event: InputRecord) => ZIO.service[FacetContextParser].map(_.parse(event.value).toOption))
-      .mapError(AppError.fromThrowable)
-  }
-
-  val calculateActionsAndPermissions
-      : ZTransducer[Has[ActionsConfig] & Has[PermissionLogic] & Clock, AppError, FacetContextCommittable, FacetContextCommittable] =
-    Committable
-      .mapValueThrowable((facetContext: FacetContext) =>
-        ZIO.service[PermissionLogic].flatMap(service => service.enrichWithActions(facetContext)),
+      .filterMapCommittableRecordM((inputRecord: InputRecord) =>
+        for {
+          outputEvent <- EventProcessor.handleInput(inputRecord.value).either
+          _           <- outputEvent.fold(error => ZIO.debug(error), _ => ZIO.unit)
+        } yield outputEvent.toOption,
       )
-      .mapError(AppError.fromThrowable)
-
-  val facetContextToOutput: ZTransducer[ZEnv, AppError, FacetContextCommittable, OutputCommittable] =
-    Committable
-      .mapValueThrowable((facetContext: FacetContext) => ZIO.succeed(OutputEvent(facetContext)))
       .mapError(AppError.fromThrowable)
 
   val publishEvent: ZTransducer[Has[EventPublisher] & Has[Config], AppError, OutputCommittable, OutputCommittable] = {
@@ -113,7 +101,7 @@ object Processor {
       .mapError(AppError.fromThrowable)
 
   val pipeline: ZSink[Env.Processor, AppError, InputRecord, OutputCommittable, Unit] =
-    filterEventsFromSupportedUniverses >>> inputToFacetContext >>> calculateActionsAndPermissions >>> facetContextToOutput >>> publishEvent >>> commit
+    filterEventsFromSupportedUniverses >>> inputToOutput >>> publishEvent >>> commit
 
   val run: ZIO[Env.Main, AppError, Unit] =
     inputRecordEvents >>> pipeline

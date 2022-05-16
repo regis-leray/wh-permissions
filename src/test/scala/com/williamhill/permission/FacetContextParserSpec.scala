@@ -20,19 +20,19 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
       ("scenario", "path", "expected result"),
       (
         "Dormancy-dormant",
-        "input-events/dormancy/dormant.json",
+        "functional-tests/dormancy/in/dormant.json",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
             who,
-            "wh-us-ny",
+            "wh-eu-de",
             Instant.parse("2022-02-28T14:22:41.433Z"),
             Some("5848afcd-8020-11ec-a1d6-5057d25f6201"),
             None,
           ),
           Nil,
           playerId("U00004334"),
-          universe("wh-us-ny"),
+          universe("wh-eu-de"),
           "Dormancy",
           PermissionStatus("Dormant"),
           Some(PermissionStatus("Active")),
@@ -40,7 +40,7 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
       ),
       (
         "Prohibition-prohibited",
-        "input-events/prohibition/prohibited.json",
+        "functional-tests/prohibition/in/prohibited.json",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -60,7 +60,7 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
       ),
       (
         "Exclusion-indefinite",
-        "input-events/excluded/indefinite.json",
+        "functional-tests/excluded/in/indefinite.json",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -80,7 +80,7 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
       ),
       (
         "Exclusion-permanent",
-        "input-events/excluded/permanent.json",
+        "functional-tests/excluded/in/permanent.json",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -100,7 +100,7 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
       ),
       (
         "Exclusion-temporary",
-        "input-events/excluded/temporary.json",
+        "functional-tests/excluded/in/temporary.json",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -120,7 +120,7 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
       ),
       (
         "Exclusion-timeout",
-        "input-events/excluded/timeout.json",
+        "functional-tests/excluded/in/timeout.json",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",

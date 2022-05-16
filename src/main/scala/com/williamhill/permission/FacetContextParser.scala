@@ -6,7 +6,7 @@ import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
 import com.williamhill.permission.domain.{FacetContext, PermissionStatus, PlayerId, Universe}
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import io.circe.{ACursor, Decoder, DecodingFailure}
-import zio.{Has, RLayer, ZIO}
+import zio.{Has, URLayer, ZIO}
 
 import java.time.Instant
 
@@ -68,7 +68,7 @@ class FacetContextParser(config: MappingsConfig) {
 
 object FacetContextParser {
 
-  val layer: RLayer[Has[MappingsConfig], Has[FacetContextParser]] =
+  val layer: URLayer[Has[MappingsConfig], Has[FacetContextParser]] =
     ZIO.service[MappingsConfig].map(new FacetContextParser(_)).toLayer
 
 }

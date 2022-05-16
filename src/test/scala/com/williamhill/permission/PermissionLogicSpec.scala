@@ -1,15 +1,16 @@
 package com.williamhill.permission
 
-import com.williamhill.permission.domain.{Action, FacetContext, PermissionStatus}
-import com.williamhill.permission.domain.Fixtures.{header, playerId, universe}
-import zio.{Has, RLayer, ZEnv, ZIO}
-import zio.test.{DefaultRunnableSpec, ZSpec, assert}
 import com.williamhill.permission.application.config.ActionsConfig
+import com.williamhill.permission.domain.Fixtures.{header, playerId, universe}
+import com.williamhill.permission.domain.{Action, FacetContext, PermissionStatus}
 import zio.test.Assertion.*
+import zio.test.environment.TestEnvironment
+import zio.test.{DefaultRunnableSpec, ZSpec, assert}
+import zio.{Has, RLayer, ZEnv, ZIO}
 
 object PermissionLogicSpec extends DefaultRunnableSpec {
 
-  override def spec: ZSpec[_root_.zio.test.environment.TestEnvironment, Any] = {
+  override def spec: ZSpec[TestEnvironment, Any] = {
     suite("Calculation of permissions")(
       testM("enrich FacetContext with actions from actions cfg") {
         val facetContext = FacetContext(

@@ -8,21 +8,21 @@
       "ip": "100.77.100.167"
     },
     "sessionId": "5848afcd-8020-11ec-a1d6-5057d25f6201",
-    "universe": "wh-us-ny",
+    "universe": "wh-eu-de",
     "when": "2022-02-28T14:22:41.433Z"
   },
   "body": {
     "type": "Dormancy",
     "newValues": {
       "id": "U00004334",
-      "universe": "wh-us-ny",
+      "universe": "wh-eu-de",
       "data": {
         "status": "Dormant"
       }
     },
     "previousValues": {
       "id": "U00004334",
-      "universe": "wh-us-ny",
+      "universe": "wh-eu-de",
       "data": {
         "status": "Active"
       }
