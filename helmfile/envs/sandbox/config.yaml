@@ -1,8 +1,8 @@
-permission-service:
+permissions-ep:
   values:
     base:
       services:
-        permission-service:
+        permissions-ep:
           enabled: true
           envVars:
             KAFKA_SERVERS: "kafka-service:9092"

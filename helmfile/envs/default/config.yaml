@@ -19,7 +19,7 @@ newrelic:
   licenceKey: ref+awsssm:///common/newrelic_license_key?region=eu-west-1
   licenceKeyBase64: ref+awsssm:///common/newrelic_license_key_base64?region=eu-west-1
   insightsKeyBase64: ref+awsssm:///common/newrelic_insights_key_base64?region=eu-west-1
-permission-service:
+permissions-ep:
   installed: true
   values:
     base:
@@ -27,7 +27,7 @@ permission-service:
         sidecar-injector-webhook.williamhill.opentelemetry/inject: true
       registry: docker-registry.prod.williamhill.plc/platform
       services:
-        permission-service:
+        permissions-ep:
           envVars:
             JAVA_TOOL_OPTIONS: "-Dhttps.proxyHost=webproxy -Dhttps.proxyPort=3128 -Dhttps.nonProxyHosts=.plc|.local|127.0.0.1|10.100.0.1/16|.svc -Dhttp.nonProxyHosts=.plc|.local|127.0.0.1|10.100.0.1/16|.svc"
           enabled: true

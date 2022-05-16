@@ -35,15 +35,15 @@ environments:
 {{ readFile "./helmfile-templates.yaml" }}
 
 releases:
-  - name: permission-service
-    installed: {{ .Values | getOrNil "permission-service.installed" | default "false" }}
+  - name: permissions-ep
+    installed: {{ .Values | getOrNil "permissions-ep.installed" | default "false" }}
     <<: *generic
-    version: '{{ env "RELEASE_VERSION" | default (.Values | getOrNil "permission-service.version") | default "0.0.0-develop" | replace "/" "-" | lower }}'
-    chart: 'nexus/permission-service'
+    version: '{{ env "RELEASE_VERSION" | default (.Values | getOrNil "permissions-ep.version") | default "0.0.0-develop" | replace "/" "-" | lower }}'
+    chart: 'nexus/permissions-ep'
     labels:
       project: unity
       slack_url_var: UNITY_TEAM_A_SLACK_HOOK_URL
-    {{- with (.Values | getOrNil "permission-service" | getOrNil "values") }}
+    {{- with (.Values | getOrNil "permissions-ep" | getOrNil "values") }}
     values:
       - {{- toYaml . | nindent 8 }}
     {{- end}}

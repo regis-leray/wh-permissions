@@ -58,13 +58,13 @@ base:
 
   livenessProbe:
     httpGet:
-      path: /permission-service/meta/health
+      path: /permissions-ep/meta/health
       port: 8080
     initialDelaySeconds: 3
     periodSeconds: 3
   readinessProbe:
     httpGet:
-      path: /permission-service/meta/health/readiness
+      path: /permissions-ep/meta/health/readiness
       port: 8080
     initialDelaySeconds: 3
     periodSeconds: 3

@@ -120,15 +120,15 @@ lazy val assemblySettings = List(
   publish / skip  := true,
 )
 
-lazy val permissionServiceMain = "com.williamhill.permission.Main"
+lazy val permissionsEpMain = "com.williamhill.permission.Main"
 
-lazy val `permission-service` = project
+lazy val `permissions-ep` = project
   .in(file("."))
   .settings(commonSettings: _*)
   .settings(testSettings: _*)
   .settings(assemblySettings: _*)
-  .settings(mainClass in Compile := Some(permissionServiceMain))
-  .settings(dockerSettings("permission-service", permissionServiceMain): _*)
+  .settings(mainClass in Compile := Some(permissionsEpMain))
+  .settings(dockerSettings("permissions-ep", permissionsEpMain): _*)
   .enablePlugins(DockerPlugin)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges

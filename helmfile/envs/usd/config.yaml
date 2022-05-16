@@ -9,9 +9,9 @@ newrelic:
   licenceKey: "" # SSM record doesn't exist, setting to empty string to avoid failures of pipeline
   licenceKeyBase64: "" # SSM record doesn't exist, setting to empty string to avoid failures of pipeline
   insightsKeyBase64: "" # SSM record doesn't exist, setting to empty string to avoid failures of pipeline
-permission-service:
+permissions-ep:
   values:
     base:
       services:
-        permission-service:
+        permissions-ep:
           enabled: true

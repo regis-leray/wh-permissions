@@ -37,7 +37,7 @@ variables:
   PushImageRegistry: nexus-uploads.dtc.prod.williamhill.plc
   PullImageRegistry: nexus-aws.dtc.prod.williamhill.plc
   Docker_Namespace: platform
-  IMAGE_NAME: $PushImageRegistry/$Docker_Namespace/permission-service:$CI_COMMIT_SHORT_SHA
+  IMAGE_NAME: $PushImageRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
   Source_Images_List: |
       $IMAGE_NAME
   HELMFILE_IMAGE: nexus-aws.dtc.prod.williamhill.plc/unity/helmfile:0.140.0-3.7.0
@@ -79,12 +79,12 @@ dependency_scanning:
   extends:
     - .eks-dev-gitlab-runner
 
-scan-permission-service-container:
+scan-permissions-ep-container:
   extends:
     - container_scanning
     - .eks-dev-gitlab-runner
   variables:
-    DOCKER_IMAGE: $PullImageRegistry/$Docker_Namespace/permission-service:$CI_COMMIT_SHORT_SHA
+    DOCKER_IMAGE: $PullImageRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
     CONTAINER_SCANNING_DISABLED: "false"
 
 
