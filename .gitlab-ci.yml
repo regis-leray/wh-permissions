@@ -88,13 +88,13 @@ scan-permissions-ep-container:
     CONTAINER_SCANNING_DISABLED: "false"
 
 
-# lint check
+# lint checks
 Run scalafmt and scalafix checks:
   extends: .execute-sbt-task-v3
   stage: test
   variables:
     Sbt_Java_Version: 11
-    Sbt_Tasks: "all-checks"
+    Sbt_Tasks: "lint-checks"
   except: [tags, triggers]
 
 # test

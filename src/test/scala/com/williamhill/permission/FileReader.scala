@@ -1,9 +1,9 @@
 package com.williamhill.permission
 
+import scala.io.Source
+
 import io.circe.Decoder
 import io.circe.parser.*
-
-import scala.io.Source
 
 object FileReader {
 

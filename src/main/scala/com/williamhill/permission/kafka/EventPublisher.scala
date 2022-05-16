@@ -1,15 +1,13 @@
 package com.williamhill.permission.kafka
 
-import zio.*
-import zio.kafka.producer.Producer
-import zio.kafka.serde.Serde
-
+import com.whbettingengine.kafka.serialization.json.schema.HasSchema
 import com.williamhill.permission.Processor
 import com.williamhill.platform.kafka
 import io.circe.Encoder
 import org.apache.kafka.clients.producer.ProducerRecord
-
-import com.whbettingengine.kafka.serialization.json.schema.HasSchema
+import zio.*
+import zio.kafka.producer.Producer
+import zio.kafka.serde.Serde
 
 trait EventPublisher {
   def publish[T: Encoder: HasSchema: HasKey](topic: String, value: T): Task[Unit]

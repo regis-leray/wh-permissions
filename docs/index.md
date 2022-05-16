@@ -7,6 +7,14 @@ This application consumes different events for the purpose of computing permissi
 
 Run unit tests using `sbt test`; integration tests can be run using `sbt it:test`.
 
+#  Lint
+
+FMT and Scalafix are used (see `.sbtrc`)
+
+Run `sbt lint-checks`  to check if the code is compliant with the linter rules.
+
+Run sbt `sbt lint` to apply linting.
+
 # CI / CD
 
 TBD

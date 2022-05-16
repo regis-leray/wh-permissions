@@ -6,11 +6,11 @@ import com.williamhill.permission.application.{AppError, Env}
 import com.williamhill.permission.kafka.Record.{InputRecord, OutputCommittable}
 import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
 import com.williamhill.permission.kafka.{EventPublisher, HasKey}
-import com.williamhill.platform.kafka as Kafka
 import com.williamhill.platform.kafka.JsonSerialization
 import com.williamhill.platform.kafka.config.{CommaSeparatedList, TopicConfig}
 import com.williamhill.platform.kafka.consumer.Committable
 import com.williamhill.platform.library.kafka.TracingConsumer
+import com.williamhill.platform.kafka as Kafka
 import pureconfig.ConfigReader
 import pureconfig.generic.semiauto.deriveReader
 import zio.*

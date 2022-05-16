@@ -1,11 +1,11 @@
 package com.williamhill.permission
 
+import java.time.Instant
+
 import com.williamhill.permission.application.config.{ActionDefinition, ActionsConfig}
 import com.williamhill.permission.domain.{Action, FacetContext}
 import zio.clock.Clock
 import zio.{Has, Task, URLayer, ZIO}
-
-import java.time.Instant
 
 trait PermissionLogic {
   def enrichWithActions(facetContext: FacetContext): Task[FacetContext]

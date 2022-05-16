@@ -1,5 +1,7 @@
 package com.williamhill.permission
 
+import java.time.Instant
+
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
@@ -7,8 +9,6 @@ import com.williamhill.permission.domain.{FacetContext, PermissionStatus, Player
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import io.circe.{ACursor, Decoder, DecodingFailure}
 import zio.{Has, URLayer, ZIO}
-
-import java.time.Instant
 
 class FacetContextParser(config: MappingsConfig) {
 

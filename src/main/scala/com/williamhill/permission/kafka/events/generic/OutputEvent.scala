@@ -1,15 +1,12 @@
 package com.williamhill.permission.kafka.events.generic
 
 import com.github.andyglow.jsonschema.AsCirce.*
-import com.williamhill.permission.domain.{Action, FacetContext, PermissionDenial}
+import com.whbettingengine.kafka.serialization.json.schema.HasSchema
+import com.williamhill.permission.domain.{Action, FacetContext, PermissionDenial, PermissionStatus}
 import io.circe.*
 import io.circe.generic.semiauto.deriveCodec
-
 import json.schema.Version.*
-import json.{Schema, Json as JsonSchema}
-
-import com.whbettingengine.kafka.serialization.json.schema.HasSchema
-import com.williamhill.permission.domain.PermissionStatus
+import json.{Json => JsonSchema, Schema}
 
 final case class OutputEvent(header: Header, body: OutputBody)
 

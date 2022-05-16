@@ -2,14 +2,14 @@ package com.williamhill.permission.application.config
 
 import com.williamhill.permission.Processor
 import com.williamhill.permission.application.HealthcheckApi
-import pureconfig.{ConfigReader, ConfigSource}
+import com.williamhill.platform.kafka.consumer.settings as cSettings
+import com.williamhill.platform.kafka.producer.settings as pSettings
 import pureconfig.generic.semiauto.deriveReader
-import zio.{Has, RLayer, ZIO}
+import pureconfig.{ConfigReader, ConfigSource}
 import zio.blocking.{Blocking, blocking}
 import zio.kafka.consumer.ConsumerSettings
 import zio.kafka.producer.ProducerSettings
-import com.williamhill.platform.kafka.consumer.settings as cSettings
-import com.williamhill.platform.kafka.producer.settings as pSettings
+import zio.{Has, RLayer, ZIO}
 
 final case class AppConfig(
     healthcheck: HealthcheckApi.Config,

@@ -1,8 +1,8 @@
 package com.williamhill.permission.domain
 
-import com.williamhill.permission.kafka.events.generic.{Header, Who}
-
 import java.time.Instant
+
+import com.williamhill.permission.kafka.events.generic.{Header, Who}
 
 object Fixtures {
 

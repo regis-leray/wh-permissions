@@ -1,9 +1,9 @@
 package com.williamhill.permission.domain
 
+import java.time.Instant
+
 import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
-
-import java.time.Instant
 
 final case class Action(
     `type`: String,

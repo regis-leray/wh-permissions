@@ -1,6 +1,7 @@
 package com.williamhill.permission.domain
 
 import scala.util.matching.Regex
+
 import com.williamhill.permission.application.AppError
 import io.circe.Decoder
 

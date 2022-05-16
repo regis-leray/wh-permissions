@@ -1,11 +1,5 @@
 package com.williamhill.permission.application
 
-import zio.*
-import zio.blocking.*
-import zio.clock.*
-import zio.duration.Duration
-import zio.interop.catz.*
-
 import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
 import com.williamhill.platform.healthcheck.OkHealthCheck
 import com.williamhill.platform.healthcheck.http4s.server.HealthCheckRoutes
@@ -15,9 +9,13 @@ import org.http4s.*
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits.*
 import org.http4s.server.{Router, Server}
-
 import pureconfig.ConfigReader
 import pureconfig.generic.semiauto.deriveReader
+import zio.*
+import zio.blocking.*
+import zio.clock.*
+import zio.duration.Duration
+import zio.interop.catz.*
 
 object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]] {
   final case class Config(

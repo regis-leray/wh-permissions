@@ -1,5 +1,10 @@
 package com.williamhill.permission
 
+import java.io.File
+
+import scala.io.Source
+import scala.util.Using
+
 import com.typesafe.scalalogging.LazyLogging
 import com.williamhill.permission.application.config.{ActionsConfig, MappingsConfig}
 import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
@@ -11,10 +16,6 @@ import zio.test.Assertion.*
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, assert}
 import zio.{Has, URLayer, ZIO, ZLayer}
-
-import java.io.File
-import scala.io.Source
-import scala.util.Using
 
 object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
 

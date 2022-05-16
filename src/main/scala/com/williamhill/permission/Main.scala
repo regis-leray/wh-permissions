@@ -1,7 +1,7 @@
 package com.williamhill.permission
 
-import com.williamhill.permission.application.{Env, Kamon}
 import com.github.mlangc.slf4zio.api.logging as Log
+import com.williamhill.permission.application.{Env, Kamon}
 import zio.{App, ExitCode, URIO, ZEnv}
 
 object Main extends App {

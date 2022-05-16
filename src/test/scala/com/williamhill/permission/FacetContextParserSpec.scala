@@ -1,5 +1,7 @@
 package com.williamhill.permission
 
+import java.time.Instant
+
 import com.williamhill.permission.application.config.MappingsConfig
 import com.williamhill.permission.domain.Fixtures.*
 import com.williamhill.permission.domain.{FacetContext, PermissionStatus}
@@ -8,8 +10,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
 import pureconfig.ConfigSource
-
-import java.time.Instant
 
 class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenPropertyChecks {
 

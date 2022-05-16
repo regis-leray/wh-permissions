@@ -1,7 +1,6 @@
 package com.williamhill.permission.kafka.events.generic
 
 import cats.Eq
-
 import io.circe.*
 import io.circe.generic.semiauto.deriveCodec
 
