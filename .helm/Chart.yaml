@@ -7,7 +7,7 @@ home: https://conf.willhillatlas.com/display/UNITY/UNITY+Home
 sources:
   - https://gitlab.com/williamhillplc/platform-engineering/unity/services/permission/permissions-ep
 keywords:
-  - self-exclusion
+  - permission
 dependencies:
   - name: base
     version: 0.0.33

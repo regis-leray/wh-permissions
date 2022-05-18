@@ -4,7 +4,7 @@ base:
   registry: docker-registry.prod.williamhill.plc/platform
 
   services:
-    permission-service:
+    permissions-ep:
       enabled: true
       isLocal: false
       replicaCount: 1

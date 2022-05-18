@@ -29,6 +29,7 @@ permissions-ep:
       services:
         permissions-ep:
           envVars:
+            HEALTHCHECK_API_HOST: "0.0.0.0"
             JAVA_TOOL_OPTIONS: "-Dhttps.proxyHost=webproxy -Dhttps.proxyPort=3128 -Dhttps.nonProxyHosts=.plc|.local|127.0.0.1|10.100.0.1/16|.svc -Dhttp.nonProxyHosts=.plc|.local|127.0.0.1|10.100.0.1/16|.svc"
           enabled: true
           resources:
