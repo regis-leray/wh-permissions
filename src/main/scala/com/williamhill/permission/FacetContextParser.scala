@@ -1,11 +1,9 @@
 package com.williamhill.permission
 
-import java.time.Instant
-
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
-import com.williamhill.permission.domain.{FacetContext, PermissionStatus, PlayerId, Universe}
+import com.williamhill.permission.domain.{FacetContext, PermissionStatus, Universe}
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import com.williamhill.permission.utils.JsonSyntax
 import io.circe.ACursor
@@ -24,7 +22,7 @@ class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
       previousValues = body.downField("previousValues")
 
       universe <- Universe(input.header.universe)
-      playerId <- newValues.downPath(mapping.playerId).as[PlayerId].left.map(AppError.fromDecodingFailure)
+      playerId <- newValues.evaluate(mapping.playerId.value).left.map(AppError.fromDecodingFailure)
 
       newStatuses <- parsePermissionStatuses(mapping)(newValues)
       oldStatuses <- previousValues.focus.toList.map(_.hcursor).flatTraverse(parsePermissionStatuses(mapping))
@@ -42,9 +40,9 @@ class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
 
   private def parsePermissionStatuses(m: Mapping)(cursor: ACursor): Either[AppError, List[PermissionStatus]] = {
     (for {
-      statuses <- cursor.evaluate(m.status)
-      start    <- m.actionsStart.flatTraverse(cursor.findFirst[Instant])
-      end      <- m.actionsEnd.flatTraverse(cursor.findFirst[Instant])
+      statuses <- cursor.evaluateList(m.status)
+      start    <- m.actionsStart.flatTraverse(cursor.evaluateFirst(_))
+      end      <- m.actionsEnd.flatTraverse(cursor.evaluateFirst(_))
     } yield statuses.map(PermissionStatus(_, start, end))).left.map(AppError.fromDecodingFailure)
   }
 

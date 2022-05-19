@@ -4,6 +4,8 @@ import scala.util.matching.Regex
 
 import com.williamhill.permission.application.AppError
 import io.circe.Decoder
+import pureconfig.ConfigReader
+import pureconfig.error.CannotConvert
 
 final case class PlayerId private (value: String) {
   override def toString: String = value
@@ -23,4 +25,8 @@ object PlayerId {
     )
 
   implicit val decoder: Decoder[PlayerId] = Decoder.decodeString.emap(s => apply(s).left.map(_.message))
+
+  implicit val reader: ConfigReader[PlayerId] =
+    ConfigReader.stringConfigReader
+      .emap(s => apply(s).left.map(ex => CannotConvert(s, "PlayerId", ex.message)))
 }

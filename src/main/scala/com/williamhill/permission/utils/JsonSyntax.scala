@@ -1,7 +1,7 @@
 package com.williamhill.permission.utils
 
 import cats.syntax.traverse.*
-import com.williamhill.permission.application.config.{MappingExpression, MappingValue}
+import com.williamhill.permission.application.config.dsl.{MappingExpression, MappingValue}
 import io.circe.{ACursor, Decoder, DecodingFailure}
 
 trait JsonSyntax {
@@ -10,40 +10,52 @@ trait JsonSyntax {
     def downPath(path: MappingValue.Path): ACursor =
       path.path.split('.').toList.foldLeft(cursor)(_ downField _)
 
-    def findFirst[T](options: List[MappingValue.Path])(implicit decoder: Decoder[Option[T]]): Either[DecodingFailure, Option[T]] =
-      options match {
-        case Nil => Right(None)
-        case head :: tail =>
-          cursor.downPath(head).as[Option[T]].flatMap {
-            case None        => findFirst(tail)
-            case Some(found) => Right(Some(found))
-          }
-      }
-
-    def evaluate(mapping: MappingValue): Either[DecodingFailure, String] = mapping match {
-      case path: MappingValue.Path       => downPath(path).as[String]
+    def evaluate[T: Decoder](mapping: MappingValue[T]): Either[DecodingFailure, T] = mapping match {
+      case path: MappingValue.Path       => downPath(path).as[T]
       case MappingValue.Hardcoded(value) => Right(value)
     }
 
-    def evaluate(mapping: MappingExpression): Either[DecodingFailure, List[String]] = {
+    def evaluateList[T: Decoder](mapping: MappingExpression[T]): Either[DecodingFailure, List[T]] = {
       mapping match {
-        case MappingExpression.SimpleExpression(value) =>
-          evaluate(value).map(List(_))
+        case single: MappingExpression.Single[T] =>
+          evaluateOption(single).map(_.toList)
 
-        case MappingExpression.ConditionalExpression.WhenEquals(value, toCompare) =>
+        case MappingExpression.Multiple(expressions) =>
+          expressions.flatTraverse(expression => cursor.evaluateList(expression))
+      }
+    }
+
+    def evaluateOption[T: Decoder](mapping: MappingExpression.Single[T]): Either[DecodingFailure, Option[T]] = {
+      mapping match {
+        case MappingExpression.Simple(value) =>
+          evaluate(value).map(Some(_))
+
+        case MappingExpression.Conditional.WhenEquals(value, toCompare) =>
           for {
             cmpValues <- toCompare.traverse(cursor.evaluate(_))
-            result    <- if (cmpValues.distinct.size == 1) cursor.evaluate(value).map(List(_)) else Right(Nil)
+            result    <- if (cmpValues.distinct.size == 1) cursor.evaluate(value).map(Some(_)) else Right(None)
           } yield result
 
-        case MappingExpression.ConditionalExpression.WhenDefined(value, x) =>
+        case MappingExpression.Conditional.WhenDefined(value, x) =>
           cursor.downPath(x).focus match {
-            case Some(_) => cursor.evaluate(value).map(List(_))
-            case None    => Right(Nil)
+            case Some(_) => cursor.evaluate(value).map(Some(_))
+            case None    => Right(None)
+          }
+      }
+    }
+
+    def evaluateFirst[T: Decoder](mapping: MappingExpression[T]): Either[DecodingFailure, Option[T]] = {
+      mapping match {
+        case single: MappingExpression.Single[T] =>
+          evaluateOption(single)
+
+        case MappingExpression.Multiple(head :: tail) =>
+          evaluateOption(head) match {
+            case Right(None) => evaluateFirst(MappingExpression.Multiple(tail))
+            case result      => result
           }
 
-        case MappingExpression.ExpressionList(expressions) =>
-          expressions.flatTraverse(expression => cursor.evaluate(expression))
+        case MappingExpression.Multiple(Nil) => Right(None)
       }
     }
   }
