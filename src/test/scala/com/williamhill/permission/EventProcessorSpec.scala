@@ -66,7 +66,8 @@ object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
 
   private def fetchJson[T: Decoder](file: File): Either[String, T] =
     for {
-      content <- Using(Source.fromFile(file))(_.getLines().mkString).toEither.left.map(_ => s"Can't read ${file.getName}")
+      content <- Using(Source.fromFile(file))(_.getLines().mkString).toEither.left
+        .map(ex => s"Can't read ${file.getPath}: ${ex.getMessage}")
       json    <- parse(content).left.map(ex => s"${file.getName} doesn't contain valid JSON: ${ex.message}")
       decoded <- json.as[T].left.map(ex => s"Cannot parse content for ${file.getName}: ${ex.message}")
     } yield decoded
@@ -91,6 +92,6 @@ object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
   }.toList
 
   override val spec: ZSpec[TestEnvironment, Any] =
-    suite("Functional spec")(tests*)
+    suite("EventProcessor")(tests*)
 
 }

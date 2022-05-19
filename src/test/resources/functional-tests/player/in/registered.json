@@ -1,0 +1,63 @@
+{
+  "header": {
+    "id": "e74f3c1f-b669-43b7-81be-6be0e31cedf8",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "127.0.0.1"
+    },
+    "universe": "wh-de-eu",
+    "when": "2021-01-06T11:13:12.021575Z"
+  },
+  "body": {
+    "type": "registered",
+    "newValues": {
+      "account": {
+        "incorrectPasswordAttempts": 0,
+        "email": "andrei.barosanu3@painters.com",
+        "username": "dr",
+        "registrationDatetime": "2021-01-06T11:13:11.993884Z",
+        "userAgent": "Mozilla/5.0",
+        "oddsFormat": "fractional",
+        "registrationIp": "127.0.0.1",
+        "selectedLanguage": "en-GB",
+        "dateOfBirth": "1886-12-08",
+        "smsCommunication": true,
+        "lastName": "Big",
+        "firstName": "Matei",
+        "id": "b7c7af4f-7571-40af-92a2-9c12b218ad73",
+        "status": "created",
+        "registrationChannel": "desktop",
+        "emailCommunication": true,
+        "currency": "MXN",
+        "address": {
+          "city": "Ciudad de Mexico, La Noria, Xochimilco",
+          "postCode": "CDMX",
+          "country": "MX",
+          "street": "Av Mexico",
+          "houseNumber": "5843"
+        },
+        "phone": {
+          "mobileNumber": "111-DEAD",
+          "countryCallCode": "+52"
+        },
+        "gender": "male",
+        "blockState": {
+          "reason": "Player Safety - Inv / Docs needed"
+        },
+        "closeState": {
+          "reason": "Player Safety - Permanent"
+        },
+        "permissions": {
+          "granted": [
+            "canLoginWithPassword",
+            "canResetPassword"
+          ],
+          "failedConditions": []
+        },
+        "oscAccountId": "28573179"
+      }
+    }
+  }
+}

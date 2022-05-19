@@ -8,8 +8,8 @@ final case class FacetContext(
     playerId: PlayerId,
     universe: Universe,
     name: String,
-    newStatus: PermissionStatus,             // extracted from newValues
-    previousStatus: Option[PermissionStatus],// extracted from previousValues
+    newStatuses: List[PermissionStatus],
+    previousStatuses: List[PermissionStatus],
 ) {
 
   val denials: List[PermissionDenial] = actions.flatMap { action =>

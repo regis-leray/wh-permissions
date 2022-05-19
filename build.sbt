@@ -71,6 +71,10 @@ lazy val commonSettings = Seq(
     http4s.dsl,
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
   ),
+  dependencyOverrides ++= Seq(
+    "org.apache.logging.log4j" % "log4j-api"  % "2.17.2",
+    "org.apache.logging.log4j" % "log4j-core" % "2.17.2",
+  ),
 )
 
 ThisBuild / credentials ++= WHNexus.optionalCredentialsFromEnv()

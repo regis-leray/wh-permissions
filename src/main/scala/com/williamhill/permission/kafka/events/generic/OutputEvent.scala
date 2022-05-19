@@ -2,7 +2,7 @@ package com.williamhill.permission.kafka.events.generic
 
 import com.github.andyglow.jsonschema.AsCirce.*
 import com.whbettingengine.kafka.serialization.json.schema.HasSchema
-import com.williamhill.permission.domain.{Action, FacetContext, PermissionDenial, PermissionStatus}
+import com.williamhill.permission.domain.{Action, FacetContext, PermissionDenial}
 import io.circe.*
 import io.circe.generic.semiauto.deriveCodec
 import json.schema.Version.*
@@ -43,9 +43,9 @@ object OutputBody {
   ): OutputBody = OutputBody(
     `type` = facetContext.name,
     newValues = NewValues(
-      id = facetContext.header.id,
-      universe = facetContext.universe.toString.toLowerCase,
-      data = Data(status = facetContext.newStatus, permissionDenials = facetContext.denials, actions = facetContext.actions),
+      id = facetContext.playerId.value,
+      universe = facetContext.universe.value.toLowerCase,
+      data = Data(permissionDenials = facetContext.denials, actions = facetContext.actions),
     ),
   )
 }
@@ -61,7 +61,6 @@ object NewValues {
 }
 
 case class Data(
-    status: PermissionStatus,
     permissionDenials: List[PermissionDenial],
     actions: List[Action],
 )

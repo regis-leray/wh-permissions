@@ -14,12 +14,9 @@
   "body": {
     "type": "Dormancy",
     "newValues": {
-      "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+      "id": "U00004334",
       "universe": "wh-eu-de",
       "data": {
-        "status": {
-          "status": "Dormant"
-        },
         "permissionDenials": [
           {
             "reason": "closed-dormant",

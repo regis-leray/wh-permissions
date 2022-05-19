@@ -7,10 +7,11 @@ import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
 import com.williamhill.permission.domain.{FacetContext, PermissionStatus, PlayerId, Universe}
 import com.williamhill.permission.kafka.events.generic.InputEvent
-import io.circe.{ACursor, Decoder, DecodingFailure}
+import com.williamhill.permission.utils.JsonSyntax
+import io.circe.ACursor
 import zio.{Has, URLayer, ZIO}
 
-class FacetContextParser(config: MappingsConfig) {
+class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
 
   def parse(input: InputEvent): Either[AppError, FacetContext] = {
     val body = input.body.hcursor
@@ -25,8 +26,8 @@ class FacetContextParser(config: MappingsConfig) {
       universe <- Universe(input.header.universe)
       playerId <- newValues.downPath(mapping.playerId).as[PlayerId].left.map(AppError.fromDecodingFailure)
 
-      newStatus <- parsePermissionStatus(mapping)(newValues)
-      oldStatus <- previousValues.focus.map(_.hcursor).traverse(parsePermissionStatus(mapping))
+      newStatuses <- parsePermissionStatuses(mapping)(newValues)
+      oldStatuses <- previousValues.focus.toList.map(_.hcursor).flatTraverse(parsePermissionStatuses(mapping))
 
     } yield FacetContext(
       header = input.header,
@@ -34,34 +35,17 @@ class FacetContextParser(config: MappingsConfig) {
       playerId = playerId,
       universe = universe,
       name = eventType,
-      newStatus = newStatus,
-      previousStatus = oldStatus,
+      newStatuses = newStatuses,
+      previousStatuses = oldStatuses,
     )
   }
 
-  implicit private class CursorExt(cursor: ACursor) {
-    def downPath(path: String): ACursor =
-      downPath(path.split('.').toList)
-
-    def downPath(path: List[String]): ACursor =
-      path.foldLeft(cursor)(_ downField _)
-
-    def findFirst[T](options: List[String])(implicit decoder: Decoder[Option[T]]): Either[DecodingFailure, Option[T]] = options match {
-      case Nil => Right(None)
-      case head :: tail =>
-        cursor.downPath(head).as[Option[T]].flatMap {
-          case None        => findFirst(tail)
-          case Some(found) => Right(Some(found))
-        }
-    }
-  }
-
-  private def parsePermissionStatus(m: Mapping)(cursor: ACursor): Either[AppError, PermissionStatus] = {
+  private def parsePermissionStatuses(m: Mapping)(cursor: ACursor): Either[AppError, List[PermissionStatus]] = {
     (for {
-      status <- cursor.downPath(m.status).as[String]
-      start  <- m.actionsStart.flatTraverse(cursor.findFirst[Instant])
-      end    <- m.actionsEnd.flatTraverse(cursor.findFirst[Instant])
-    } yield PermissionStatus(status, start, end)).left.map(AppError.fromDecodingFailure)
+      statuses <- cursor.evaluate(m.status)
+      start    <- m.actionsStart.flatTraverse(cursor.findFirst[Instant])
+      end      <- m.actionsEnd.flatTraverse(cursor.findFirst[Instant])
+    } yield statuses.map(PermissionStatus(_, start, end))).left.map(AppError.fromDecodingFailure)
   }
 
 }

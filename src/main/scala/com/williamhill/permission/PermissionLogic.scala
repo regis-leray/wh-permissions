@@ -16,19 +16,21 @@ class PermissionLogicLive(actionsConfig: ActionsConfig, clock: Clock.Service) ex
 
   override def enrichWithActions(fc: FacetContext): Task[FacetContext] =
     clock.instant.map { now =>
-      val applicableActions = actionsConfig.bindings
-        .find(x => x.universe == fc.universe.value && x.eventType == fc.name && x.status == fc.newStatus.status)
-        .toList
-        .flatMap(_.actions)
-        .flatMap(actionName => actionsConfig.definitions.filter(_.name == actionName))
-
-      applicableActions.foldLeft(fc) { (context, actionDefinition) =>
-        context.newStatus.endDate match {
-          case Some(endDate) if endDate.isBefore(now) =>
-            context.addAction(actionDefinition.toDomainWithDeadline(endDate))
-          case _ => context.addAction(actionDefinition.toDomain)
+      actionsConfig.bindings
+        .filter(b => b.universe == fc.universe.value && b.eventType == fc.name)
+        .flatMap(b =>
+          fc.newStatuses
+            .find(_.status == b.status)
+            .map(_ -> actionsConfig.definitions.filter(a => b.actions.contains(a.name))),
+        )
+        .foldLeft(fc) { case (context, (status, actions)) =>
+          status.endDate match {
+            case Some(endDate) if endDate.isBefore(now) =>
+              actions.foldLeft(context)(_ addAction _.toDomainWithDeadline(endDate))
+            case _ =>
+              actions.foldLeft(context)(_ addAction _.toDomain)
+          }
         }
-      }
     }
 
 }
