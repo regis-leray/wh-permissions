@@ -41,8 +41,8 @@ class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
   private def parsePermissionStatuses(m: Mapping)(cursor: ACursor): Either[AppError, List[PermissionStatus]] = {
     (for {
       statuses <- cursor.evaluateList(m.status)
-      start    <- m.actionsStart.flatTraverse(cursor.evaluateFirst(_))
-      end      <- m.actionsEnd.flatTraverse(cursor.evaluateFirst(_))
+      start    <- m.actionsStart.flatTraverse(cursor.evaluateOption(_))
+      end      <- m.actionsEnd.flatTraverse(cursor.evaluateOption(_))
     } yield statuses.map(PermissionStatus(_, start, end))).left.map(AppError.fromDecodingFailure)
   }
 

@@ -131,7 +131,7 @@ lazy val `permissions-ep` = project
   .settings(commonSettings: _*)
   .settings(testSettings: _*)
   .settings(assemblySettings: _*)
-  .settings(mainClass in Compile := Some(permissionsEpMain))
+  .settings(Compile / mainClass := Some(permissionsEpMain))
   .settings(dockerSettings("permissions-ep", permissionsEpMain): _*)
   .enablePlugins(DockerPlugin)
 

@@ -6,6 +6,8 @@ import io.circe.{ACursor, Decoder, DecodingFailure}
 
 trait JsonSyntax {
 
+  type OptionDecoder[T] = Decoder[Option[T]]
+
   implicit class CursorExt(cursor: ACursor) {
     def downPath(path: MappingValue.Path): ACursor =
       path.path.split('.').toList.foldLeft(cursor)(_ downField _)
@@ -25,21 +27,24 @@ trait JsonSyntax {
       }
     }
 
-    def evaluateOption[T: Decoder](mapping: MappingExpression.Single[T]): Either[DecodingFailure, Option[T]] = {
+    def evaluateOption[T: OptionDecoder](mapping: MappingExpression.Single[T]): Either[DecodingFailure, Option[T]] = {
       mapping match {
-        case MappingExpression.Simple(value) =>
-          evaluate(value).map(Some(_))
-
-        case MappingExpression.Conditional.WhenEquals(value, toCompare) =>
+        case MappingExpression.Simple(value, defaultTo) =>
           for {
-            cmpValues <- toCompare.traverse(cursor.evaluate(_))
-            result    <- if (cmpValues.distinct.size == 1) cursor.evaluate(value).map(Some(_)) else Right(None)
+            a <- evaluate(value.optional)
+            b <- defaultTo.filter(_ => a.isEmpty).flatTraverse(evaluateOption(_))
+          } yield a.orElse(b)
+
+        case MappingExpression.Conditional.WhenEquals(value, toCompare, defaultTo) =>
+          for {
+            cmpValues <- toCompare.traverse(v => cursor.evaluate(v.optional))
+            result    <- if (cmpValues.distinct.size == 1) cursor.evaluate(value.optional) else defaultTo.flatTraverse(evaluateOption(_))
           } yield result
 
-        case MappingExpression.Conditional.WhenDefined(value, x) =>
-          cursor.downPath(x).focus match {
-            case Some(_) => cursor.evaluate(value).map(Some(_))
-            case None    => Right(None)
+        case MappingExpression.Conditional.WhenDefined(value, path, defaultTo) =>
+          cursor.downPath(path).focus match {
+            case Some(_) => cursor.evaluate(value.optional)
+            case None    => defaultTo.flatTraverse(cursor.evaluateOption(_))
           }
       }
     }

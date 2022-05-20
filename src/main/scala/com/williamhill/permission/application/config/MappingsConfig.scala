@@ -12,9 +12,9 @@ import zio.{Has, URLayer, ZIO}
 case class Mapping(
     eventType: String,
     status: MappingExpression[String],
-    playerId: MappingExpression.Single[PlayerId],
-    actionsStart: Option[MappingExpression[Instant]],
-    actionsEnd: Option[MappingExpression[Instant]],
+    playerId: MappingExpression.Simple[PlayerId],
+    actionsStart: Option[MappingExpression.Single[Instant]],
+    actionsEnd: Option[MappingExpression.Single[Instant]],
 )
 
 case class MappingsConfig(mappings: List[Mapping])

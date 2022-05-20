@@ -3,13 +3,20 @@ package com.williamhill.permission.application.config.dsl
 import pureconfig.ConfigReader
 import pureconfig.error.CannotConvert
 
-sealed trait MappingValue[+T]
+sealed trait MappingValue[+T] {
+  def optional: MappingValue[Option[T]]
+}
 
 object MappingValue {
   type Reader[A] = ConfigReader[MappingValue[A]]
 
-  case class Path(path: String)     extends MappingValue[Nothing]
-  case class Hardcoded[T](value: T) extends MappingValue[T]
+  case class Path(path: String) extends MappingValue[Nothing] {
+    def optional: Path = this
+  }
+
+  case class Hardcoded[+T](value: T) extends MappingValue[T] {
+    def optional: Hardcoded[Option[T]] = Hardcoded(Some(value))
+  }
 
   object Path {
     implicit val reader: ConfigReader[Path] = ConfigReader.stringConfigReader.emap {
