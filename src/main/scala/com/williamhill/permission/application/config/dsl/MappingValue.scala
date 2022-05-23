@@ -14,8 +14,8 @@ object MappingValue {
     def optional: Path = this
   }
 
-  case class Hardcoded[+T](value: T) extends MappingValue[T] {
-    def optional: Hardcoded[Option[T]] = Hardcoded(Some(value))
+  case class Const[+T](value: T) extends MappingValue[T] {
+    def optional: Const[Option[T]] = Const(Some(value))
   }
 
   object Path {
@@ -25,9 +25,9 @@ object MappingValue {
     }
   }
 
-  object Hardcoded {
-    implicit def reader[T: ConfigReader]: ConfigReader[Hardcoded[T]] = ConfigReader[T].map(Hardcoded(_))
+  object Const {
+    implicit def reader[T: ConfigReader]: ConfigReader[Const[T]] = ConfigReader[T].map(Const(_))
   }
 
-  implicit def reader[T: ConfigReader]: ConfigReader[MappingValue[T]] = Path.reader.orElse(Hardcoded.reader[T])
+  implicit def reader[T: ConfigReader]: ConfigReader[MappingValue[T]] = Path.reader.orElse(Const.reader[T])
 }

@@ -1,8 +1,8 @@
 package com.williamhill.permission.utils
 
 import cats.syntax.traverse.*
-import com.williamhill.permission.application.config.dsl.{MappingExpression, MappingValue}
-import io.circe.{ACursor, Decoder, DecodingFailure}
+import com.williamhill.permission.application.config.dsl.{BooleanExpression, MappingExpression, MappingValue}
+import io.circe.{ACursor, Decoder, DecodingFailure, Json}
 
 trait JsonSyntax {
 
@@ -12,9 +12,9 @@ trait JsonSyntax {
     def downPath(path: MappingValue.Path): ACursor =
       path.path.split('.').toList.foldLeft(cursor)(_ downField _)
 
-    def evaluate[T: Decoder](mapping: MappingValue[T]): Either[DecodingFailure, T] = mapping match {
-      case path: MappingValue.Path       => downPath(path).as[T]
-      case MappingValue.Hardcoded(value) => Right(value)
+    private def evaluate[T: Decoder](mapping: MappingValue[T]): Either[DecodingFailure, T] = mapping match {
+      case path: MappingValue.Path   => downPath(path).as[T]
+      case MappingValue.Const(value) => Right(value)
     }
 
     def evaluateList[T: Decoder](mapping: MappingExpression[T]): Either[DecodingFailure, List[T]] = {
@@ -27,27 +27,26 @@ trait JsonSyntax {
       }
     }
 
-    def evaluateOption[T: OptionDecoder](mapping: MappingExpression.Single[T]): Either[DecodingFailure, Option[T]] = {
-      mapping match {
-        case MappingExpression.Simple(value, defaultTo) =>
-          for {
-            a <- evaluate(value.optional)
-            b <- defaultTo.filter(_ => a.isEmpty).flatTraverse(evaluateOption(_))
-          } yield a.orElse(b)
-
-        case MappingExpression.Conditional.WhenEquals(value, toCompare, defaultTo) =>
-          for {
-            cmpValues <- toCompare.traverse(v => cursor.evaluate(v.optional))
-            result    <- if (cmpValues.distinct.size == 1) cursor.evaluate(value.optional) else defaultTo.flatTraverse(evaluateOption(_))
-          } yield result
-
-        case MappingExpression.Conditional.WhenDefined(value, path, defaultTo) =>
-          cursor.downPath(path).focus match {
-            case Some(_) => cursor.evaluate(value.optional)
-            case None    => defaultTo.flatTraverse(cursor.evaluateOption(_))
-          }
-      }
+    def evaluateBoolean(condition: BooleanExpression): Either[DecodingFailure, Boolean] = condition match {
+      case BooleanExpression.And(expressions) =>
+        expressions.traverse(evaluateBoolean).map(_.forall(identity))
+      case BooleanExpression.Or(expressions) =>
+        expressions.traverse(evaluateBoolean).map(_.exists(identity))
+      case BooleanExpression.Equals(values) =>
+        values.traverse(evaluate[Json]).map(_.distinct.size == 1)
+      case BooleanExpression.Defined(path) =>
+        Right(cursor.downPath(path).focus.isDefined)
     }
+
+    def evaluateOption[T: OptionDecoder](mapping: MappingExpression.Single[T]): Either[DecodingFailure, Option[T]] =
+      for {
+        unfiltered    <- mapping.when.fold[Either[DecodingFailure, Boolean]](Right(true))(evaluateBoolean)
+        optionalValue <- if (unfiltered) evaluate(mapping.value.optional) else Right(None)
+        withFallback  <- optionalValue.fold(mapping.defaultTo.flatTraverse(evaluateOption[T]))(v => Right(Some(v)))
+      } yield withFallback
+
+    def evaluateRequired[T: OptionDecoder](mapping: MappingExpression.Single[T]): Either[DecodingFailure, T] =
+      evaluateOption(mapping).flatMap(_.toRight(DecodingFailure(s"Evaluation of $mapping yield no results", cursor.history)))
 
     def evaluateFirst[T: Decoder](mapping: MappingExpression[T]): Either[DecodingFailure, Option[T]] = {
       mapping match {

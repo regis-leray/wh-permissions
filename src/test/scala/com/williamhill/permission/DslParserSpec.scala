@@ -1,9 +1,9 @@
 package com.williamhill.permission
 
+import com.williamhill.permission.application.config.dsl.BooleanExpression.{Defined, Equals}
 import com.williamhill.permission.application.config.dsl.MappingExpression
-import com.williamhill.permission.application.config.dsl.MappingExpression.Conditional.{WhenDefined, WhenEquals}
-import com.williamhill.permission.application.config.dsl.MappingExpression.{Multiple, Simple}
-import com.williamhill.permission.application.config.dsl.MappingValue.{Hardcoded, Path}
+import com.williamhill.permission.application.config.dsl.MappingExpression.{Multiple, Single}
+import com.williamhill.permission.application.config.dsl.MappingValue.{Const, Path}
 import io.circe.Json
 import org.scalatest.Assertion
 import org.scalatest.freespec.AnyFreeSpec
@@ -20,14 +20,14 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
 
     "Path" in {
       val input  = """x = "$.hello.world""""
-      val output = Simple(Path("hello.world"), None)
+      val output = Single(Path("hello.world"))
 
       test(input, output)
     }
 
     "Hardcoded" in {
       val input  = """x = "hello.world""""
-      val output = Simple(Hardcoded("hello.world"), None)
+      val output = Single(Const("hello.world"))
 
       test(input, output)
     }
@@ -40,9 +40,9 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |  default-to = "$.something.else"
           |}""".stripMargin
 
-      val output = Simple(
+      val output = Single(
         Path("hello.world"),
-        Some(Simple(Path("something.else"), None)),
+        defaultTo = Some(Single(Path("something.else"))),
       )
 
       test(input, output)
@@ -56,9 +56,9 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |  default-to = "something else"
           |}""".stripMargin
 
-      val output = Simple(
+      val output = Single(
         Path("hello.world"),
-        Some(Simple(Hardcoded("something else"), None)),
+        defaultTo = Some(Single(Const("something else"))),
       )
 
       test(input, output)
@@ -75,17 +75,12 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |  }
           |}""".stripMargin
 
-      val output = Simple(
+      val output = Single(
         Path("foo.bar"),
-        Some(
-          Simple(
+        defaultTo = Some(
+          Single(
             Path("foo.baz"),
-            Some(
-              Simple(
-                Path("foo.qux"),
-                None,
-              ),
-            ),
+            defaultTo = Some(Single(Path("foo.qux"))),
           ),
         ),
       )
@@ -102,14 +97,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-defined = "$.foo.bar"
+          |  when = { defined = "$.foo.bar" }
           |}
           |""".stripMargin
 
-      val output = WhenDefined(
+      val output = Single(
         Path("hello.world"),
-        Path("foo.bar"),
-        None,
+        when = Some(Defined(Path("foo.bar"))),
       )
 
       test(input, output)
@@ -120,22 +114,21 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-defined = "$.foo.bar"
+          |  when = { defined = "$.foo.bar" }
           |  default-to: {
           |    value = "$.foo.baz"
-          |    when-defined = "$.foo.cux"
+          |    when = { defined = "$.foo.cux" }
           |  }
           |}
           |""".stripMargin
 
-      val output = WhenDefined(
+      val output = Single(
         Path("hello.world"),
-        Path("foo.bar"),
-        Some(
-          WhenDefined(
+        when = Some(Defined(Path("foo.bar"))),
+        defaultTo = Some(
+          Single(
             Path("foo.baz"),
-            Path("foo.cux"),
-            None,
+            when = Some(Defined(Path("foo.cux"))),
           ),
         ),
       )
@@ -152,14 +145,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-equals = ["$.foo.bar", "BAZ BAZ!"]
+          |  when = { equals = ["$.foo.bar", "BAZ BAZ!"] }
           |}
           |""".stripMargin
 
-      val output = WhenEquals(
+      val output = Single(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded(Json.fromString("BAZ BAZ!"))),
-        None,
+        when = Some(Equals(List(Path("foo.bar"), Const(Json.fromString("BAZ BAZ!"))))),
       )
 
       test(input, output)
@@ -170,14 +162,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-equals = ["$.foo.bar", true]
+          |  when = { equals = ["$.foo.bar", true] }
           |}
           |""".stripMargin
 
-      val output = WhenEquals(
+      val output = Single(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded(Json.fromBoolean(true))),
-        None,
+        when = Some(Equals(List(Path("foo.bar"), Const(Json.fromBoolean(true))))),
       )
 
       test(input, output)
@@ -188,14 +179,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-equals = ["$.foo.bar", 99]
+          |  when = { equals = ["$.foo.bar", 99] }
           |}
           |""".stripMargin
 
-      val output = WhenEquals(
+      val output = Single(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded(Json.fromInt(99))),
-        None,
+        when = Some(Equals(List(Path("foo.bar"), Const(Json.fromInt(99))))),
       )
 
       test(input, output)
@@ -206,14 +196,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-equals = ["$.foo.bar", 2147483648]
+          |  when = { equals = ["$.foo.bar", 2147483648] }
           |}
           |""".stripMargin
 
-      val output = WhenEquals(
+      val output = Single(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded(Json.fromLong(2147483648L))),
-        None,
+        when = Some(Equals(List(Path("foo.bar"), Const(Json.fromLong(2147483648L))))),
       )
 
       test(input, output)
@@ -224,14 +213,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-equals = ["$.foo.bar", 99.12]
+          |  when = { equals = ["$.foo.bar", 99.12] }
           |}
           |""".stripMargin
 
-      val output = WhenEquals(
+      val output = Single(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded(Json.fromDoubleOrNull(99.12))),
-        None,
+        when = Some(Equals(List(Path("foo.bar"), Const(Json.fromDoubleOrNull(99.12))))),
       )
 
       test(input, output)
@@ -242,22 +230,21 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  when-equals = ["$.foo.bar", "BAZ BAZ!"]
+          |  when = { equals = ["$.foo.bar", "BAZ BAZ!"] }
           |  default-to = {
           |    value = "$.cux.cux"
-          |    when-equals = ["HELLO", "WORLD"]
+          |    when = { equals = ["HELLO", "WORLD"] }
           |  }
           |}
           |""".stripMargin
 
-      val output = WhenEquals(
+      val output = Single(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded(Json.fromString("BAZ BAZ!"))),
-        Some(
-          WhenEquals(
+        when = Some(Equals(List(Path("foo.bar"), Const(Json.fromString("BAZ BAZ!"))))),
+        defaultTo = Some(
+          Single(
             Path("cux.cux"),
-            List(Hardcoded(Json.fromString("HELLO")), Hardcoded(Json.fromString("WORLD"))),
-            None,
+            when = Some(Equals(List(Const(Json.fromString("HELLO")), Const(Json.fromString("WORLD"))))),
           ),
         ),
       )
@@ -276,7 +263,7 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         |  "world",
         |  {
         |    value = "xxx"
-        |    when-defined = "$.foo.bar"
+        |    when = { defined = "$.foo.bar" }
         |    default-to = "yyy"
         |  }
         |]
@@ -284,12 +271,12 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
 
     val output = Multiple(
       List(
-        Simple(Path("hello"), None),
-        Simple(Hardcoded("world"), None),
-        WhenDefined(
-          Hardcoded("xxx"),
-          Path("foo.bar"),
-          Some(Simple(Hardcoded("yyy"), None)),
+        Single(Path("hello"), None),
+        Single(Const("world"), None),
+        Single(
+          Const("xxx"),
+          when = Some(Defined(Path("foo.bar"))),
+          defaultTo = Some(Single(Const("yyy"))),
         ),
       ),
     )

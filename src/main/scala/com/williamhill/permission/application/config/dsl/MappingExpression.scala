@@ -20,95 +20,27 @@ trait JsonReader {
 
 object MappingExpression extends JsonReader {
 
-  sealed trait Single[+T] extends MappingExpression[T] {
-    def defaultTo: Option[Single[T]]
-  }
-
-  case class Simple[+T](value: MappingValue[T], defaultTo: Option[Single[T]]) extends Single[T]
-
-  object Simple {
-    implicit def reader[T](implicit mv: MappingValue.Reader[T]): ConfigReader[Simple[T]] = {
-      mv.map(Simple(_, None))
-        .orElse(
-          ConfigReader.fromCursor { cursor =>
-            for {
-              obj         <- cursor.asMap
-              valueCursor <- obj.get("value").toRight(ConfigReaderFailures(ConvertFailure(KeyNotFound("value", obj.keys.toSet), cursor)))
-              value       <- mv.from(valueCursor)
-              defaultTo   <- obj.get("default-to").traverse(reader.from)
-            } yield Simple(value, defaultTo)
-          },
-        )
-    }
-  }
-
-  sealed trait Conditional[+T] extends Single[T] {
-    def value: MappingValue[T]
-    def defaultTo: Option[Single[T]]
-  }
-
-  object Conditional {
-    case class WhenEquals[+T](
-        value: MappingValue[T],
-        whenEquals: List[MappingValue[Json]],
-        defaultTo: Option[Single[T]],
-    ) extends Conditional[T]
-
-    case class WhenDefined[+T](
-        value: MappingValue[T],
-        whenDefined: MappingValue.Path,
-        defaultTo: Option[Single[T]],
-    ) extends Conditional[T]
-
-    private def readerFor[T: ConfigReader](
-        key: String,
-        getReader: (MappingValue[T], Option[Single[T]]) => ConfigReader[Conditional[T]],
-    ): ConfigReader[Conditional[T]] = {
-      ConfigReader.fromCursor(cursor =>
-        for {
-          obj         <- cursor.asMap
-          valueCursor <- obj.get("value").toRight(ConfigReaderFailures(ConvertFailure(KeyNotFound("value", obj.keys.toSet), cursor)))
-          dataCursor  <- obj.get(key).toRight(ConfigReaderFailures(ConvertFailure(KeyNotFound(key, obj.keys.toSet), cursor)))
-          value       <- MappingValue.reader[T].from(valueCursor)
-          defaultTo   <- obj.get("default-to").traverse(Single.reader[T].from)
-          expression  <- getReader(value, defaultTo).from(dataCursor)
-        } yield expression,
-      )
-    }
-
-    private def whenEqualsReader[T: ConfigReader]: ConfigReader[Conditional[T]] =
-      readerFor(
-        key = "when-equals",
-        getReader = { case (value, defaultTo) =>
-          ConfigReader
-            .fromCursor(cursor =>
-              ConfigReader[List[MappingValue[Json]]]
-                .from(cursor)
-                .map(WhenEquals(value, _, defaultTo)),
-            )
-        },
-      )
-
-    private def whenDefinedReader[T: ConfigReader]: ConfigReader[Conditional[T]] =
-      readerFor(
-        key = "when-defined",
-        getReader = { case (value, defaultTo) =>
-          ConfigReader
-            .fromCursor(cursor =>
-              MappingValue.Path.reader
-                .from(cursor)
-                .map(WhenDefined(value, _, defaultTo)),
-            )
-        },
-      )
-
-    implicit def reader[T: ConfigReader]: ConfigReader[Conditional[T]] =
-      whenEqualsReader[T].orElse(whenDefinedReader[T])
-  }
+  case class Single[+T](
+      value: MappingValue[T],
+      when: Option[BooleanExpression] = None,
+      defaultTo: Option[Single[T]] = None,
+  ) extends MappingExpression[T]
 
   object Single {
-    implicit def reader[T: ConfigReader]: ConfigReader[Single[T]] =
-      Conditional.reader[T].orElse(Simple.reader[T])
+    implicit def reader[T](implicit mv: MappingValue.Reader[T]): ConfigReader[Single[T]] = {
+      mv.map(Single(_, None, None))
+        .orElse(ConfigReader.fromCursor { cursor =>
+          for {
+            obj <- cursor.asMap
+            value <- obj.get("value") match {
+              case Some(valueCursor) => mv.from(valueCursor)
+              case None              => Left(ConfigReaderFailures(ConvertFailure(KeyNotFound("value", obj.keys.toSet), cursor)))
+            }
+            when    <- obj.get("when").traverse(BooleanExpression.reader.from)
+            default <- obj.get("default-to").traverse(reader.from)
+          } yield Single(value, when, default)
+        })
+    }
   }
 
   case class Multiple[+T](expressions: List[Single[T]]) extends MappingExpression[T]

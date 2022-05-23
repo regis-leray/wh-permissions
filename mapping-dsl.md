@@ -14,7 +14,7 @@ There are different types of expressions:
 
 #### Simple expression
 
-A "Simple expression" can be a hardcoded value or a JSON path:
+A "Single expression" can be a hardcoded value or a JSON path:
 ```
 expr = "this is a hardcoded value!"
 ```
@@ -52,48 +52,72 @@ expr = {
 }
 ```
 
-#### Conditional expression
+Single expressions can be conditionally evaluated.
 
-A "Conditional expression" is an expression whose evaluation depends on a particular condition.  
-We currently support the following types of conditional expressions:
-
-**when-defined**
-```
-expr = {
-  value = "Phone number available"
-  when-defined = "$.contact.number"
-}
-```
-
-> The expression above will yield the string `Phone number available` 
-if the `contact.number` JSON path exists.
-
-
-**when-equals**
-```
-expr = {
-  value = "Root"
-  when-equals = ["$.user.id", "1"]
-}
-```
-
-> The expression above will yield the string `Root`
-if the `user.id` JSON path contains the string value "1".
-
-All conditional expressions also support a `default-to` case 
-similarly to simple expressions:
+**equals**
 
 ```
-expr = {
-  value = "Root"
-  when-equals = ["$.user.id", "1"]
-  default-to = {
-    value = "Jack"
-    when-equals = ["$.user.id", "2"]
-    default-to = "Unknown"
+name = {
+  value = "Jack"
+  when = {
+    equals = [
+      "$.userId",
+      99
+    ]
   }
+  default-to = "Unknown"
 }
 ```
+> `name` = if ($.userId == 99) "Jack" else "Unknown"
+
+
+**defined**
+
+```
+loggedIn = {
+  value = true
+  when = {
+    defined = "$.userId"
+  }
+  default-to = false
+}
+```
+> `loggedIn` = $.userId != null
+
+
+**and**
+
+```
+blueBox = {
+  value = true
+  when = {
+    and = [
+      { equals = ["$.color", "blue"] },
+      { equals = ["$.shape", "box"] }
+    ]
+  }
+  default-to = false
+}
+```
+> `blueBox` = ($.color == "blue") && ($.shape == "box")  
+
+
+**or**
+
+```
+blueOrBox = {
+  value = true
+  when = {
+    or = [
+      { equals = ["$.color", "blue"] },
+      { equals = ["$.shape", "box"] }
+    ]
+  }
+  default-to = false
+}
+```
+> `blueOrBox` = ($.color == "blue") || ($.shape == "box")
+
 
 #### Expression list
 

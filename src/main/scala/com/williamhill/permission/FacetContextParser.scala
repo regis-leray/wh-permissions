@@ -22,7 +22,7 @@ class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
       previousValues = body.downField("previousValues")
 
       universe <- Universe(input.header.universe)
-      playerId <- newValues.evaluate(mapping.playerId.value).left.map(AppError.fromDecodingFailure)
+      playerId <- newValues.evaluateRequired(mapping.playerId).left.map(AppError.fromDecodingFailure)
 
       newStatuses <- parsePermissionStatuses(mapping)(newValues)
       oldStatuses <- previousValues.focus.toList.map(_.hcursor).flatTraverse(parsePermissionStatuses(mapping))
