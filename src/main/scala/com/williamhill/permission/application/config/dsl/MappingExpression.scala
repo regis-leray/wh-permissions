@@ -1,12 +1,24 @@
 package com.williamhill.permission.application.config.dsl
 
 import cats.syntax.traverse.*
+import io.circe.Json
 import pureconfig.ConfigReader
 import pureconfig.error.{ConfigReaderFailures, ConvertFailure, KeyNotFound}
 
 sealed trait MappingExpression[+T]
 
-object MappingExpression {
+trait JsonReader {
+  implicit val jsonReader: ConfigReader[Json] = ConfigReader.fromCursor { cursor =>
+    cursor.asInt
+      .map(Json.fromInt)
+      .orElse(cursor.asLong.map(Json.fromLong))
+      .orElse(cursor.asDouble.map(Json.fromDoubleOrString))
+      .orElse(cursor.asBoolean.map(Json.fromBoolean))
+      .orElse(cursor.asString.map(Json.fromString))
+  }
+}
+
+object MappingExpression extends JsonReader {
 
   sealed trait Single[+T] extends MappingExpression[T] {
     def defaultTo: Option[Single[T]]
@@ -38,7 +50,7 @@ object MappingExpression {
   object Conditional {
     case class WhenEquals[+T](
         value: MappingValue[T],
-        whenEquals: List[MappingValue[T]],
+        whenEquals: List[MappingValue[Json]],
         defaultTo: Option[Single[T]],
     ) extends Conditional[T]
 
@@ -70,7 +82,7 @@ object MappingExpression {
         getReader = { case (value, defaultTo) =>
           ConfigReader
             .fromCursor(cursor =>
-              ConfigReader[List[MappingValue[T]]]
+              ConfigReader[List[MappingValue[Json]]]
                 .from(cursor)
                 .map(WhenEquals(value, _, defaultTo)),
             )

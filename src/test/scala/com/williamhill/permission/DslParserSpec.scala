@@ -4,6 +4,7 @@ import com.williamhill.permission.application.config.dsl.MappingExpression
 import com.williamhill.permission.application.config.dsl.MappingExpression.Conditional.{WhenDefined, WhenEquals}
 import com.williamhill.permission.application.config.dsl.MappingExpression.{Multiple, Simple}
 import com.williamhill.permission.application.config.dsl.MappingValue.{Hardcoded, Path}
+import io.circe.Json
 import org.scalatest.Assertion
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -11,8 +12,8 @@ import pureconfig.generic.semiauto.deriveReader
 import pureconfig.{ConfigReader, ConfigSource}
 
 class DslParserSpec extends AnyFreeSpec with Matchers {
-  case class Output(x: MappingExpression[String])
 
+  case class Output(x: MappingExpression[String])
   implicit val reader: ConfigReader[Output] = deriveReader
 
   "Simple expression" - {
@@ -36,12 +37,12 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello.world"
-          |  default-to = "$.something else"
+          |  default-to = "$.something.else"
           |}""".stripMargin
 
       val output = Simple(
         Path("hello.world"),
-        Some(Simple(Path("something else"), None)),
+        Some(Simple(Path("something.else"), None)),
       )
 
       test(input, output)
@@ -146,7 +147,7 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
 
   "When equals" - {
 
-    "Without default" in {
+    "Comparing strings" in {
       val input =
         """
           |x = {
@@ -157,7 +158,79 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
 
       val output = WhenEquals(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded("BAZ BAZ!")),
+        List(Path("foo.bar"), Hardcoded(Json.fromString("BAZ BAZ!"))),
+        None,
+      )
+
+      test(input, output)
+    }
+
+    "Comparing booleans" in {
+      val input =
+        """
+          |x = {
+          |  value = "$.hello.world"
+          |  when-equals = ["$.foo.bar", true]
+          |}
+          |""".stripMargin
+
+      val output = WhenEquals(
+        Path("hello.world"),
+        List(Path("foo.bar"), Hardcoded(Json.fromBoolean(true))),
+        None,
+      )
+
+      test(input, output)
+    }
+
+    "Comparing integers" in {
+      val input =
+        """
+          |x = {
+          |  value = "$.hello.world"
+          |  when-equals = ["$.foo.bar", 99]
+          |}
+          |""".stripMargin
+
+      val output = WhenEquals(
+        Path("hello.world"),
+        List(Path("foo.bar"), Hardcoded(Json.fromInt(99))),
+        None,
+      )
+
+      test(input, output)
+    }
+
+    "Comparing longs" in {
+      val input =
+        """
+          |x = {
+          |  value = "$.hello.world"
+          |  when-equals = ["$.foo.bar", 2147483648]
+          |}
+          |""".stripMargin
+
+      val output = WhenEquals(
+        Path("hello.world"),
+        List(Path("foo.bar"), Hardcoded(Json.fromLong(2147483648L))),
+        None,
+      )
+
+      test(input, output)
+    }
+
+    "Comparing doubles" in {
+      val input =
+        """
+          |x = {
+          |  value = "$.hello.world"
+          |  when-equals = ["$.foo.bar", 99.12]
+          |}
+          |""".stripMargin
+
+      val output = WhenEquals(
+        Path("hello.world"),
+        List(Path("foo.bar"), Hardcoded(Json.fromDoubleOrNull(99.12))),
         None,
       )
 
@@ -179,11 +252,11 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
 
       val output = WhenEquals(
         Path("hello.world"),
-        List(Path("foo.bar"), Hardcoded("BAZ BAZ!")),
+        List(Path("foo.bar"), Hardcoded(Json.fromString("BAZ BAZ!"))),
         Some(
           WhenEquals(
             Path("cux.cux"),
-            List(Hardcoded("HELLO"), Hardcoded("WORLD")),
+            List(Hardcoded(Json.fromString("HELLO")), Hardcoded(Json.fromString("WORLD"))),
             None,
           ),
         ),
