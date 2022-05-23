@@ -69,7 +69,7 @@ object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
       content <- Using(Source.fromFile(file))(_.getLines().mkString).toEither.left
         .map(ex => s"Can't read ${file.getPath}: ${ex.getMessage}")
       json    <- parse(content).left.map(ex => s"${file.getName} doesn't contain valid JSON: ${ex.message}")
-      decoded <- json.as[T].left.map(ex => s"Cannot parse content for ${file.getName}: ${ex.message}")
+      decoded <- json.as[T].left.map(ex => s"Cannot parse content for ${file.getPath}: ${ex.history}")
     } yield decoded
 
   private val tests = testFiles.flatMap { case (eventType, ios) =>

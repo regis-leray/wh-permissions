@@ -17,30 +17,35 @@
       "id": "U00004334",
       "universe": "wh-eu-de",
       "data": {
-        "permissionDenials": [
-          {
-            "reason": "closed-dormant",
-            "description": "The account is closed as dormant",
-            "permissionName": "canLogin"
-          },
-          {
-            "reason": "closed-dormant",
-            "description": "The account is closed as dormant",
-            "permissionName": "canBet"
-          },
-          {
-            "reason": "closed-dormant",
-            "description": "The account is closed as dormant",
-            "permissionName": "canGame"
-          }
-        ],
+        "permissionDenials": {
+          "canLogin":
+            {
+              "reasonCode": "closed-dormant",
+              "description": "The account is closed as dormant"
+            }
+          ,
+          "canBet":
+            {
+              "reasonCode": "closed-dormant",
+              "description": "The account is closed as dormant"
+            }
+          ,
+          "canGame":
+            {
+              "reasonCode": "closed-dormant",
+              "description": "The account is closed as dormant"
+            }
+
+        },
         "actions": [
           {
             "type": "notification",
             "name": "sendDormancyNotification",
-            "reasonCode": "closed-dormant",
-            "denialDescription": "The account is closed as dormant",
-            "deniedPermissions": ["canLogin", "canBet", "canGame"]
+            "relatesToPermissions": [
+              "canLogin",
+              "canBet",
+              "canGame"
+            ]
           }
         ]
       }

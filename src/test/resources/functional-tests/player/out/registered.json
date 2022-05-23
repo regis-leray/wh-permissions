@@ -16,20 +16,19 @@
       "id": "b7c7af4f-7571-40af-92a2-9c12b218ad73",
       "universe": "wh-de-eu",
       "data": {
-        "permissionDenials": [
-          {
-            "reason": "blocked",
-            "description": "The account is blocked",
-            "permissionName": "canDeposit"
-          }
-        ],
+        "permissionDenials": {
+          "canDeposit":
+            {
+              "reasonCode": "blocked",
+              "description": "The account is blocked"
+            }
+
+        },
         "actions": [
           {
             "type": "notification",
             "name": "blockPlayer",
-            "reasonCode": "blocked",
-            "denialDescription": "The account is blocked",
-            "deniedPermissions": ["canDeposit"]
+            "relatesToPermissions": ["canDeposit"]
           }
         ]
       }
