@@ -1,5 +1,7 @@
 package com.williamhill.permission
 
+import scala.annotation.tailrec
+
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
@@ -11,12 +13,17 @@ import zio.{Has, URLayer, ZIO}
 
 class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
 
-  def parse(input: InputEvent): Either[AppError, FacetContext] = {
+  def parse(topic: String, input: InputEvent): Either[AppError, FacetContext] = {
     val body = input.body.hcursor
 
     for {
-      eventType <- body.downField("type").as[String].left.map(AppError.fromDecodingFailure)
-      mapping   <- config.mappings.find(_.eventType.equalsIgnoreCase(eventType)).toRight(AppError.missingMapping(eventType))
+      eventTypeAndMapping <-
+        config.mappings
+          .filter(_.topics.forall(_.contains(topic)))
+          .collectSome(mapping => body.evaluateRequired(mapping.eventType.toExpression).toOption.map(_ -> mapping))
+          .toRight(AppError.eventTypeNotFound(input.body))
+
+      (eventType, mapping) = eventTypeAndMapping
 
       newValues      = body.downField("newValues")
       previousValues = body.downField("previousValues")
@@ -44,6 +51,20 @@ class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
       start    <- m.actionsStart.flatTraverse(cursor.evaluateOption(_))
       end      <- m.actionsEnd.flatTraverse(cursor.evaluateOption(_))
     } yield statuses.map(PermissionStatus(_, start, end))).left.map(AppError.fromDecodingFailure)
+  }
+
+  implicit private class ListExt[T](list: List[T]) {
+    final def collectSome[U](f: T => Option[U]): Option[U] = collectSomeRec(list, f)
+
+    @tailrec
+    final private def collectSomeRec[U](list: List[T], f: T => Option[U]): Option[U] = list match {
+      case Nil => None
+      case head :: tail =>
+        f(head) match {
+          case some @ Some(_) => some
+          case None           => collectSomeRec(tail, f)
+        }
+    }
   }
 
 }

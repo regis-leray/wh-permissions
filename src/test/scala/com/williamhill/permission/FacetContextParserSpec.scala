@@ -17,10 +17,10 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
 
   val scenarios: TableFor3[String, String, FacetContext] =
     Table(
-      ("scenario", "path", "expected result"),
+      ("topic", "scenario", "expected result"),
       (
-        "Dormancy-dormant",
-        "functional-tests/dormancy/in/dormant.json",
+        "dormancy",
+        "dormant",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -33,14 +33,14 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           Nil,
           playerId("U00004334"),
           universe("wh-eu-de"),
-          "Dormancy",
+          "dormancy",
           List(PermissionStatus("Dormant")),
           List(PermissionStatus("Active")),
         ),
       ),
       (
-        "Prohibition-prohibited",
-        "functional-tests/prohibition/in/prohibited.json",
+        "prohibition",
+        "prohibited",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -53,14 +53,14 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           Nil,
           playerId("U00004334"),
           universe("wh-mga"),
-          "Prohibition",
+          "prohibition",
           List(PermissionStatus("Prohibited")),
           List(PermissionStatus("Allowed")),
         ),
       ),
       (
-        "Exclusion-indefinite",
-        "functional-tests/excluded/in/indefinite.json",
+        "excluded",
+        "indefinite",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -79,8 +79,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         ),
       ),
       (
-        "Exclusion-permanent",
-        "functional-tests/excluded/in/permanent.json",
+        "excluded",
+        "permanent",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -99,8 +99,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         ),
       ),
       (
-        "Exclusion-temporary",
-        "functional-tests/excluded/in/temporary.json",
+        "excluded",
+        "temporary",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -121,8 +121,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         ),
       ),
       (
-        "Exclusion-timeout",
-        "functional-tests/excluded/in/timeout.json",
+        "excluded",
+        "timeout",
         FacetContext(
           Header(
             "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
@@ -146,10 +146,10 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
 
   val parser: FacetContextParser = new FacetContextParser(ConfigSource.resources("mappings.conf").loadOrThrow[MappingsConfig])
 
-  forAll(scenarios) { case (scenario, path, expectedResult) =>
-    it should s"convert $scenario input event to FacetContext" in {
-      val inputEvent = FileReader.fromResources[InputEvent](path)
-      parser.parse(inputEvent) shouldBe Right(expectedResult)
+  forAll(scenarios) { case (topic, scenario, expectedResult) =>
+    it should s"convert $topic/$scenario input event to FacetContext" in {
+      val inputEvent = FileReader.fromResources[InputEvent](s"functional-tests/$topic/in/$scenario.json")
+      parser.parse(topic, inputEvent) shouldBe Right(expectedResult)
     }
   }
 }

@@ -18,7 +18,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           Nil,
           playerId("U00000001"),
           universe("wh-eu-de"),
-          "Dormancy",
+          "dormancy",
           List(PermissionStatus("Dormant")),
           Nil,
         )
@@ -46,7 +46,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           Nil,
           playerId("U00000001"),
           universe("wh-foo"),
-          "Dormancy",
+          "dormancy",
           List(PermissionStatus("Dormant")),
           Nil,
         )

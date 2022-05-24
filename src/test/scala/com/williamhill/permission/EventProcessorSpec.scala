@@ -72,19 +72,19 @@ object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
       decoded <- json.as[T].left.map(ex => s"Cannot parse content for ${file.getPath}: ${ex.history}")
     } yield decoded
 
-  private val tests = testFiles.flatMap { case (eventType, ios) =>
+  private val tests = testFiles.flatMap { case (topicName, ios) =>
     ios.map { case (inputFile, outputFile) =>
       val scenarioName = inputFile.getName.takeWhile(_ != '.')
 
       val spec: ZSpec[Has[EventProcessor], String] =
-        testM(s"$eventType/$scenarioName") {
+        testM(s"$topicName/$scenarioName") {
           for {
             inputEvent  <- ZIO.fromEither(fetchJson[InputEvent](inputFile))
             outputEvent <- ZIO.fromEither(fetchJson[OutputEvent](outputFile))
-            processed   <- EventProcessor.handleInput(inputEvent).mapError(_.message).either
+            processed   <- EventProcessor.handleInput(topicName, inputEvent).mapError(_.message).either
             sameHeader = assert(processed.map(_.header))(isRight(equalTo(outputEvent.header)))
             sameBody   = assert(processed.map(_.body))(isRight(equalTo(outputEvent.body)))
-          } yield (sameHeader && sameBody)
+          } yield sameHeader && sameBody
         }
 
       spec.provideSomeLayerShared(eventProcessorLayer)

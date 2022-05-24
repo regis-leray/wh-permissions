@@ -1,7 +1,7 @@
 package com.williamhill.permission
 
 import cats.implicits.catsSyntaxEitherId
-import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
+import com.github.mlangc.slf4zio.api.{Logging, logging => Log}
 import com.williamhill.permission.application.{AppError, Env}
 import com.williamhill.permission.kafka.Record.{InputRecord, OutputCommittable}
 import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
@@ -71,7 +71,7 @@ object Processor {
     Committable
       .filterMapCommittableRecordM((inputRecord: InputRecord) =>
         for {
-          outputEvent <- EventProcessor.handleInput(inputRecord.value).either
+          outputEvent <- EventProcessor.handleInput(inputRecord.record.topic, inputRecord.value).either
           _           <- outputEvent.fold(error => ZIO.debug(error), _ => ZIO.unit)
         } yield outputEvent.toOption,
       )

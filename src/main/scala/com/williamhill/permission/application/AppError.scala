@@ -1,6 +1,7 @@
 package com.williamhill.permission.application
 
 import cats.syntax.either.*
+import io.circe.Json
 
 //TODO check if we want error status
 case class AppError(message: String, cause: Option[Throwable] = None) {
@@ -10,8 +11,8 @@ case class AppError(message: String, cause: Option[Throwable] = None) {
 }
 
 object AppError {
-  def fromMessage(message: String): AppError      = AppError(message, None)
-  def missingMapping(eventType: String): AppError = AppError(s"Missing mapping configuration for event type: `$eventType`")
+  def fromMessage(message: String): AppError  = AppError(message, None)
+  def eventTypeNotFound(body: Json): AppError = AppError(s"Event type not found for ${body.noSpaces}")
 
   def fromThrowable(throwable: Throwable): AppError                             = AppError(throwable.getMessage, Some(throwable))
   def fromThrowableWithMessage(message: String, throwable: Throwable): AppError = AppError(message, Some(throwable))

@@ -1,6 +1,6 @@
 package com.williamhill.permission.application
 
-import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
+import com.github.mlangc.slf4zio.api.{Logging, logging => Log}
 import com.williamhill.platform.healthcheck.OkHealthCheck
 import com.williamhill.platform.healthcheck.http4s.server.HealthCheckRoutes
 import com.williamhill.platform.healthcheck.kafka.KafkaHealthCheck

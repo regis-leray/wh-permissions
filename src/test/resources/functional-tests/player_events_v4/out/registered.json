@@ -11,7 +11,7 @@
     "when": "2021-01-06T11:13:12.021575Z"
   },
   "body": {
-    "type": "registered",
+    "type": "player_events_v4/registered",
     "newValues": {
       "id": "b7c7af4f-7571-40af-92a2-9c12b218ad73",
       "universe": "wh-de-eu",

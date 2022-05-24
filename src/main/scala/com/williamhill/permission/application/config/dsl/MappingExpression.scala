@@ -28,7 +28,7 @@ object MappingExpression extends JsonReader {
 
   object Single {
     implicit def reader[T](implicit mv: MappingValue.Reader[T]): ConfigReader[Single[T]] = {
-      mv.map(Single(_, None, None))
+      mv.map(Single(_))
         .orElse(ConfigReader.fromCursor { cursor =>
           for {
             obj <- cursor.asMap
