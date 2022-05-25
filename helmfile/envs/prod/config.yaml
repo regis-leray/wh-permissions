@@ -12,7 +12,7 @@ autoscaling:
   enabled: true
 pdb:
   enabled: true
-permissions-ep:
+permissions:
   values:
     base:
       services:

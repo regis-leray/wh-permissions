@@ -1,4 +1,4 @@
-permissions-ep:
+permissions:
   values:
     base:
       services:

@@ -35,11 +35,11 @@ environments:
 {{ readFile "./helmfile-templates.yaml" }}
 
 releases:
-  - name: permissions-ep
-    installed: {{ .Values | getOrNil "permissions-ep.installed" | default "false" }}
+  - name: permissions
+    installed: {{ .Values | getOrNil "permissions.installed" | default "false" }}
     <<: *generic
     version: '{{ env "RELEASE_VERSION" | default (.Values | getOrNil "permissions-ep.version") | default "0.0.0-develop" | replace "/" "-" | lower }}'
-    chart: 'nexus/permissions-ep'
+    chart: 'nexus/permissions'
     labels:
       project: unity
       slack_url_var: UNITY_TEAM_A_SLACK_HOOK_URL

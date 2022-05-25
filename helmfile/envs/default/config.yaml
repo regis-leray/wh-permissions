@@ -19,7 +19,7 @@ newrelic:
   licenceKey: ref+awsssm:///common/newrelic_license_key?region=eu-west-1
   licenceKeyBase64: ref+awsssm:///common/newrelic_license_key_base64?region=eu-west-1
   insightsKeyBase64: ref+awsssm:///common/newrelic_insights_key_base64?region=eu-west-1
-permissions-ep:
+permissions:
   installed: true
   values:
     base:

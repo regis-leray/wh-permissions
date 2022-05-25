@@ -1,5 +1,5 @@
 apiVersion: v2
-name: permissions-ep
+name: permissions
 version: 0.0.1
 description: |
   Application consuming facet events to compute and publish permissions

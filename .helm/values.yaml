@@ -1,5 +1,5 @@
 base:
-  serviceName: permissions-ep
+  serviceName: permissions
   version: develop
   registry: docker-registry.prod.williamhill.plc/platform
 
