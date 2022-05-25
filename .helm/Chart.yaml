@@ -5,7 +5,7 @@ description: |
   Application consuming facet events to compute and publish permissions
 home: https://conf.willhillatlas.com/display/UNITY/UNITY+Home
 sources:
-  - https://gitlab.com/williamhillplc/platform-engineering/unity/services/permission/permissions-ep
+  - https://gitlab.com/williamhillplc/platform-engineering/unity/services/permission/permission-service
 keywords:
   - permission
 dependencies:
