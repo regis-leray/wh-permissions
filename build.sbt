@@ -69,6 +69,7 @@ lazy val commonSettings = Seq(
     williamHill.tracing.tracingKafka,
     enumeratum.circe,
     http4s.dsl,
+    logback.logstashLogbackEncoder,
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
   ),
   dependencyOverrides ++= Seq(

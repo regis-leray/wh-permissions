@@ -76,12 +76,7 @@ object Dependencies {
     private val version = "0.23.7"
     val dsl             = "org.http4s" %% "http4s-dsl" % version
   }
-
-  /// Skipping for now , ma
-  //  "org.slf4j" % "slf4j-api" % "1.7.36",
-  //  "net.logstash.logback" % "logstash-logback-encoder" % "7.0.1",
-  //  http4s("dsl"),
-  //  "com.github.alexarchambault" %% "scalacheck-shapeless_1.15" % "1.3.0" % Test, // required by exclusion-event-model-tests
-  //  ) ++ monocle.map { _ % "it, test" }
-
+  object logback {
+    val logstashLogbackEncoder = "net.logstash.logback" % "logstash-logback-encoder" % "7.2"
+  }
 }
