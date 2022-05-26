@@ -9,7 +9,7 @@ pdb:
 proxy:
   host: webproxy
   port: 3128
-registry: nexus-aws.dtc.prod.williamhill.plc/betting-engine
+registry: nexus-aws.dtc.prod.williamhill.plc/platform
 newrelic:
   enabled: true
   distributed_tracing_enabled: true

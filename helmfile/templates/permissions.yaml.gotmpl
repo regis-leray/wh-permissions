@@ -1,6 +1,6 @@
 base:
   env: {{ .Values | get "environment" "{{ .Environment.Name }}" }}
-  registry: {{ .Values | get "registry" "nexus-aws.dtc.prod.williamhill.plc/betting-engine" }}
+  registry: {{ .Values | get "registry" "nexus-aws.dtc.prod.williamhill.plc/platform" }}
   privateHost: {{ .Values | get "host" "uat.unity.aws-eu-west-1.dev.williamhill.plc" }}
   {{- with .Values.tolerations }}
   tolerations:
