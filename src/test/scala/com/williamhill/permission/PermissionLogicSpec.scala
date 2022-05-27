@@ -1,6 +1,6 @@
 package com.williamhill.permission
 
-import com.williamhill.permission.application.config.ActionsConfig
+import com.williamhill.permission.application.config.RulesConfig
 import com.williamhill.permission.domain.Fixtures.{header, playerId, universe}
 import com.williamhill.permission.domain.{Action, FacetContext, PermissionStatus}
 import zio.test.Assertion.*
@@ -19,8 +19,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           playerId("U00000001"),
           universe("wh-eu-de"),
           "dormancy",
-          List(PermissionStatus("Dormant")),
-          Nil,
+          Vector(PermissionStatus("Dormant")),
+          Vector.empty,
         )
 
         val expectedEnrichedContext = facetContext.copy(actions =
@@ -47,8 +47,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           playerId("U00000001"),
           universe("wh-foo"),
           "dormancy",
-          List(PermissionStatus("Dormant")),
-          Nil,
+          Vector(PermissionStatus("Dormant")),
+          Vector.empty,
         )
 
         (for {
@@ -61,8 +61,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
 
   }
   object Internal {
-    val configLayer: RLayer[ZEnv, ZEnv & Has[ActionsConfig] & Has[PermissionLogic]] =
-      ZEnv.live >+> ActionsConfig.layer >+> PermissionLogic.layer
+    val configLayer: RLayer[ZEnv, ZEnv & Has[RulesConfig] & Has[PermissionLogic]] =
+      ZEnv.live >+> RulesConfig.layer >+> PermissionLogic.layer
   }
 
 }

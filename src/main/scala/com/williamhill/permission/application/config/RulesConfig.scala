@@ -17,25 +17,25 @@ object ActionDefinition {
   implicit val reader: ConfigReader[ActionDefinition] = deriveReader
 }
 
-final case class ActionBinding(
+final case class RuleDefinition(
     universe: String,
     eventType: String,
     status: String,
     actions: List[String],
 )
 
-object ActionBinding {
-  implicit val reader: ConfigReader[ActionBinding] = deriveReader
+object RuleDefinition {
+  implicit val reader: ConfigReader[RuleDefinition] = deriveReader
 }
 
-final case class ActionsConfig(
-    bindings: List[ActionBinding],
-    definitions: List[ActionDefinition],
+final case class RulesConfig(
+    rules: List[RuleDefinition],
+    actions: List[ActionDefinition],
 )
 
-object ActionsConfig {
-  implicit val reader: ConfigReader[ActionsConfig] = deriveReader
+object RulesConfig {
+  implicit val reader: ConfigReader[RulesConfig] = deriveReader
 
-  val layer: URLayer[Blocking, Has[ActionsConfig]] =
-    blocking(ZIO.effect(ConfigSource.resources("actions.conf").loadOrThrow[ActionsConfig])).orDie.toLayer
+  val layer: URLayer[Blocking, Has[RulesConfig]] =
+    blocking(ZIO.effect(ConfigSource.resources("rules.conf").loadOrThrow[RulesConfig])).orDie.toLayer
 }

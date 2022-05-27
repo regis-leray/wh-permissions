@@ -2,7 +2,7 @@ package com.williamhill.permission.application
 
 import com.github.mlangc.slf4zio.api.Logging
 import com.williamhill.permission.Processor.Config
-import com.williamhill.permission.application.config.{ActionsConfig, AppConfig, MappingsConfig}
+import com.williamhill.permission.application.config.{AppConfig, MappingsConfig, RulesConfig}
 import com.williamhill.permission.kafka.{EventPublisher, EventPublisherLive}
 import com.williamhill.permission.{EventProcessor, FacetContextParser, PermissionLogic}
 import org.http4s.server.Server
@@ -28,7 +28,7 @@ object Env {
     ZLayer.wireSome[ZEnv, Main](
       Logging.global,
       AppConfig.layer,
-      ActionsConfig.layer,
+      RulesConfig.layer,
       MappingsConfig.layer,
       FacetContextParser.layer,
       PermissionLogic.layer,

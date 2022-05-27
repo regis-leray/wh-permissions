@@ -6,7 +6,7 @@ import scala.io.Source
 import scala.util.Using
 
 import com.typesafe.scalalogging.LazyLogging
-import com.williamhill.permission.application.config.{ActionsConfig, MappingsConfig}
+import com.williamhill.permission.application.config.{MappingsConfig, RulesConfig}
 import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
 import io.circe.Decoder
 import io.circe.parser.parse
@@ -19,10 +19,10 @@ import zio.{Has, URLayer, ZIO, ZLayer}
 
 object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
 
-  private val configsLayer: URLayer[Blocking, Has[MappingsConfig] & Has[ActionsConfig]] =
-    MappingsConfig.layer ++ ActionsConfig.layer
+  private val configsLayer: URLayer[Blocking, Has[MappingsConfig] & Has[RulesConfig]] =
+    MappingsConfig.layer ++ RulesConfig.layer
 
-  private val componentsLayer: URLayer[Has[MappingsConfig] & Has[ActionsConfig] & Clock, Has[FacetContextParser] & Has[PermissionLogic]] =
+  private val componentsLayer: URLayer[Has[MappingsConfig] & Has[RulesConfig] & Clock, Has[FacetContextParser] & Has[PermissionLogic]] =
     FacetContextParser.layer ++ PermissionLogic.layer
 
   private val eventProcessorLayer: URLayer[Blocking & Clock, Has[EventProcessor]] =

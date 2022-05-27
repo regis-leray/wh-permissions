@@ -1,7 +1,7 @@
 package com.williamhill.permission
 
-import com.williamhill.permission.application.config.dsl.MappingExpression.Single
-import com.williamhill.permission.utils.JsonSyntax
+import com.williamhill.permission.dsl.Expression.Basic
+import com.williamhill.permission.dsl.JsonSyntax.CursorExt
 import io.circe.Json
 import io.circe.parser.parse as parseJson
 import org.scalatest.freespec.AnyFreeSpec
@@ -9,13 +9,16 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor2, TableFor3}
 import pureconfig.ConfigSource
 
-class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyChecks with JsonSyntax {
+class ExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyChecks {
 
   val json: Json =
     parseJson(
       """
          |{
          | "v": "found",
+         | "foo": [{"qux": 1936}, {"qux": 1936}],
+         | "bar": [{"qux": 1937}, {"qux": 1936}],
+         | "baz": [{"qux": 1936}, {"zzz": 0}],
          | "qux": 1936
          |}
          |""".stripMargin,
@@ -27,14 +30,14 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
   val equalsScenarios: TableType = Table(
     tableHeader,
     (
-      "1 parameter will always be true",
-      """{ equals: ["$.qux"] }""".stripMargin,
-      true,
-    ),
-    (
       "0 parameters will always be false",
       """{ equals: [] }""".stripMargin,
       false,
+    ),
+    (
+      "1 parameter will always be true",
+      """{ equals: ["$.qux"] }""".stripMargin,
+      true,
     ),
     (
       "2 parameters (true)",
@@ -44,6 +47,31 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
     (
       "2 parameters (false)",
       """{ equals: ["$.qux", 1937] }""".stripMargin,
+      false,
+    ),
+    (
+      "matching all elements in array .*",
+      """{ equals: ["$.foo.*.qux", 1936] }""",
+      true,
+    ),
+    (
+      "matching only one element in array .*",
+      """{ equals: ["$.bar.*.qux", 1936] }""",
+      false,
+    ),
+    (
+      "matching nothing in array .*",
+      """{ equals: ["$.foo.*.qux", 1937] }""",
+      false,
+    ),
+    (
+      "matching array element .[N]",
+      """{ equals: ["$.bar[0].qux", 1937] }""",
+      true,
+    ),
+    (
+      "not matching array element .[N]",
+      """{ equals: ["$.bar[1].qux", 1937] }""",
       false,
     ),
     (
@@ -70,28 +98,43 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
       """{ defined: "$.zzz" }""",
       false,
     ),
+    (
+      "all elements in array are defined .*",
+      """{ defined: "$.foo.*.qux" }""",
+      true,
+    ),
+    (
+      "no elements in array are defined .*",
+      """{ defined: "$.foo.*.zzz" }""",
+      false,
+    ),
+    (
+      "only one element in array is defined .*",
+      """{ defined: "$.baz.*.zzz" }""",
+      false,
+    ),
   )
 
   val andScenarios: TableType = Table(
     tableHeader,
     (
       "0 clauses will always be true",
-      """{ and: [] }""",
+      """{ all: [] }""",
       true,
     ),
     (
       "1 clause (true)",
-      """{ and: [ { defined: "$.qux" } ] }""",
+      """{ all: [ { defined: "$.qux" } ] }""",
       true,
     ),
     (
       "1 clause (false)",
-      """{ and: [ { defined: "$.zzz" } ] }""",
+      """{ all: [ { defined: "$.zzz" } ] }""",
       false,
     ),
     (
       "2 clauses (true)",
-      """{ and: [ 
+      """{ all: [ 
         | { defined: "$.qux" },
         | { equals: ["$.qux", 1936] }
         |] }""".stripMargin,
@@ -99,7 +142,7 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
     ),
     (
       "2 clauses (false)",
-      """{ and: [ 
+      """{ all: [ 
         | { defined: "$.qux" },
         | { equals: ["$.qux", 1937] }
         |] }""".stripMargin,
@@ -111,22 +154,22 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
     tableHeader,
     (
       "0 clauses will always be false",
-      """{ or: [] }""",
+      """{ any: [] }""",
       false,
     ),
     (
       "1 clause (true)",
-      """{ or: [ { defined: "$.qux" } ] }""",
+      """{ any: [ { defined: "$.qux" } ] }""",
       true,
     ),
     (
       "1 clause (false)",
-      """{ or: [ { defined: "$.zzz" } ] }""",
+      """{ any: [ { defined: "$.zzz" } ] }""",
       false,
     ),
     (
       "2 clauses (true)",
-      """{ or: [ 
+      """{ any: [ 
         |  { defined: "$.qux" },
         |  { defined: "$.zzz" }
         |] }""".stripMargin,
@@ -134,7 +177,7 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
     ),
     (
       "2 clauses (false)",
-      """{ or: [ 
+      """{ any: [ 
         |  { defined: "$.yyy" },
         |  { defined: "$.zzz" }
         |] }""".stripMargin,
@@ -159,8 +202,8 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
                 |value = "$$.v"
                 |when = $when
                 |""".stripMargin)
-            .loadOrThrow[Single[String]]
-          json.hcursor.evaluateOption(expr) shouldBe Right(Option.when(hasResults)("found"))
+            .loadOrThrow[Basic[String]]
+          json.hcursor.evaluateFirst(expr) shouldBe Right(Option.when(hasResults)("found"))
         }
       }
     }

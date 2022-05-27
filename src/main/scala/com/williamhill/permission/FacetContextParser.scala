@@ -1,17 +1,16 @@
 package com.williamhill.permission
 
-import scala.annotation.tailrec
-
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
 import com.williamhill.permission.domain.{FacetContext, PermissionStatus, Universe}
+import com.williamhill.permission.dsl.JsonSyntax.*
+import com.williamhill.permission.dsl.SeqSyntax.*
 import com.williamhill.permission.kafka.events.generic.InputEvent
-import com.williamhill.permission.utils.JsonSyntax
 import io.circe.ACursor
 import zio.{Has, URLayer, ZIO}
 
-class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
+class FacetContextParser(config: MappingsConfig) {
 
   def parse(topic: String, input: InputEvent): Either[AppError, FacetContext] = {
     val body = input.body.hcursor
@@ -32,7 +31,7 @@ class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
       playerId <- newValues.evaluateRequired(mapping.playerId).left.map(AppError.fromDecodingFailure)
 
       newStatuses <- parsePermissionStatuses(mapping)(newValues)
-      oldStatuses <- previousValues.focus.toList.map(_.hcursor).flatTraverse(parsePermissionStatuses(mapping))
+      oldStatuses <- previousValues.focus.toVector.map(_.hcursor).flatTraverse(parsePermissionStatuses(mapping))
 
     } yield FacetContext(
       header = input.header,
@@ -45,26 +44,12 @@ class FacetContextParser(config: MappingsConfig) extends JsonSyntax {
     )
   }
 
-  private def parsePermissionStatuses(m: Mapping)(cursor: ACursor): Either[AppError, List[PermissionStatus]] = {
+  private def parsePermissionStatuses(m: Mapping)(cursor: ACursor): Either[AppError, Vector[PermissionStatus]] = {
     (for {
-      statuses <- cursor.evaluateList(m.status)
-      start    <- m.actionsStart.flatTraverse(cursor.evaluateOption(_))
-      end      <- m.actionsEnd.flatTraverse(cursor.evaluateOption(_))
+      statuses <- cursor.evaluateAll(m.status)
+      start    <- m.actionsStart.flatTraverse(cursor.evaluateFirst(_))
+      end      <- m.actionsEnd.flatTraverse(cursor.evaluateFirst(_))
     } yield statuses.map(PermissionStatus(_, start, end))).left.map(AppError.fromDecodingFailure)
-  }
-
-  implicit private class ListExt[T](list: List[T]) {
-    final def collectSome[U](f: T => Option[U]): Option[U] = collectSomeRec(list, f)
-
-    @tailrec
-    final private def collectSomeRec[U](list: List[T], f: T => Option[U]): Option[U] = list match {
-      case Nil => None
-      case head :: tail =>
-        f(head) match {
-          case some @ Some(_) => some
-          case None           => collectSomeRec(tail, f)
-        }
-    }
   }
 
 }

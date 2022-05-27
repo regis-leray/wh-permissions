@@ -34,8 +34,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           playerId("U00004334"),
           universe("wh-eu-de"),
           "dormancy",
-          List(PermissionStatus("Dormant")),
-          List(PermissionStatus("Active")),
+          Vector(PermissionStatus("Dormant")),
+          Vector(PermissionStatus("Active")),
         ),
       ),
       (
@@ -54,8 +54,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           playerId("U00004334"),
           universe("wh-mga"),
           "prohibition",
-          List(PermissionStatus("Prohibited")),
-          List(PermissionStatus("Allowed")),
+          Vector(PermissionStatus("Prohibited")),
+          Vector(PermissionStatus("Allowed")),
         ),
       ),
       (
@@ -74,8 +74,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           playerId("U00004335"),
           universe("wh-eu-dk"),
           "excluded",
-          List(PermissionStatus("indefinite", Some(Instant.parse("2022-02-11T00:00:00Z")))),
-          Nil,
+          Vector(PermissionStatus("indefinite", Some(Instant.parse("2022-02-11T00:00:00Z")))),
+          Vector.empty,
         ),
       ),
       (
@@ -94,8 +94,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           playerId("U00004336"),
           universe("wh-mga"),
           "excluded",
-          List(PermissionStatus("permanent", Some(Instant.parse("2022-02-11T00:00:00Z")))),
-          Nil,
+          Vector(PermissionStatus("permanent", Some(Instant.parse("2022-02-11T00:00:00Z")))),
+          Vector.empty,
         ),
       ),
       (
@@ -114,10 +114,10 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           playerId("U00005335"),
           universe("wh-mga"),
           "excluded",
-          List(
+          Vector(
             PermissionStatus("temporary", Some(Instant.parse("2021-01-06T11:13:11.993Z")), Some(Instant.parse("2021-12-06T11:13:11.993Z"))),
           ),
-          Nil,
+          Vector.empty,
         ),
       ),
       (
@@ -136,10 +136,10 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           playerId("U00005335"),
           universe("wh-mga"),
           "excluded",
-          List(
+          Vector(
             PermissionStatus("timeout", Some(Instant.parse("2021-01-06T11:13:11.993Z")), Some(Instant.parse("2021-02-07T11:13:11.993Z"))),
           ),
-          Nil,
+          Vector.empty,
         ),
       ),
     )
