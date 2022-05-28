@@ -51,4 +51,5 @@ object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]]
             )
             .toManaged_,
       )
+      .onExit(_ => Log.infoIO(s"healthcheck API stopped for ${cfg.identifier}"))
 }

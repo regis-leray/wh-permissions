@@ -6,7 +6,6 @@ import zio.{App, ExitCode, URIO, ZEnv}
 
 object Main extends App {
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
-    println(s"App starting ......")
 //    Kamon.asResource
 //      .use_(
 //    Log.warnIO("START consuming input events") *>
@@ -16,7 +15,8 @@ object Main extends App {
         Log.errorIO("STOP consuming input events => failed with error", _),
         _ => Log.warnIO("STOP consuming input events"),
       )
-      .as(ExitCode.success)
+      .onExit(exit => Log.infoIO(s"Shutting down input events processor: $exit"))
+      .exitCode
 //      )
       .provideSomeLayer[ZEnv](Env.layer)
       .orDie

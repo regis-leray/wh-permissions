@@ -13,10 +13,10 @@ ThisBuild / semanticdbVersion                              := scalafixSemanticdb
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 ThisBuild / scalafixScalaBinaryVersion                     := "2.13"
 
-ThisBuild / javaOptions ++= Seq(
-  // ZIO Interop Log4j2
-  "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
-)
+//ThisBuild / javaOptions ++= Seq(
+//  // ZIO Interop Log4j2
+//  "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
+//)
 
 lazy val commonSettings = Seq(
   scalaVersion := scalaVer,
@@ -71,10 +71,6 @@ lazy val commonSettings = Seq(
     http4s.dsl,
     logback.logstashLogbackEncoder,
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
-  ),
-  dependencyOverrides ++= Seq(
-    "org.apache.logging.log4j" % "log4j-api"  % "2.17.2",
-    "org.apache.logging.log4j" % "log4j-core" % "2.17.2",
   ),
 )
 

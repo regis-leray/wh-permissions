@@ -6,43 +6,43 @@
             <pattern>%date{MM/dd HH:mm:ss} %-5level %logger{1} - %msg%n%replace(%xException){'\n',' | '}%nopex</pattern>
         </encoder>
         <target>System.out</target>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
-                <defaultMask>***</defaultMask>
-                <!--Mask self-exclusion-->
-                <values>.*You do not have.*.permission Reason: self-excluded.*</values>
-            </jsonGeneratorDecorator>
-        </encoder>
+<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">-->
+<!--                <defaultMask>***</defaultMask>-->
+<!--                &lt;!&ndash;Mask self-exclusion&ndash;&gt;-->
+<!--                <values>.*You do not have.*.permission Reason: self-excluded.*</values>-->
+<!--            </jsonGeneratorDecorator>-->
+<!--        </encoder>-->
     </appender>
-    <appender name="newrelicError" class="com.unity.newrelic.appender.NewRelicNoticeErrorAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>ERROR</level>
-        </filter>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
-                <defaultMask>***</defaultMask>
-                <!--Mask username/email-->
-                <path>username</path>
-            </jsonGeneratorDecorator>
-        </encoder>
-    </appender>
-    <appender name="newrelicCustom" class="com.unity.newrelic.appender.NewRelicCustomEventAppender">
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-        </filter>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
-                <defaultMask>***</defaultMask>
-                <!--Mask username/email-->
-                <path>username</path>
-            </jsonGeneratorDecorator>
-        </encoder>
-    </appender>
+<!--    <appender name="newrelicError" class="com.unity.newrelic.appender.NewRelicNoticeErrorAppender">-->
+<!--        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
+<!--            <level>ERROR</level>-->
+<!--        </filter>-->
+<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">-->
+<!--                <defaultMask>***</defaultMask>-->
+<!--                &lt;!&ndash;Mask username/email&ndash;&gt;-->
+<!--                <path>username</path>-->
+<!--            </jsonGeneratorDecorator>-->
+<!--        </encoder>-->
+<!--    </appender>-->
+<!--    <appender name="newrelicCustom" class="com.unity.newrelic.appender.NewRelicCustomEventAppender">-->
+<!--        <filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+<!--            <level>INFO</level>-->
+<!--            <onMismatch>DENY</onMismatch>-->
+<!--        </filter>-->
+<!--        <filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+<!--            <level>INFO</level>-->
+<!--            <onMatch>ACCEPT</onMatch>-->
+<!--        </filter>-->
+<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">-->
+<!--                <defaultMask>***</defaultMask>-->
+<!--                &lt;!&ndash;Mask username/email&ndash;&gt;-->
+<!--                <path>username</path>-->
+<!--            </jsonGeneratorDecorator>-->
+<!--        </encoder>-->
+<!--    </appender>-->
 
     <logger name="akka" level="${LOG_LEVEL:-INFO}"/>
     <logger name="com.williamhill.self_exclusion_ep" level="${LOG_LEVEL:-INFO}"/>
@@ -56,8 +56,8 @@
 
     <root level="${LOG_LEVEL:-INFO}">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="newrelicError"/>
-        <appender-ref ref="newrelicCustom"/>
+<!--        <appender-ref ref="newrelicError"/>-->
+<!--        <appender-ref ref="newrelicCustom"/>-->
     </root>
 
 </configuration>
