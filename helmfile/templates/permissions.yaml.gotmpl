@@ -56,28 +56,5 @@ base:
       memory: 1024Mi
       cpu: 100m
 
-  livenessProbe:
-    httpGet:
-      path: /permissions-ep/meta/health
-      port: 8080
-    initialDelaySeconds: 3
-    periodSeconds: 3
-  readinessProbe:
-    httpGet:
-      path: /permissions-ep/meta/health/readiness
-      port: 8080
-    initialDelaySeconds: 3
-    periodSeconds: 3
-  readinessProperties:
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    failureThreshold: 6
-    periodSeconds: 10
-  livenessProperties:
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    failureThreshold: 9
-    periodSeconds: 10
-
   custom_annotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
