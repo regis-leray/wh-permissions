@@ -13,10 +13,10 @@ ThisBuild / semanticdbVersion                              := scalafixSemanticdb
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 ThisBuild / scalafixScalaBinaryVersion                     := "2.13"
 
-//ThisBuild / javaOptions ++= Seq(
-//  // ZIO Interop Log4j2
-//  "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
-//)
+ThisBuild / javaOptions ++= Seq(
+  // ZIO Interop Log4j2
+  "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
+)
 
 lazy val commonSettings = Seq(
   scalaVersion := scalaVer,
