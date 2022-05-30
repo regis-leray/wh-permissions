@@ -18,9 +18,5 @@ object Fixtures {
       Some("48dac344-84c1-11ec-a8a3-0242ac120002"),
     )
 
-  def playerId(playerIdString: String): PlayerId =
-    PlayerId(playerIdString).fold(e => throw e.toThrowable, identity)
-
-  def universe(universeString: String): Universe =
-    Universe(universeString).fold(e => throw e.toThrowable, identity)
+  def universe(universeString: String): Universe = Universe(universeString).fold(e => throw e.toThrowable, identity)
 }

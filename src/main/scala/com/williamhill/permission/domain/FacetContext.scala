@@ -16,7 +16,7 @@ object OutputAction {
 
 final case class FacetContext(
     header: Header,
-    actions: List[Action],
+    actions: Vector[Action],
     playerId: PlayerId,
     universe: Universe,
     name: String,
@@ -33,7 +33,7 @@ final case class FacetContext(
     }
   }.toMap
 
-  val outputActions: List[OutputAction] = actions.map(OutputAction.apply)
+  val outputActions: Vector[OutputAction] = actions.map(OutputAction.apply)
 
   def addAction(action: Action): FacetContext = this.copy(actions = actions :+ action)
 

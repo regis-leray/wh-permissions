@@ -1,8 +1,8 @@
 package com.williamhill.permission
 
 import com.williamhill.permission.application.config.RulesConfig
-import com.williamhill.permission.domain.Fixtures.{header, playerId, universe}
-import com.williamhill.permission.domain.{Action, FacetContext, PermissionStatus}
+import com.williamhill.permission.domain.Fixtures.{header, universe}
+import com.williamhill.permission.domain.{Action, FacetContext, PermissionStatus, PlayerId}
 import zio.test.Assertion.*
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, assert}
@@ -15,8 +15,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
       testM("enrich FacetContext with actions from actions cfg") {
         val facetContext = FacetContext(
           header("wh-eu-de"),
-          Nil,
-          playerId("U00000001"),
+          Vector.empty,
+          PlayerId("U00000001"),
           universe("wh-eu-de"),
           "dormancy",
           Vector(PermissionStatus("Dormant")),
@@ -24,7 +24,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
         )
 
         val expectedEnrichedContext = facetContext.copy(actions =
-          List(
+          Vector(
             Action(
               `type` = "notification",
               name = "sendDormancyNotification",
@@ -43,8 +43,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
       testM("not enrich anything when universe does not match with the one in the actions config") {
         val facet = FacetContext(
           header("wh-foo"),
-          Nil,
-          playerId("U00000001"),
+          Vector.empty,
+          PlayerId("U00000001"),
           universe("wh-foo"),
           "dormancy",
           Vector(PermissionStatus("Dormant")),

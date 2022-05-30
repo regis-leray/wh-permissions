@@ -1,9 +1,7 @@
-package com.williamhill.permission
+package com.williamhill.permission.dsl
 
 import com.williamhill.permission.dsl.BooleanExpression.{Defined, Equals}
-import com.williamhill.permission.dsl.Expression.{Basic, Bucket}
-import com.williamhill.permission.dsl.Value.{Const, JsonPath}
-import com.williamhill.permission.dsl.*
+import com.williamhill.permission.dsl.Expression.{Conditional, Const, Expressions, JsonPath}
 import io.circe.Json
 import org.scalatest.Assertion
 import org.scalatest.freespec.AnyFreeSpec
@@ -11,7 +9,7 @@ import org.scalatest.matchers.should.Matchers
 import pureconfig.generic.semiauto.deriveReader
 import pureconfig.{ConfigReader, ConfigSource}
 
-class DslParserSpec extends AnyFreeSpec with Matchers {
+class ConfigParserSpec extends AnyFreeSpec with Matchers {
 
   case class Output(x: Expression[String])
   implicit val reader: ConfigReader[Output] = deriveReader
@@ -19,23 +17,26 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
   "Simple expression" - {
 
     "Json path" in {
-      val input = """x = "$.hello['world'][*][2][3:9].*""""
-      val output = Basic(
+      val input = """x = "$.hello['world'][*][2][-2][3:9][3:][:9][-5:-10].*""""
+      val output =
         JsonPath.Property("hello") /:
           JsonPath.Property("world") /:
           JsonPath.Wildcard /:
           JsonPath.ArrayElement(2) /:
-          JsonPath.ArrayRange(3, 9) /:
+          JsonPath.ArrayElement(-2) /:
+          JsonPath.ArrayRange(Some(3), Some(9)) /:
+          JsonPath.ArrayRange(Some(3), None) /:
+          JsonPath.ArrayRange(None, Some(9)) /:
+          JsonPath.ArrayRange(Some(-5), Some(-10)) /:
           JsonPath.Wildcard /:
-          JsonPath.Empty,
-      )
+          JsonPath.Empty
 
       test(input, output)
     }
 
     "Hardcoded" in {
       val input  = """x = "hello.world""""
-      val output = Basic(Const("hello.world"))
+      val output = Const("hello.world")
 
       test(input, output)
     }
@@ -48,9 +49,9 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |  default-to = "$.something.else"
           |}""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello") /: JsonPath.Property("world").toPath,
-        defaultTo = Some(Basic(JsonPath.Property("something") /: JsonPath.Property("else").toPath)),
+        defaultTo = Some(JsonPath.Property("something") /: JsonPath.Property("else").toPath),
       )
 
       test(input, output)
@@ -64,9 +65,9 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |  default-to = "something else"
           |}""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
-        defaultTo = Some(Basic(Const("something else"))),
+        defaultTo = Some(Const("something else")),
       )
 
       test(input, output)
@@ -83,12 +84,12 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |  }
           |}""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("foo").toPath,
         defaultTo = Some(
-          Basic(
+          Conditional(
             JsonPath.Property("bar").toPath,
-            defaultTo = Some(Basic(JsonPath.Property("baz").toPath)),
+            defaultTo = Some(JsonPath.Property("baz").toPath),
           ),
         ),
       )
@@ -109,7 +110,7 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
         when = Some(Defined(JsonPath.Property("foo").toPath)),
       )
@@ -130,11 +131,11 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
         when = Some(Defined(JsonPath.Property("foo").toPath)),
         defaultTo = Some(
-          Basic(
+          Conditional(
             JsonPath.Property("bar").toPath,
             when = Some(Defined(JsonPath.Property("baz").toPath)),
           ),
@@ -153,13 +154,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello"
-          |  when = { equals = ["$.foo", "BAZ BAZ!"] }
+          |  when = { src = "$.foo", equals = "BAZ BAZ!" }
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
-        when = Some(Equals(List(JsonPath.Property("foo").toPath, Const(Json.fromString("BAZ BAZ!"))))),
+        when = Some(Equals(JsonPath.Property("foo").toPath, Const(Json.fromString("BAZ BAZ!")))),
       )
 
       test(input, output)
@@ -170,13 +171,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello"
-          |  when = { equals = ["$.foo", true] }
+          |  when = { src = "$.foo", equals = true }
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
-        when = Some(Equals(List(JsonPath.Property("foo").toPath, Const(Json.fromBoolean(true))))),
+        when = Some(Equals(JsonPath.Property("foo").toPath, Const(Json.fromBoolean(true)))),
       )
 
       test(input, output)
@@ -187,13 +188,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello"
-          |  when = { equals = ["$.foo", 99] }
+          |  when = { src = "$.foo", equals = 99 }
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
-        when = Some(Equals(List(JsonPath.Property("foo").toPath, Const(Json.fromInt(99))))),
+        when = Some(Equals(JsonPath.Property("foo").toPath, Const(Json.fromInt(99)))),
       )
 
       test(input, output)
@@ -204,13 +205,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello"
-          |  when = { equals = ["$.foo", 2147483648] }
+          |  when = { src = "$.foo", equals = 2147483648 }
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
-        when = Some(Equals(List(JsonPath.Property("foo").toPath, Const(Json.fromLong(2147483648L))))),
+        when = Some(Equals(JsonPath.Property("foo").toPath, Const(Json.fromLong(2147483648L)))),
       )
 
       test(input, output)
@@ -221,13 +222,13 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello"
-          |  when = { equals = ["$.foo", 99.12] }
+          |  when = { src = "$.foo", equals = 99.12 }
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
-        when = Some(Equals(List(JsonPath.Property("foo").toPath, Const(Json.fromDoubleOrNull(99.12))))),
+        when = Some(Equals(JsonPath.Property("foo").toPath, Const(Json.fromDoubleOrNull(99.12)))),
       )
 
       test(input, output)
@@ -238,21 +239,21 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         """
           |x = {
           |  value = "$.hello"
-          |  when = { equals = ["$.foo", "BAZ BAZ!"] }
+          |  when = { src = "$.foo", equals = "BAZ BAZ!" }
           |  default-to = {
           |    value = "$.bar"
-          |    when = { equals = ["HELLO", "WORLD"] }
+          |    when = { src = "HELLO", equals = "WORLD" }
           |  }
           |}
           |""".stripMargin
 
-      val output = Basic(
+      val output = Conditional(
         JsonPath.Property("hello").toPath,
-        when = Some(Equals(List(JsonPath.Property("foo").toPath, Const(Json.fromString("BAZ BAZ!"))))),
+        when = Some(Equals(JsonPath.Property("foo").toPath, Const(Json.fromString("BAZ BAZ!")))),
         defaultTo = Some(
-          Basic(
+          Conditional(
             JsonPath.Property("bar").toPath,
-            when = Some(Equals(List(Const(Json.fromString("HELLO")), Const(Json.fromString("WORLD"))))),
+            when = Some(Equals(Const(Json.fromString("HELLO")), Const(Json.fromString("WORLD")))),
           ),
         ),
       )
@@ -277,14 +278,14 @@ class DslParserSpec extends AnyFreeSpec with Matchers {
         |]
         |""".stripMargin
 
-    val output = Bucket(
-      List(
-        Basic(JsonPath.Property("hello").toPath, None),
-        Basic(Const("world"), None),
-        Basic(
+    val output = Expressions(
+      Vector(
+        JsonPath.Property("hello").toPath,
+        Const("world"),
+        Conditional(
           Const("xxx"),
           when = Some(Defined(JsonPath.Property("foo") /: JsonPath.Property("bar").toPath)),
-          defaultTo = Some(Basic(Const("yyy"))),
+          defaultTo = Some(Const("yyy")),
         ),
       ),
     )

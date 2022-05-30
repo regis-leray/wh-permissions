@@ -9,7 +9,7 @@ we designed a lightweight DSL to enable the extraction and evaluation of data st
 ### Design
 
 The core of the DSL is modelled as `Expression[T]`.  
-An `Expression[T]` can be evaluated in order to extract data (of type `T`, `Option[T]` or `List[T]`) from an upcoming event.
+An `Expression[T]` can be evaluated in order to extract data (of type `T`, `Option[T]` or `Vector[T]`) from an upcoming event.
 
 In its simpler form, an expression can be modelled as a string:
 
@@ -152,7 +152,7 @@ and its evaluation will produce a list of type `T`.
 In order to configure the mappings for a new event type, add an entry to `mappings.conf` including:
 
 - event-type: `Expression.Single[String]` - this *must be* a conditional expression
-- status: `Expression[String]` - (can be either a single expression or a list of expressions)
+- status: `Expression[String]`
 - player-id: `Expression.Single[String]`
 - actions-start: `Expression.Single[Instant]` (optional)
 - actions-end: `Expression.Single[Instant]` (optional)

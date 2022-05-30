@@ -1,7 +1,6 @@
-package com.williamhill.permission
+package com.williamhill.permission.dsl
 
-import com.williamhill.permission.dsl.Expression.Basic
-import com.williamhill.permission.dsl.JsonSyntax.CursorExt
+import com.williamhill.permission.dsl.Expression.Conditional
 import io.circe.Json
 import io.circe.parser.parse as parseJson
 import org.scalatest.freespec.AnyFreeSpec
@@ -9,7 +8,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor2, TableFor3}
 import pureconfig.ConfigSource
 
-class ExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyChecks {
+class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrivenPropertyChecks {
 
   val json: Json =
     parseJson(
@@ -30,58 +29,48 @@ class ExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrive
   val equalsScenarios: TableType = Table(
     tableHeader,
     (
-      "0 parameters will always be false",
-      """{ equals: [] }""".stripMargin,
-      false,
-    ),
-    (
-      "1 parameter will always be true",
-      """{ equals: ["$.qux"] }""".stripMargin,
+      "JSON path matches expected value",
+      """{ src = "$.qux", equals = 1936 }""".stripMargin,
       true,
     ),
     (
-      "2 parameters (true)",
-      """{ equals: ["$.qux", 1936] }""".stripMargin,
+      "JSON path does not match expected value",
+      """{ src = "$.qux", equals = 1937 }""".stripMargin,
+      false,
+    ),
+    (
+      "JSON path contains a different type",
+      """{ src = "$.qux", equals = "1937" }""".stripMargin,
+      false,
+    ),
+    (
+      "JSON path is missing",
+      """{ src = "$.nothing.here[0]", equals = "1937" }""".stripMargin,
+      false,
+    ),
+    (
+      "partial matching in array (wildcard syntax)",
+      """{ src = "$.bar.*.qux", equals = 1936 }""",
+      false,
+    ),
+    (
+      "matching nothing in array (wildcard syntax)",
+      """{ src = "$.foo.*.qux", equals = 1937 }""",
+      false,
+    ),
+    (
+      "matching all in array (wildcard syntax)",
+      """{ src = "$.bar.*.qux", equals = [1936, 1937] }""",
       true,
-    ),
-    (
-      "2 parameters (false)",
-      """{ equals: ["$.qux", 1937] }""".stripMargin,
-      false,
-    ),
-    (
-      "matching all elements in array .*",
-      """{ equals: ["$.foo.*.qux", 1936] }""",
-      true,
-    ),
-    (
-      "matching only one element in array .*",
-      """{ equals: ["$.bar.*.qux", 1936] }""",
-      false,
-    ),
-    (
-      "matching nothing in array .*",
-      """{ equals: ["$.foo.*.qux", 1937] }""",
-      false,
     ),
     (
       "matching array element .[N]",
-      """{ equals: ["$.bar[0].qux", 1937] }""",
+      """{ src: "$.bar[0].qux", equals: 1937 }""",
       true,
     ),
     (
       "not matching array element .[N]",
-      """{ equals: ["$.bar[1].qux", 1937] }""",
-      false,
-    ),
-    (
-      "3 parameters (true)",
-      """{ equals: ["$.qux", "$.qux", 1936] }""".stripMargin,
-      true,
-    ),
-    (
-      "3 parameters (false)",
-      """{ equals: ["$.qux", "$.qux", 1937] }""".stripMargin,
+      """{ src: "$.bar[1].qux", equals: 1937 }""",
       false,
     ),
   )
@@ -136,7 +125,7 @@ class ExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrive
       "2 clauses (true)",
       """{ all: [ 
         | { defined: "$.qux" },
-        | { equals: ["$.qux", 1936] }
+        | { src = "$.qux", equals: 1936 }
         |] }""".stripMargin,
       true,
     ),
@@ -144,7 +133,7 @@ class ExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrive
       "2 clauses (false)",
       """{ all: [ 
         | { defined: "$.qux" },
-        | { equals: ["$.qux", 1937] }
+        | { src = "$.qux", equals: 1937 }
         |] }""".stripMargin,
       false,
     ),
@@ -202,8 +191,10 @@ class ExpressionEvaluationSpec extends AnyFreeSpec with Matchers with TableDrive
                 |value = "$$.v"
                 |when = $when
                 |""".stripMargin)
-            .loadOrThrow[Basic[String]]
-          json.hcursor.evaluateFirst(expr) shouldBe Right(Option.when(hasResults)("found"))
+            .loadOrThrow[Conditional[String]]
+          new ExpressionEvaluator(json.hcursor).evaluateFirst(expr) shouldBe Right(
+            Option.when(hasResults)("found"),
+          )
         }
       }
     }

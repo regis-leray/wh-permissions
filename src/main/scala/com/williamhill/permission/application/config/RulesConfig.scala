@@ -1,5 +1,6 @@
 package com.williamhill.permission.application.config
 
+import com.williamhill.permission.dsl.Expression
 import pureconfig.generic.semiauto.deriveReader
 import pureconfig.{ConfigReader, ConfigSource}
 import zio.blocking.{Blocking, blocking}
@@ -17,20 +18,9 @@ object ActionDefinition {
   implicit val reader: ConfigReader[ActionDefinition] = deriveReader
 }
 
-final case class RuleDefinition(
-    universe: String,
-    eventType: String,
-    status: String,
-    actions: List[String],
-)
-
-object RuleDefinition {
-  implicit val reader: ConfigReader[RuleDefinition] = deriveReader
-}
-
 final case class RulesConfig(
-    rules: List[RuleDefinition],
-    actions: List[ActionDefinition],
+    rules: Vector[Expression[String]],
+    actions: Vector[ActionDefinition],
 )
 
 object RulesConfig {

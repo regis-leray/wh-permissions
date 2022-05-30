@@ -4,51 +4,50 @@ import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
 import com.williamhill.permission.domain.{FacetContext, PermissionStatus, Universe}
-import com.williamhill.permission.dsl.JsonSyntax.*
+import com.williamhill.permission.dsl.ExpressionEvaluator
 import com.williamhill.permission.dsl.SeqSyntax.*
 import com.williamhill.permission.kafka.events.generic.InputEvent
-import io.circe.ACursor
 import zio.{Has, URLayer, ZIO}
 
 class FacetContextParser(config: MappingsConfig) {
 
   def parse(topic: String, input: InputEvent): Either[AppError, FacetContext] = {
-    val body = input.body.hcursor
+    val evaluator = new ExpressionEvaluator(input.body.hcursor)
 
     for {
       eventTypeAndMapping <-
         config.mappings
           .filter(_.topics.forall(_.contains(topic)))
-          .collectSome(mapping => body.evaluateRequired(mapping.eventType.toExpression).toOption.map(_ -> mapping))
+          .collectSome(mapping => evaluator.evaluateRequired(mapping.event.toExpression).toOption.map(_ -> mapping))
           .toRight(AppError.eventTypeNotFound(input.body))
 
-      (eventType, mapping) = eventTypeAndMapping
+      (event, mapping) = eventTypeAndMapping
 
-      newValues      = body.downField("newValues")
-      previousValues = body.downField("previousValues")
+      newValues      = evaluator.mapCursor(_.downField("newValues"))
+      previousValues = evaluator.mapCursor(_.downField("previousValues"))
 
       universe <- Universe(input.header.universe)
       playerId <- newValues.evaluateRequired(mapping.playerId).left.map(AppError.fromDecodingFailure)
 
       newStatuses <- parsePermissionStatuses(mapping)(newValues)
-      oldStatuses <- previousValues.focus.toVector.map(_.hcursor).flatTraverse(parsePermissionStatuses(mapping))
+      oldStatuses <- previousValues.optional.toVector.flatTraverse(parsePermissionStatuses(mapping))
 
     } yield FacetContext(
       header = input.header,
-      actions = Nil,
+      actions = Vector.empty,
       playerId = playerId,
       universe = universe,
-      name = eventType,
+      name = event,
       newStatuses = newStatuses,
       previousStatuses = oldStatuses,
     )
   }
 
-  private def parsePermissionStatuses(m: Mapping)(cursor: ACursor): Either[AppError, Vector[PermissionStatus]] = {
+  private def parsePermissionStatuses(m: Mapping)(evaluator: ExpressionEvaluator): Either[AppError, Vector[PermissionStatus]] = {
     (for {
-      statuses <- cursor.evaluateAll(m.status)
-      start    <- m.actionsStart.flatTraverse(cursor.evaluateFirst(_))
-      end      <- m.actionsEnd.flatTraverse(cursor.evaluateFirst(_))
+      statuses <- evaluator.evaluateAll(m.status)
+      start    <- m.actionsStart.flatTraverse(evaluator.evaluateFirst(_))
+      end      <- m.actionsEnd.flatTraverse(evaluator.evaluateFirst(_))
     } yield statuses.map(PermissionStatus(_, start, end))).left.map(AppError.fromDecodingFailure)
   }
 

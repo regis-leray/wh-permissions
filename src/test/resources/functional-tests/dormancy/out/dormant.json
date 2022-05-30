@@ -8,14 +8,14 @@
       "ip": "100.77.100.167"
     },
     "sessionId": "5848afcd-8020-11ec-a1d6-5057d25f6201",
-    "universe": "wh-eu-de",
+    "universe": "wh-mga",
     "when": "2022-02-28T14:22:41.433Z"
   },
   "body": {
     "type": "dormancy",
     "newValues": {
       "id": "U00004334",
-      "universe": "wh-eu-de",
+      "universe": "wh-mga",
       "data": {
         "permissionDenials": {
           "canLogin":

@@ -62,7 +62,7 @@ object NewValues {
 
 case class Data(
     permissionDenials: Map[String, PermissionDenial],
-    actions: List[OutputAction],
+    actions: Vector[OutputAction],
 )
 
 object Data {
