@@ -186,7 +186,7 @@ This is a 2 steps process:
 
 #### Mappings.conf
 
-In order to configure the mappings for a new event type, add an entry to `mappings.conf` including:
+In order to configure the mappings for a new event type, add an entry to [mappings.conf](src/main/resources/mappings.conf) including:
 
 - event: `Expression[String]` - this *must be* a conditional expression
 - status: `Expression[String]` (multiple values allowed, potentially empty)
@@ -194,11 +194,11 @@ In order to configure the mappings for a new event type, add an entry to `mappin
 - actions-start: `Expression[Instant]` (optional)
 - actions-end: `Expression[Instant]` (optional)
 
-This will instrcut the service on when and how to extract piece of information from an event in input.
+This will instruct the service on when and how to extract piece of information from an event in input.
 
 
 #### Rules.conf
 
-Specific events need to be bound to specific actions by adding entries to `rules.conf`.
+Specific events need to be bound to specific actions by adding entries to [rules.conf](src/main/resources/rules.conf).
 Entries in the rules list are evaluated as list of action names (`String`)
 and can refer to any of the following fields: `$.event`, `$.status`, `$.universe`.
