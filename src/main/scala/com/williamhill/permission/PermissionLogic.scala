@@ -49,7 +49,7 @@ class PermissionLogicLive(config: RulesConfig, clock: Clock.Service) extends Per
                   ad.reasonCode,
                   ad.denialDescription,
                   ad.deniedPermissions,
-                  status.endDate.filter(_.isBefore(now)),
+                  status.endDate.filter(_.isAfter(now)),
                 ),
               ),
           )

@@ -115,7 +115,7 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           universe("wh-mga"),
           "excluded",
           Vector(
-            PermissionStatus("temporary", Some(Instant.parse("2021-01-06T11:13:11.993Z")), Some(Instant.parse("2021-12-06T11:13:11.993Z"))),
+            PermissionStatus("temporary", Some(Instant.parse("2021-01-06T11:13:11.993Z")), Some(Instant.parse("2025-12-06T11:13:11.993Z"))),
           ),
           Vector.empty,
         ),
