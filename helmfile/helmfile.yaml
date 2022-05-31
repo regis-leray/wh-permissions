@@ -42,7 +42,7 @@ releases:
     chart: 'nexus/permissions'
     labels:
       project: unity
-      slack_url_var: UNITY_TEAM_A_SLACK_HOOK_URL
+      slack_url_var: UNITY_TEAM_D_SLACK_HOOK_URL
     {{- with (.Values | getOrNil "permissions-ep" | getOrNil "values") }}
     values:
       - {{- toYaml . | nindent 8 }}
