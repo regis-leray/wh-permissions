@@ -16,7 +16,3 @@ permissions:
       services:
         permissions-ep:
           enabled: true
-          envVars:
-            KAFKA_SERVERS: ref+awsssm:///mtt-sit/msk/unity-mtt-sit-msk-mtt-sit/brokers_plaintext_connection_string?region=eu-west-1
-            SCHEMA_REGISTRY_URL: http://cp-schema-registry:8081
-            ZOOKEEPER_SERVERS: ref+awsssm:///mtt-sit/msk/unity-mtt-sit-msk-mtt-sit/zookeeper_plaintext_connection_string?region=eu-west-1
