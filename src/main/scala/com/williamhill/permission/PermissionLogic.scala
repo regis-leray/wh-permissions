@@ -1,69 +1,60 @@
 package com.williamhill.permission
 
-import java.time.Instant
-
+import cats.syntax.either.*
 import cats.syntax.traverse.*
+import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.RulesConfig
 import com.williamhill.permission.domain.{Action, FacetContext}
 import com.williamhill.permission.dsl.ExpressionEvaluator
-import io.circe.{DecodingFailure, Json, JsonObject}
+import io.circe.{Json, JsonObject}
 import zio.clock.Clock
-import zio.{Has, Task, URLayer, ZIO}
+import zio.{Has, IO, URLayer, ZIO}
 
 trait PermissionLogic {
-  def enrichWithActions(facetContext: FacetContext): Task[FacetContext]
+  def enrichWithActions(facetContext: FacetContext): IO[AppError, FacetContext]
 }
 
-class PermissionLogicLive(config: RulesConfig, clock: Clock.Service) extends PermissionLogic {
+class PermissionLogicLive(config: RulesConfig) extends PermissionLogic {
 
-  override def enrichWithActions(fc: FacetContext): Task[FacetContext] =
-    for {
-      now    <- clock.instant
-      result <- Task.fromEither(enrichWithActions(fc, now))
-    } yield result
-
-  def enrichWithActions(fc: FacetContext, now: Instant): Either[DecodingFailure, FacetContext] = {
-    fc.newStatuses
-      .flatTraverse { status =>
-        val evaluator = new ExpressionEvaluator(
-          Json
-            .fromJsonObject(
-              JsonObject(
-                "universe" -> Json.fromString(fc.universe.value),
-                "event"    -> Json.fromString(fc.name),
-                "status"   -> Json.fromString(status.status),
-              ),
-            )
-            .hcursor,
-        )
-
-        config.rules
-          .flatTraverse(evaluator.evaluateAll[String])
-          .map(actionNames => config.actions.filter(ad => actionNames.contains(ad.name)))
-          .map(actionDefinitions =>
-            actionDefinitions
-              .map(ad =>
-                Action(
-                  ad.`type`,
-                  ad.name,
-                  ad.reasonCode,
-                  ad.denialDescription,
-                  ad.deniedPermissions,
-                  status.endDate.filter(_.isAfter(now)),
+  override def enrichWithActions(fc: FacetContext): IO[AppError, FacetContext] =
+    ZIO.fromEither {
+      fc.newStatus.statuses
+        .flatTraverse { status =>
+          val evaluator = new ExpressionEvaluator(
+            Json
+              .fromJsonObject(
+                JsonObject(
+                  "universe" -> Json.fromString(fc.universe.value),
+                  "event"    -> Json.fromString(fc.name),
+                  "status"   -> Json.fromString(status),
                 ),
-              ),
+              )
+              .hcursor,
           )
-      }
-      .map(actions => fc.copy(actions = actions))
-  }
+
+          config.rules
+            .flatTraverse(evaluator.evaluateAll[String])
+            .map(actionNames => config.actions.filter(ad => actionNames.contains(ad.name)))
+            .map(actionDefinitions =>
+              actionDefinitions
+                .map(ad =>
+                  Action(
+                    ad.`type`,
+                    ad.name,
+                    ad.reasonCode,
+                    ad.denialDescription,
+                    ad.deniedPermissions,
+                    fc.newStatus.endDate,
+                  ),
+                ),
+            )
+        }
+        .bimap(e => AppError.fromDecodingFailure(e), actions => fc.copy(actions = actions))
+    }
 
 }
 
 object PermissionLogic {
-  val layer: URLayer[Has[RulesConfig] & Clock, Has[PermissionLogic]] = (
-    for {
-      clock <- ZIO.service[Clock.Service]
-      cfg   <- ZIO.service[RulesConfig]
-    } yield new PermissionLogicLive(cfg, clock)
-  ).toLayer
+  val layer: URLayer[Has[RulesConfig] & Clock, Has[PermissionLogic]] =
+    ZIO.service[RulesConfig].map(new PermissionLogicLive(_)).toLayer
 }

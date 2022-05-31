@@ -1,5 +1,7 @@
 package com.williamhill.permission
 
+import cats.syntax.either.*
+import cats.syntax.option.*
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
@@ -30,7 +32,9 @@ class FacetContextParser(config: MappingsConfig) {
       playerId <- newValues.evaluateRequired(mapping.playerId).left.map(AppError.fromDecodingFailure)
 
       newStatuses <- parsePermissionStatuses(mapping)(newValues)
-      oldStatuses <- previousValues.optional.toVector.flatTraverse(parsePermissionStatuses(mapping))
+      oldStatuses <- previousValues.optional.fold(none[PermissionStatus].asRight[AppError])(
+        parsePermissionStatuses(mapping)(_).map(Some(_)),
+      )
 
     } yield FacetContext(
       header = input.header,
@@ -38,17 +42,17 @@ class FacetContextParser(config: MappingsConfig) {
       playerId = playerId,
       universe = universe,
       name = event,
-      newStatuses = newStatuses,
-      previousStatuses = oldStatuses,
+      newStatus = newStatuses,
+      previousStatus = oldStatuses,
     )
   }
 
-  private def parsePermissionStatuses(m: Mapping)(evaluator: ExpressionEvaluator): Either[AppError, Vector[PermissionStatus]] = {
+  private def parsePermissionStatuses(m: Mapping)(evaluator: ExpressionEvaluator): Either[AppError, PermissionStatus] = {
     (for {
       statuses <- evaluator.evaluateAll(m.status)
       start    <- m.actionsStart.flatTraverse(evaluator.evaluateFirst(_))
       end      <- m.actionsEnd.flatTraverse(evaluator.evaluateFirst(_))
-    } yield statuses.map(PermissionStatus(_, start, end))).left.map(AppError.fromDecodingFailure)
+    } yield PermissionStatus(statuses, start, end)).left.map(AppError.fromDecodingFailure)
   }
 
 }

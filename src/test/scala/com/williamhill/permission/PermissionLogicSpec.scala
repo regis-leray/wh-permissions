@@ -19,8 +19,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           PlayerId("U00000001"),
           universe("wh-eu-de"),
           "dormancy",
-          Vector(PermissionStatus("Dormant")),
-          Vector.empty,
+          PermissionStatus(Vector("Dormant")),
+          None,
         )
 
         val expectedEnrichedContext = facetContext.copy(actions =
@@ -47,8 +47,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           PlayerId("U00000001"),
           universe("wh-foo"),
           "dormancy",
-          Vector(PermissionStatus("Dormant")),
-          Vector.empty,
+          PermissionStatus(Vector("Dormant")),
+          None,
         )
 
         (for {
