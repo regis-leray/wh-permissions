@@ -1,8 +1,5 @@
 package com.williamhill.permission.application.config
 
-import java.time.Instant
-
-import com.williamhill.permission.domain.PlayerId
 import com.williamhill.permission.dsl.Expression.Const
 import com.williamhill.permission.dsl.{BooleanExpression, Expression}
 import pureconfig.generic.semiauto.deriveReader
@@ -11,7 +8,7 @@ import zio.blocking.{Blocking, blocking}
 import zio.{Has, URLayer, ZIO}
 
 case class EventTypeMapping(value: String, when: BooleanExpression) {
-  def toExpression: Expression[String] = Expression.Conditional(Const(value), when = Some(when))
+  def toExpression: Expression = Expression.Conditional(Const(value), when = Some(when))
 }
 
 object EventTypeMapping {
@@ -21,10 +18,10 @@ object EventTypeMapping {
 case class Mapping(
     topics: Option[Set[String]],
     event: EventTypeMapping,
-    status: Expression[String],
-    playerId: Expression[PlayerId],
-    actionsStart: Option[Expression[Instant]],
-    actionsEnd: Option[Expression[Instant]],
+    status: Expression,
+    playerId: Expression,
+    actionsStart: Option[Expression],
+    actionsEnd: Option[Expression],
 )
 
 case class MappingsConfig(mappings: List[Mapping])

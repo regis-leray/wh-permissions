@@ -1,6 +1,5 @@
 package com.williamhill.permission.dsl
 
-import io.circe.CursorOp.DownField
 import io.circe.parser.parse as parseJson
 import io.circe.{Decoder, DecodingFailure}
 import org.scalatest.freespec.AnyFreeSpec
@@ -73,13 +72,6 @@ class JsonPathEvaluationSpec extends AnyFreeSpec with Matchers {
       ) shouldBe Right(Vector(16, 17))
     }
 
-    "querying range in reverse order" in {
-      evaluateAll[Int](
-        json = """{"hello": [15, 16, 17, 18]}""",
-        config = """value = "$.hello[2:1]"""",
-      ) shouldBe Right(Vector(17, 16))
-    }
-
     "querying out of range" in {
       evaluateAll[Int](
         json = """{"hello": [15, 16, 17, 18]}""",
@@ -90,7 +82,7 @@ class JsonPathEvaluationSpec extends AnyFreeSpec with Matchers {
     "querying negative range" in {
       evaluateAll[Int](
         json = """{"hello": [15, 16, 17, 18]}""",
-        config = """value = "$.hello[-3:-2]"""",
+        config = """value = "$.hello[-3:-1]"""",
       ) shouldBe Right(Vector(16, 17))
     }
 
@@ -121,13 +113,13 @@ class JsonPathEvaluationSpec extends AnyFreeSpec with Matchers {
       evaluateAll[String](
         json = """{"hello": 15}""",
         config = """value = "$.hello"""",
-      ) shouldBe Left(DecodingFailure("String", List(DownField("hello"))))
+      ) shouldBe Left(DecodingFailure("String", Nil))
     }
   }
 
-  private def evaluateAll[T: Expression.Reader: Decoder](json: String, config: String): Either[DecodingFailure, Vector[T]] = {
-    new ExpressionEvaluator(parseJson(json).getOrElse(fail(s"Invalid json: $json")).hcursor).evaluateAll(
-      ConfigSource.string(config).loadOrThrow[Expression[T]],
+  private def evaluateAll[T: Decoder](json: String, config: String): Either[DecodingFailure, Vector[T]] = {
+    new ExpressionEvaluator(parseJson(json).getOrElse(fail(s"Invalid json: $json")).hcursor).evaluateVector[T](
+      ConfigSource.string(config).loadOrThrow[Expression],
     )
   }
 }

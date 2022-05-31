@@ -12,12 +12,11 @@ class ConstEvaluationSpec extends AnyFreeSpec with Matchers {
     "double" in { evaluateAll[Double]("value = 1.23") shouldBe Right(Vector(1.23)) }
     "string" in { evaluateAll[String]("""value = "hello"""") shouldBe Right(Vector("hello")) }
     "list of constants" in { evaluateAll[Int]("value = [1, 2, 3]") shouldBe Right(Vector(1, 2, 3)) }
-    "list of list of constants" in { evaluateAll[Int]("value = [1, [2, 3]]") shouldBe Right(Vector(1, 2, 3)) }
   }
 
-  private def evaluateAll[T: Expression.Reader: Decoder](config: String): Either[DecodingFailure, Vector[T]] = {
-    new ExpressionEvaluator(Json.fromJsonObject(JsonObject.empty).hcursor).evaluateAll(
-      ConfigSource.string(config).loadOrThrow[Expression[T]],
+  private def evaluateAll[T: Decoder](config: String): Either[DecodingFailure, Vector[T]] = {
+    new ExpressionEvaluator(Json.fromJsonObject(JsonObject.empty).hcursor).evaluateVector[T](
+      ConfigSource.string(config).loadOrThrow[Expression],
     )
   }
 }

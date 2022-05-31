@@ -3,24 +3,24 @@ package com.williamhill.permission.dsl
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 
-import cats.syntax.traverse.*
+import cats.implicits.toTraverseOps
 import com.williamhill.permission.dsl.SeqSyntax.SeqExt
+import io.circe.{Encoder, Json}
 import pureconfig.ConfigReader
 import pureconfig.error.{CannotConvert, ConfigReaderFailures, ConvertFailure, KeyNotFound}
 
-sealed trait Expression[+T]
+sealed trait Expression
 
 object Expression {
 
-  type Reader[T] = ConfigReader[Expression[T]]
-
-  case class Const[+T](value: T) extends Expression[T]
+  case class Const(value: Json) extends Expression
 
   object Const {
-    implicit def reader[T: ConfigReader]: ConfigReader[Const[T]] = ConfigReader[T].map(Const(_))
+    def apply[T: Encoder](value: T): Const   = Const(Encoder[T].apply(value))
+    implicit val reader: ConfigReader[Const] = JsonConfigReader.jsonReader.map(Const(_))
   }
 
-  sealed trait JsonPath extends Expression[Nothing] {
+  sealed trait JsonPath extends Expression {
     def /:(s: JsonPath.Segment): JsonPath = JsonPath.NonEmpty(s, this)
   }
 
@@ -83,40 +83,40 @@ object Expression {
       ConfigReader.stringConfigReader.emap(s => parse(s).left.map(reason => CannotConvert(s, "JsonPath", reason)))
   }
 
-  case class Conditional[+T](
-      value: Expression[T],
+  case class Conditional(
+      value: Expression,
       when: Option[BooleanExpression] = None,
-      defaultTo: Option[Expression[T]] = None,
-  ) extends Expression[T]
+      defaultTo: Option[Expression] = None,
+  ) extends Expression
 
   object Conditional {
-    implicit def reader[T: ConfigReader]: ConfigReader[Conditional[T]] = {
+    implicit val reader: ConfigReader[Conditional] = {
       ConfigReader.fromCursor { cursor =>
         for {
           obj <- cursor.asMap
           value <- obj.get("value") match {
-            case Some(valueCursor) => Expression.reader[T].from(valueCursor)
+            case Some(valueCursor) => Expression.reader.from(valueCursor)
             case None              => Left(ConfigReaderFailures(ConvertFailure(KeyNotFound("value", obj.keys.toSet), cursor)))
           }
           when    <- obj.get("when").traverse(BooleanExpression.reader.from)
-          default <- obj.get("default-to").traverse(Expression.reader[T].from)
+          default <- obj.get("default-to").traverse(Expression.reader.from)
         } yield Conditional(value, when, default)
       }
     }
   }
 
-  case class Expressions[+T](expressions: Vector[Expression[T]]) extends Expression[T]
+  case class Expressions(expressions: Vector[Expression]) extends Expression
 
   object Expressions {
-    implicit def reader[T: ConfigReader]: ConfigReader[Expressions[T]] =
-      ConfigReader[Vector[Expression[T]]].map(Expressions(_))
+    implicit val reader: ConfigReader[Expressions] =
+      ConfigReader[Vector[Expression]].map(Expressions(_))
   }
 
-  implicit def reader[T: ConfigReader]: ConfigReader[Expression[T]] = {
+  implicit val reader: ConfigReader[Expression] = {
     JsonPath.reader
-      .orElse(Const.reader[T])
-      .orElse(Conditional.reader[T])
-      .orElse(Expressions.reader[T])
+      .orElse(Const.reader)
+      .orElse(Conditional.reader)
+      .orElse(Expressions.reader)
   }
 
 }

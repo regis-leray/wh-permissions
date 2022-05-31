@@ -19,7 +19,7 @@ object ActionDefinition {
 }
 
 final case class RulesConfig(
-    rules: Vector[Expression[String]],
+    rules: Vector[Expression],
     actions: Vector[ActionDefinition],
 )
 

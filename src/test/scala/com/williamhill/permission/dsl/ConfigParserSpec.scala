@@ -11,7 +11,7 @@ import pureconfig.{ConfigReader, ConfigSource}
 
 class ConfigParserSpec extends AnyFreeSpec with Matchers {
 
-  case class Output(x: Expression[String])
+  case class Output(x: Expression)
   implicit val reader: ConfigReader[Output] = deriveReader
 
   "Simple expression" - {
@@ -294,7 +294,7 @@ class ConfigParserSpec extends AnyFreeSpec with Matchers {
 
   }
 
-  private def test(input: String, output: Expression[String]): Assertion =
+  private def test(input: String, output: Expression): Assertion =
     ConfigSource.string(input).loadOrThrow[Output] shouldBe Output(output)
 
 }

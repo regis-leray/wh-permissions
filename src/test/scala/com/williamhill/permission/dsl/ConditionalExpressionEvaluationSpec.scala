@@ -100,7 +100,7 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
     (
       "only one element in array is defined .*",
       """{ defined: "$.baz.*.zzz" }""",
-      false,
+      true,
     ),
   )
 
@@ -226,8 +226,8 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
                 |value = "$$.v"
                 |when = $when
                 |""".stripMargin)
-            .loadOrThrow[Conditional[String]]
-          new ExpressionEvaluator(json.hcursor).evaluateFirst(expr) shouldBe Right(
+            .loadOrThrow[Conditional]
+          new ExpressionEvaluator(json.hcursor).evaluate[Option[String]](expr) shouldBe Right(
             Option.when(hasResults)("found"),
           )
         }

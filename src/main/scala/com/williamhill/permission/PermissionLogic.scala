@@ -33,7 +33,7 @@ class PermissionLogicLive(config: RulesConfig) extends PermissionLogic {
           )
 
           config.rules
-            .flatTraverse(evaluator.evaluateAll[String])
+            .flatTraverse(evaluator.evaluateVector[String])
             .map(actionNames => config.actions.filter(ad => actionNames.contains(ad.name)))
             .map(actionDefinitions =>
               actionDefinitions

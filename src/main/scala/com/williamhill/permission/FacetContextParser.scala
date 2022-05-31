@@ -1,13 +1,15 @@
 package com.williamhill.permission
 
+import java.time.Instant
+
 import cats.syntax.either.*
 import cats.syntax.option.*
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
-import com.williamhill.permission.domain.{FacetContext, PermissionStatus, Universe}
+import com.williamhill.permission.domain.{FacetContext, PermissionStatus, PlayerId, Universe}
 import com.williamhill.permission.dsl.ExpressionEvaluator
-import com.williamhill.permission.dsl.SeqSyntax.*
+import com.williamhill.permission.dsl.SeqSyntax.SeqExt
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import zio.{Has, URLayer, ZIO}
 
@@ -20,7 +22,7 @@ class FacetContextParser(config: MappingsConfig) {
       eventTypeAndMapping <-
         config.mappings
           .filter(_.topics.forall(_.contains(topic)))
-          .collectSome(mapping => evaluator.evaluateRequired(mapping.event.toExpression).toOption.map(_ -> mapping))
+          .collectSome(mapping => evaluator.evaluate[String](mapping.event.toExpression).toOption.map(_ -> mapping))
           .toRight(AppError.eventTypeNotFound(input.body))
 
       (event, mapping) = eventTypeAndMapping
@@ -29,7 +31,7 @@ class FacetContextParser(config: MappingsConfig) {
       previousValues = evaluator.mapCursor(_.downField("previousValues"))
 
       universe <- Universe(input.header.universe)
-      playerId <- newValues.evaluateRequired(mapping.playerId).left.map(AppError.fromDecodingFailure)
+      playerId <- newValues.evaluate[PlayerId](mapping.playerId).left.map(AppError.fromDecodingFailure)
 
       newStatuses <- parsePermissionStatuses(mapping)(newValues)
       oldStatuses <- previousValues.optional.fold(none[PermissionStatus].asRight[AppError])(
@@ -49,9 +51,9 @@ class FacetContextParser(config: MappingsConfig) {
 
   private def parsePermissionStatuses(m: Mapping)(evaluator: ExpressionEvaluator): Either[AppError, PermissionStatus] = {
     (for {
-      statuses <- evaluator.evaluateAll(m.status)
-      start    <- m.actionsStart.flatTraverse(evaluator.evaluateFirst(_))
-      end      <- m.actionsEnd.flatTraverse(evaluator.evaluateFirst(_))
+      statuses <- evaluator.evaluateVector[String](m.status)
+      start    <- m.actionsStart.flatTraverse(evaluator.evaluate[Option[Instant]])
+      end      <- m.actionsEnd.flatTraverse(evaluator.evaluate[Option[Instant]])
     } yield PermissionStatus(statuses, start, end)).left.map(AppError.fromDecodingFailure)
   }
 
