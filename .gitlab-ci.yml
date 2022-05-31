@@ -1,37 +1,37 @@
-default:
-  tags:
-    - unity-aws-kubernetes-dev-eu-west-1-eks04
-
 stages:
-  - test
   - build
-  - security-test
+  - test
   - distribute
   - publish
   - plan
   - apply
+  - post-deploy
+  - retag
   - integration-test
   - notify
 
 include:
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: main
+    ref: 2.1.4
     file: parts/scala-app.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: main
+    ref: 2.1.4
     file: parts/tasks/ISpec-template.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: main
+    ref: 2.1.4
     file: parts/tasks/cd-templates.yaml
   - project: williamhillplc/infosec/devsecops/gitlabci-templates
-    ref: 1.5.1
+    ref: 1.6.3
     file: security/basic.yml
-#  - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-#    ref: main
-#    file: parts/unity-service-cd-tasks.yaml
+  - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
+    ref: 2.1.4
+    file: parts/unity-service-cd-tasks.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
     ref: main
-    file: gitlab/runners.yaml
+    file:
+      - gitlab/runners.yaml
+      - gitlab/appsec_commons.yaml
+
 
 variables:
   PushImageRegistry: nexus-uploads.dtc.prod.williamhill.plc
@@ -156,23 +156,7 @@ Publish Helm to Nexus Tag:
     - .eks-dev-gitlab-runner
   stage: publish
 
-# plan
-
-#temp_sit_diff:
-#  extends:
-#    - .sit
-#    - .helmfile_diff
-#  when: manual
-#
-#temp_sit_apply:
-#  extends:
-#    - .sit
-#    - .helmfile_apply
-#  when: manual
-#  resource_group: sit_apply
-#  needs:
-#    - temp_sit_diff
-
+#plan
 ## unity release steps
 .helmfile_diff:
   image: ${HELMFILE_IMAGE}
@@ -181,7 +165,7 @@ Publish Helm to Nexus Tag:
     - env
     - cd helmfile
     - helmfile -e $Environment -n $Namespace $SELECTOR diff
-    -
+
 .helmfile_apply:
   image: ${HELMFILE_IMAGE}
   stage: apply
