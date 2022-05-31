@@ -60,10 +60,13 @@ class ExpressionEvaluator(cursor: ACursor) {
       } yield a.toSet == b.toSet
 
     case BooleanExpression.Includes(src, other) =>
+      evaluateBoolean(BooleanExpression.OneOf(other, src))
+
+    case BooleanExpression.OneOf(src, other) =>
       for {
         a <- evaluateAll(src)
         b <- evaluateAll(other)
-      } yield b.forall(a.contains)
+      } yield a.forall(b.contains)
 
     case BooleanExpression.Defined(path) =>
       Right(cursor.downPath(path).forall(_.focus.isDefined))

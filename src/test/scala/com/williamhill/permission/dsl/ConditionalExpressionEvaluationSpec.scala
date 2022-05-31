@@ -104,6 +104,40 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
     ),
   )
 
+  val oneOfScenarios: TableType = Table(
+    tableHeader,
+    (
+      "Constant is one of JSON path expression",
+      """{ src = 1936, one-of = "$.bar.*.qux" }""".stripMargin,
+      true,
+    ),
+    (
+      "JSON path expression is one of constant",
+      """{ src = "$.bar[0].qux", one-of = [1936, 1937] }""".stripMargin,
+      true,
+    ),
+    (
+      "Constant is NOT one of JSON path expression",
+      """{ src = 1939, one-of = "$.bar.*.qux" }""".stripMargin,
+      false,
+    ),
+    (
+      "JSON path expression is NOT one of constant",
+      """{ src = "$.bar[0].qux", one-of = [1939, 1938] }""".stripMargin,
+      false,
+    ),
+    (
+      "[1, 2] is one of [1, 2, 3]",
+      """{ src = [1, 2], one-of = [1, 2, 3] }""".stripMargin,
+      true,
+    ),
+    (
+      "[1, 4] is NOT one of [1, 2, 3]",
+      """{ src = [1, 4], one-of = [1, 2, 3] }""".stripMargin,
+      false,
+    ),
+  )
+
   val andScenarios: TableType = Table(
     tableHeader,
     (
@@ -178,6 +212,7 @@ class ConditionalExpressionEvaluationSpec extends AnyFreeSpec with Matchers with
     ("type", "sub-scenarios"),
     ("equals", equalsScenarios),
     ("defined", definedScenarios),
+    ("one-of", oneOfScenarios),
     ("and", andScenarios),
     ("or", orScenarios),
   )

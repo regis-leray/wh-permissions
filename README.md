@@ -1,12 +1,12 @@
 # Permission Service
 
-TODO
-
-- testing
-- default values for actions
-- Grant-permission
+This service allows the binding from any event to a permission event.
+Information about how to achieve this can be found [here](expression-dsl.md).
 
 ## Testing permission-service
+```bash
+sbt test
+```
 
 ## Run locally 
 
