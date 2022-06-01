@@ -24,11 +24,13 @@ final case class FacetContext(
     previousStatuses: Vector[PermissionStatus],
 ) {
 
-  val denials: Map[String, PermissionDenial] = actions.flatMap { action =>
+  val denials: Map[String, Vector[PermissionDenial]] = actions.flatMap { action =>
     action.deniedPermissions.map { perm =>
-      perm -> PermissionDenial(
-        reasonCode = action.reasonCode,
-        description = action.denialDescription,
+      perm -> Vector(
+        PermissionDenial(
+          reasonCode = action.reasonCode,
+          description = action.denialDescription,
+        ),
       )
     }
   }.toMap

@@ -17,25 +17,26 @@
       "id": "U00004334",
       "universe": "wh-mga",
       "data": {
+        "context": {},
         "permissionDenials": {
-          "canLogin":
+          "canLogin": [
             {
               "reasonCode": "closed-dormant",
               "description": "The account is closed as dormant"
             }
-          ,
-          "canBet":
+          ],
+          "canBet": [
             {
               "reasonCode": "closed-dormant",
               "description": "The account is closed as dormant"
             }
-          ,
-          "canGame":
+          ],
+          "canGame": [
             {
               "reasonCode": "closed-dormant",
               "description": "The account is closed as dormant"
             }
-
+          ]
         },
         "actions": [
           {

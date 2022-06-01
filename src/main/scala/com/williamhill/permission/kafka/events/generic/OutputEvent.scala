@@ -45,7 +45,11 @@ object OutputBody {
     newValues = NewValues(
       id = facetContext.playerId.value,
       universe = facetContext.universe.value.toLowerCase,
-      data = Data(permissionDenials = facetContext.denials, actions = facetContext.outputActions),
+      data = Data(
+        permissionDenials = facetContext.denials,
+        actions = facetContext.outputActions,
+        context = Map.empty,
+      ),
     ),
   )
 }
@@ -61,8 +65,9 @@ object NewValues {
 }
 
 case class Data(
-    permissionDenials: Map[String, PermissionDenial],
+    permissionDenials: Map[String, Vector[PermissionDenial]],
     actions: Vector[OutputAction],
+    context: Map[String, String],
 )
 
 object Data {

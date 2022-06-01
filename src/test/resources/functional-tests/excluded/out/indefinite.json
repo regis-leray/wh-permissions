@@ -18,27 +18,38 @@
       "id": "U00004335",
       "universe": "wh-eu-dk",
       "data": {
+        "context": {},
         "permissionDenials": {
-          "canLoginWithPassword": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canWithdraw": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canDeposit": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canBet": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canGame": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          }
+          "canLoginWithPassword": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canWithdraw": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canDeposit": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canBet": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canGame": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ]
         },
         "actions": [
           {

@@ -18,33 +18,50 @@
       "id": "U00005335",
       "universe": "wh-mga",
       "data": {
+        "context": {},
         "permissionDenials": {
-          "canLoginWithPassword": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canWithdraw": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canDeposit": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canBet": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          },
-          "canGame": {
-            "reasonCode": "self-excluded",
-            "description": "Permission not granted because of self-exclusion"
-          }
+          "canLoginWithPassword": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canWithdraw": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canDeposit": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canBet": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ],
+          "canGame": [
+            {
+              "reasonCode": "self-excluded",
+              "description": "Permission not granted because of self-exclusion"
+            }
+          ]
         },
         "actions": [
           {
             "type": "notification",
             "name": "block-account",
-            "relatesToPermissions": ["canLoginWithPassword", "canWithdraw", "canDeposit", "canBet", "canGame"],
+            "relatesToPermissions": [
+              "canLoginWithPassword",
+              "canWithdraw",
+              "canDeposit",
+              "canBet",
+              "canGame"
+            ],
             "deadline": "2025-12-06T11:13:11.993Z"
           }
         ]
