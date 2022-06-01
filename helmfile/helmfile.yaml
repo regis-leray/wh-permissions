@@ -21,6 +21,9 @@ environments:
   usd:
     <<: *templated-environment
 
+  gpt:
+    <<: *templated-environment
+
   sit:
     <<: *templated-environment
 
@@ -32,7 +35,6 @@ environments:
 
   prod:
     <<: *templated-environment
-
 ---
 
 {{ readFile "./helmfile-templates.yaml" }}
@@ -40,7 +42,7 @@ environments:
 releases:
   - name: permissions-kafka-topics
     <<: *generic
-    version: 0.0.0-develop
+    version: 0.0.0-master
     chart: 'nexus/be-kafka-topics-service'
     labels:
       slack_url_var: UNITY_TEAM_D_SLACK_HOOK_URL
