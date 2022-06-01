@@ -40,7 +40,7 @@ environments:
 releases:
   - name: permissions-kafka-topics
     <<: *generic
-    version: 0.0.0-master
+    version: 0.0.0-develop
     chart: 'nexus/be-kafka-topics-service'
     labels:
       slack_url_var: UNITY_TEAM_D_SLACK_HOOK_URL
