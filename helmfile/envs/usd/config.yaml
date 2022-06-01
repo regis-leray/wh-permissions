@@ -1,6 +1,10 @@
 environment: usd
 namespace: libertonia
 host: libertonia.aws-us-east-1.usd.williamhill.plc
+kafka:
+  kafka_servers: b-1.usd-dev-usd-aws-msk-u.cbpmv5.c16.kafka.us-east-1.amazonaws.com:9092,b-2.usd-dev-usd-aws-msk-u.cbpmv5.c16.kafka.us-east-1.amazonaws.com:9092,b-3.usd-dev-usd-aws-msk-u.cbpmv5.c16.kafka.us-east-1.amazonaws.com:9092
+  schema_registry: http://cp-schema-registry:8081
+  zookeeper_servers: z-1.usd-dev-usd-aws-msk-u.cbpmv5.c16.kafka.us-east-1.amazonaws.com:2181,z-2.usd-dev-usd-aws-msk-u.cbpmv5.c16.kafka.us-east-1.amazonaws.com:2181,z-3.usd-dev-usd-aws-msk-u.cbpmv5.c16.kafka.us-east-1.amazonaws.com:2181
 hpa:
   enabled: true
 minReplicas: 1

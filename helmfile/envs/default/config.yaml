@@ -19,6 +19,13 @@ newrelic:
   licenceKey: ref+awsssm:///common/newrelic_license_key?region=eu-west-1
   licenceKeyBase64: ref+awsssm:///common/newrelic_license_key_base64?region=eu-west-1
   insightsKeyBase64: ref+awsssm:///common/newrelic_insights_key_base64?region=eu-west-1
+permissions-kafka-topics:
+  values:
+    base:
+      registry: nexus-aws.dtc.prod.williamhill.plc/betting-engine
+    kafkaTopics:
+      configmapName: permissions-kafka-topics-v1
+      jobName: permissions-kafka-topics-manager
 permissions:
   installed: true
   values:

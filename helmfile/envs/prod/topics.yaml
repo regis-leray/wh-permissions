@@ -1,0 +1,4 @@
+topics:
+  permission_facet_events_v1:
+    config:
+      retention.ms: 157788000000 # 5years

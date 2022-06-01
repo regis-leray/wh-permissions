@@ -1,0 +1,14 @@
+base:
+  multitenancyEnabled: true
+  globalVars:
+    kafka:
+      KAFKA_SERVERS: {{ .Values | getOrNil "kafka" | getOrNil "kafka_servers" | default "kafka-service:9092" }}
+      ZOOKEEPER_SERVERS: {{ .Values | getOrNil "kafka" | getOrNil "zookeeper_servers" | default "zookeeper-service:2181" }}
+      SCHEMA_REGISTRY_URL: {{ .Values | getOrNil "kafka" | getOrNil "schema_registry" | default "http://schema-registry-service:8081" }}
+
+kafkaTopics:
+  action: apply
+  {{- with .Values.topics }}
+  topics:
+    {{- toYaml . | nindent 6 }}
+  {{- end }}

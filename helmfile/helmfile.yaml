@@ -2,6 +2,7 @@ environments:
   default:
     values:
       - ./envs/default/config.yaml
+      - ./envs/default/topics.yaml
 
   templated-environment: &templated-environment
     values:
@@ -10,7 +11,9 @@ environments:
       - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/default/universes.yaml?ref=master
       - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/{{ .Environment.Name }}/universes.yaml?ref=master
       - ./envs/default/config.yaml
+      - ./envs/default/topics.yaml
       - ./envs/{{ .Environment.Name }}/config.yaml
+      - ./envs/{{ .Environment.Name }}/topics.yaml
 
   uat:
     <<: *templated-environment
@@ -35,6 +38,16 @@ environments:
 {{ readFile "./helmfile-templates.yaml" }}
 
 releases:
+  - name: permissions-kafka-topics
+    <<: *generic
+    version: 0.0.0-master
+    chart: 'nexus/be-kafka-topics-service'
+    labels:
+      slack_url_var: UNITY_TEAM_D_SLACK_HOOK_URL
+    { { - with (.Values | getOrNil "permissions-kafka-topics" | getOrNil "values") } }
+    values:
+      - { { - toYaml . | nindent 8 } }
+    { { - end } }
   - name: permissions
     installed: {{ .Values | getOrNil "permissions.installed" | default "false" }}
     <<: *generic
