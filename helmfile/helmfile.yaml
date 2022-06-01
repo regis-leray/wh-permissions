@@ -46,10 +46,10 @@ releases:
     chart: 'nexus/be-kafka-topics-service'
     labels:
       slack_url_var: UNITY_TEAM_D_SLACK_HOOK_URL
-    { { - with (.Values | getOrNil "permissions-kafka-topics" | getOrNil "values") } }
+    {{- with (.Values | getOrNil "permissions-kafka-topics" | getOrNil "values") }}
     values:
-      - { { - toYaml . | nindent 8 } }
-    { { - end } }
+      - {{- toYaml . | nindent 8 }}
+    {{- end }}
   - name: permissions
     installed: {{ .Values | getOrNil "permissions.installed" | default "false" }}
     <<: *generic
