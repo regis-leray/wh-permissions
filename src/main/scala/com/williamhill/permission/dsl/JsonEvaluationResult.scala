@@ -15,11 +15,11 @@ object JsonEvaluationResult {
 
   case class One(json: Json) extends JsonEvaluationResult {
     override def asJson: Json            = json
-    override def asJsonArr: Vector[Json] = Vector(json)
+    override def asJsonArr: Vector[Json] = json.asArray.getOrElse(Vector(json))
   }
 
   case class Many(results: Vector[JsonEvaluationResult]) extends JsonEvaluationResult {
-    override def asJson: Json            = Json.arr(results.flatMap(_.asJsonArr): _*)
+    override def asJson: Json            = Json.arr(results.flatMap(_.asJsonArr)*)
     override def asJsonArr: Vector[Json] = results.flatMap(_.asJsonArr)
   }
 }

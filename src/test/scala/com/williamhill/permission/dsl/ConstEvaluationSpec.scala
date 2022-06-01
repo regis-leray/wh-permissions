@@ -1,22 +1,35 @@
 package com.williamhill.permission.dsl
 
-import io.circe.{Decoder, DecodingFailure, Json, JsonObject}
-import org.scalatest.freespec.AnyFreeSpec
-import org.scalatest.matchers.should.Matchers
-import pureconfig.ConfigSource
-
-class ConstEvaluationSpec extends AnyFreeSpec with Matchers {
-  "Evaluation of a" - {
-    "integer" in { evaluateAll[Int]("value = 123") shouldBe Right(Vector(123)) }
-    "long" in { evaluateAll[Long]("value = 123") shouldBe Right(Vector(123L)) }
-    "double" in { evaluateAll[Double]("value = 1.23") shouldBe Right(Vector(1.23)) }
-    "string" in { evaluateAll[String]("""value = "hello"""") shouldBe Right(Vector("hello")) }
-    "list of constants" in { evaluateAll[Int]("value = [1, 2, 3]") shouldBe Right(Vector(1, 2, 3)) }
-  }
-
-  private def evaluateAll[T: Decoder](config: String): Either[DecodingFailure, Vector[T]] = {
-    new ExpressionEvaluator(Json.fromJsonObject(JsonObject.empty).hcursor).evaluateVector[T](
-      ConfigSource.string(config).loadOrThrow[Expression],
+class ConstEvaluationSpec
+    extends ExpressionEvaluationTester(
+      Scenario(
+        hint = "Type: integer",
+        json = "{}",
+        expr = "value = 123",
+        expectedOutput = 123,
+      ),
+      Scenario(
+        hint = "Type: long",
+        json = "{}",
+        expr = "value = 123",
+        expectedOutput = 123L,
+      ),
+      Scenario(
+        hint = "Type: double",
+        json = "{}",
+        expr = "value = 1.23",
+        expectedOutput = 1.23,
+      ),
+      Scenario(
+        hint = "Type: string",
+        json = "{}",
+        expr = """value = "hello"""",
+        expectedOutput = "hello",
+      ),
+      Scenario(
+        hint = "Type: list of constants",
+        json = "{}",
+        expr = "value = [1, 2, 3]",
+        expectedOutput = Vector(1, 2, 3),
+      ),
     )
-  }
-}

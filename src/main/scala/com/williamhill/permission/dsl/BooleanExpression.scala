@@ -10,6 +10,7 @@ object BooleanExpression {
   case class Equals(src: Expression, other: Expression)   extends BooleanExpression
   case class Includes(src: Expression, other: Expression) extends BooleanExpression
   case class OneOf(src: Expression, other: Expression)    extends BooleanExpression
+  case class Overlaps(src: Expression, other: Expression) extends BooleanExpression
   case class Defined(path: Expression.JsonPath)           extends BooleanExpression
   case class And(all: List[BooleanExpression])            extends BooleanExpression
   case class Or(any: List[BooleanExpression])             extends BooleanExpression
@@ -24,31 +25,23 @@ object BooleanExpression {
     }
   }
 
-  val equalsReader: ConfigReader[Equals] =
-    propertyReader("src", Expression.reader)
-      .zip(propertyReader("equals", Expression.reader))
-      .map { case (src, equalsTo) => Equals(src, equalsTo) }
+  def twoPropsExpression[A](key1: String, key2: String)(f: (Expression, Expression) => A): ConfigReader[A] =
+    propertyReader(key1, Expression.reader).zip(propertyReader(key2, Expression.reader)).map(f.tupled)
 
-  val includesReader: ConfigReader[Includes] =
-    propertyReader("src", Expression.reader)
-      .zip(propertyReader("includes", Expression.reader))
-      .map { case (src, equalsTo) => Includes(src, equalsTo) }
-
-  val oneOfReader: ConfigReader[OneOf] =
-    propertyReader("src", Expression.reader)
-      .zip(propertyReader("one-of", Expression.reader))
-      .map { case (src, equalsTo) => OneOf(src, equalsTo) }
-
+  val equalsReader: ConfigReader[Equals]             = twoPropsExpression("src", "equals")(Equals)
+  val includesReader: ConfigReader[Includes]         = twoPropsExpression("src", "includes")(Includes)
+  val oneOfReader: ConfigReader[OneOf]               = twoPropsExpression("src", "one-of")(OneOf)
+  val intersectsReader: ConfigReader[Overlaps]       = twoPropsExpression("src", "overlaps")(Overlaps)
   val definedReader: ConfigReader[BooleanExpression] = propertyReader("defined", Expression.JsonPath.reader.map(Defined))
-
-  def andReader: ConfigReader[BooleanExpression] = propertyReader("all", ConfigReader[List[BooleanExpression]].map(And))
-  def orReader: ConfigReader[BooleanExpression]  = propertyReader("any", ConfigReader[List[BooleanExpression]].map(Or))
+  def andReader: ConfigReader[BooleanExpression]     = propertyReader("all", ConfigReader[List[BooleanExpression]].map(And))
+  def orReader: ConfigReader[BooleanExpression]      = propertyReader("any", ConfigReader[List[BooleanExpression]].map(Or))
 
   implicit def reader: ConfigReader[BooleanExpression] =
     equalsReader
       .orElse(definedReader)
       .orElse(includesReader)
       .orElse(oneOfReader)
+      .orElse(intersectsReader)
       .orElse(andReader)
       .orElse(orReader)
 }

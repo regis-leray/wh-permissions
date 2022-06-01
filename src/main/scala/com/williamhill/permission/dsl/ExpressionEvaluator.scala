@@ -13,14 +13,17 @@ class ExpressionEvaluator(cursor: ACursor) {
   def evaluateJson(mapping: Expression): Json =
     mapping match {
       case Conditional(value, when, defaultTo) =>
-        if (evaluateWhen(when)) evaluateJson(value)
-        else defaultTo.map(evaluateJson).getOrElse(Json.Null)
+        Option
+          .when(evaluateWhen(when))(evaluateJson(value))
+          .filterNot(_.isNull)
+          .orElse(defaultTo.map(evaluateJson))
+          .getOrElse(Json.Null)
 
       case jsonPath: JsonPath => JsonPathEvaluator.evaluate(cursor, jsonPath).asJson
 
       case const @ Const(_) => const.value
 
-      case Expressions(expressions) => Json.arr(expressions.map(evaluateJson): _*)
+      case Expressions(expressions) => Json.arr(expressions.map(evaluateJson)*)
     }
 
   def evaluateJsonArr(mapping: Expression): Vector[Json] =
@@ -52,8 +55,9 @@ class ExpressionEvaluator(cursor: ACursor) {
     case BooleanExpression.And(expressions)     => expressions.map(evaluateBoolean).forall(identity)
     case BooleanExpression.Or(expressions)      => expressions.map(evaluateBoolean).exists(identity)
     case BooleanExpression.Equals(src, other)   => evaluateJsonArr(src).toSet == evaluateJsonArr(other).toSet
-    case BooleanExpression.Includes(src, other) => evaluateJsonArr(other).forall(evaluateJsonArr(src).contains)
-    case BooleanExpression.OneOf(src, other)    => evaluateJsonArr(src).forall(evaluateJsonArr(other).contains)
+    case BooleanExpression.Includes(src, other) => evaluateJsonArr(src).contains(evaluateJson(other))
+    case BooleanExpression.OneOf(src, other)    => evaluateJsonArr(other).contains(evaluateJson(src))
+    case BooleanExpression.Overlaps(src, other) => evaluateJsonArr(src).toSet.intersect(evaluateJsonArr(other).toSet).nonEmpty
     case BooleanExpression.Defined(path)        => evaluateJsonArr(path).nonEmpty
   }
 
