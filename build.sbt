@@ -69,7 +69,13 @@ lazy val commonSettings = Seq(
     williamHill.tracing.tracingKafka,
     enumeratum.circe,
     http4s.dsl,
+    kafkaSerdeScala.circe,
+    testContainers.scalaKafka % IntegrationTest,
     logback.logstashLogbackEncoder,
+    monocle.core,
+    monocle.`macro`,
+    "org.scalactic" %% "scalactic" % "3.2.12",
+    "org.scalatest" %% "scalatest" % "3.2.12" % "it",
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
   ),
 )
@@ -83,7 +89,7 @@ ThisBuild / credentials += Credentials(
   "8U0p8jAr6Me36vl",
 )
 
-lazy val testSettings = Seq(
+val testSettings = Seq(
   Test / logBuffered        := false,
   Test / fork               := true,
   Test / testForkedParallel := true,
@@ -127,6 +133,8 @@ lazy val `permissions-ep` = project
   .in(file("."))
   .settings(commonSettings: _*)
   .settings(testSettings: _*)
+  .configs(IntegrationTest)
+  .settings(Defaults.itSettings)
   .settings(assemblySettings: _*)
   .settings(Compile / mainClass := Some(permissionsEpMain))
   .settings(dockerSettings("permissions-ep", permissionsEpMain): _*)

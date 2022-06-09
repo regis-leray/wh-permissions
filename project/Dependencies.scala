@@ -9,7 +9,7 @@ object Dependencies {
     val core  = "dev.zio" %% "zio"       % version
     val kafka = "dev.zio" %% "zio-kafka" % "0.17.4"
 
-    val magic             = "io.github.kitlangton" %% "zio-magic"           % "0.3.11"
+    val magic             = "io.github.kitlangton" %% "zio-magic"           % "0.3.12"
     val stream            = "dev.zio"              %% "zio-streams"         % version
     val test              = "dev.zio"              %% "zio-test"            % version % Test
     val `test-sbt`        = "dev.zio"              %% "zio-test-sbt"        % version % Test
@@ -25,6 +25,12 @@ object Dependencies {
     val jawn            = "io.circe" %% "circe-jawn"    % version
   }
 
+  object kafkaSerdeScala {
+    private val version = "0.6.5"
+    val circe           = "io.github.azhur" %% "kafka-serde-circe" % version
+
+  }
+
   object confluent {
     val jsonSchemaSerializer = "io.confluent" % "kafka-json-schema-serializer" % "7.0.1"
     val schemaRegistryClient = "io.confluent" % "kafka-schema-registry-client" % "5.3.0"
@@ -38,8 +44,6 @@ object Dependencies {
   }
 
   object williamHill {
-//    val exclusionEvent = "com.williamhill.platform" %% "exclusion-event-model" % "1.0.2"
-//    val facetEvent     = "com.williamhill.platform" %% "facet-event-model"     % "0.9.3"
 
     val kafkaLibraryCore = "com.williamhill.bettingengine" %% "be-kafka-library-core" % "1.2.8" excludeAll (ExclusionRule(
       "com.typesafe.akka",
@@ -79,4 +83,17 @@ object Dependencies {
   object logback {
     val logstashLogbackEncoder = "net.logstash.logback" % "logstash-logback-encoder" % "7.2"
   }
+  object testContainers {
+    private val version = "0.40.7"
+    val scalaKafka      = "com.dimafeng" %% "testcontainers-scala-kafka" % version
+  }
+
+  object monocle {
+    private val version = "3.1.0"
+    val core            = "dev.optics" %% s"monocle-core"  % version
+    val `macro`         = "dev.optics" %% s"monocle-macro" % version
+
+    // macro required for 2.x only
+  }
+
 }

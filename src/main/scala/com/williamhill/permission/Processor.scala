@@ -1,22 +1,20 @@
 package com.williamhill.permission
 
 import cats.implicits.catsSyntaxEitherId
-import com.github.mlangc.slf4zio.api.{Logging, logging => Log}
+import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
+import com.williamhill.permission.application.config.AppConfig
 import com.williamhill.permission.application.{AppError, Env}
-import com.williamhill.permission.kafka.Record.{InputRecord, OutputCommittable}
+import com.williamhill.permission.kafka.Record.{OutputCommittable, StringRecord}
 import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
 import com.williamhill.permission.kafka.{EventPublisher, HasKey}
-import com.williamhill.platform.kafka.JsonSerialization
 import com.williamhill.platform.kafka.config.{CommaSeparatedList, TopicConfig}
 import com.williamhill.platform.kafka.consumer.Committable
 import com.williamhill.platform.library.kafka.TracingConsumer
-import com.williamhill.platform.kafka as Kafka
 import pureconfig.ConfigReader
 import pureconfig.generic.semiauto.deriveReader
 import zio.*
-import zio.clock.Clock
-import zio.kafka.consumer.{CommittableRecord, Consumer, Subscription}
-import zio.kafka.serde.Serde
+import zio.kafka.consumer.*
+import zio.kafka.serde.Serde as ZioSerde
 import zio.stream.*
 
 object Processor {
@@ -33,51 +31,51 @@ object Processor {
     implicit val tracingIdentifiersReader: ConfigReader[TracingIdentifiers] = deriveReader
     implicit val reader: ConfigReader[Config]                               = deriveReader
   }
+  val inputRecordEvents: ZStream[Has[Consumer] & Has[AppConfig] & Has[Config], AppError, StringRecord] = {
 
-  val inputRecordEvents: ZStream[Has[Config] & Has[Consumer], AppError, InputRecord] =
-    ZStream
-      .service[Config]
-      .flatMap { cfg =>
-        ZStream
-          .fromEffect(
-            JsonSerialization.valueDeserializer[InputEvent](cfg.inputEvents.schemaRegistrySettings),
-          )
-          .flatMap { valueDes =>
-            Consumer
-              .subscribeAnd(Subscription.topics(cfg.inputEvents.topics.head, cfg.inputEvents.topics.tail*))
-              .plainStream(Serde.string, valueDes)
-              .tap { rec =>
-                Task {
-                  TracingConsumer.runWithConsumerSpanWithKamonHeader(
-                    cfg.tracingIdentifiers.groupId,
-                    cfg.tracingIdentifiers.clientId,
-                    rec.record,
-                  )(rec)
-                }
-              }
+    (for {
+      config <- ZStream.service[Config]
+      subscription = Subscription.topics(config.inputEvents.topics.head, config.inputEvents.topics.tail*)
+      rec <- Consumer
+        .subscribeAnd(subscription)
+        .plainStream(ZioSerde.string, ZioSerde.string)
+        .tap { rec =>
+          Task {
+            TracingConsumer.runWithConsumerSpanWithKamonHeader(
+              config.tracingIdentifiers.groupId,
+              config.tracingIdentifiers.clientId,
+              rec.record,
+            )(rec)
           }
-          .mapError(AppError.fromThrowable)
-      }
+        }
+    } yield rec).mapError(AppError.fromThrowable)
 
-  val filterEventsFromSupportedUniverses: ZTransducer[Has[Config] & Clock, AppError, InputRecord, InputRecord] =
-    Kafka.filterMapM { event =>
-      for {
-        maybeSupportedEvent <- ZIO.service[Config].map(_.configuredUniverses.unwrap.find(_ == event.value.header.universe).map(_ => event))
-        _                   <- ZIO.when(maybeSupportedEvent.isEmpty)(event.offset.commit).mapError(AppError.fromThrowable)
-      } yield maybeSupportedEvent
-    }
+  }
 
-  val inputToOutput: ZTransducer[Has[EventProcessor], AppError, CommittableRecord[String, InputEvent], OutputCommittable] =
+  val inputToOutput: ZTransducer[Has[EventProcessor] & Has[Config] & Logging, AppError, StringRecord, OutputCommittable] =
     Committable
-      .filterMapCommittableRecordM((inputRecord: InputRecord) =>
-        for {
-          outputEvent <- EventProcessor.handleInput(inputRecord.record.topic, inputRecord.value).either
-          _           <- outputEvent.fold(error => ZIO.debug(error), _ => ZIO.unit)
-        } yield outputEvent.toOption,
-      )
+      .filterMapCommittableRecordM { (inputRecord: StringRecord) =>
+        val result: ZIO[Has[EventProcessor] & Has[Config], AppError, OutputEvent] = for {
+          config     <- ZIO.service[Config]
+          inputEvent <- ZIO.fromEither(InputEvent.produce(inputRecord.record.value()))
+          universe            = inputEvent.header.universe
+          maybeSupportedEvent = config.configuredUniverses.unwrap.find(_ == inputEvent.header.universe).map(_ => inputEvent)
+          _ <- ZIO.when(maybeSupportedEvent.isEmpty)(inputRecord.offset.commit).mapError(AppError.fromThrowable)
+          supportedEvent <- ZIO
+            .fromOption(maybeSupportedEvent)
+            .mapError(_ => AppError.fromMessage(s"Universe $universe of message : ${inputEvent.header.id} is not supported"))
+          outputEvent <- EventProcessor.handleInput(
+            inputRecord.record.topic,
+            supportedEvent,
+          )
+        } yield outputEvent
+
+        result.foldM(appError => Log.warnIO(appError.logMessage) *> ZIO.succeed[Option[OutputEvent]](None), oe => ZIO.succeed(Option(oe)))
+      }
       .mapError(AppError.fromThrowable)
 
-  val publishEvent: ZTransducer[Has[EventPublisher] & Has[Config], AppError, OutputCommittable, OutputCommittable] = {
+  val publishEvent
+      : ZTransducer[Has[EventPublisher] & Has[Config] & Has[ZioSerde[Any, OutputEvent]], AppError, OutputCommittable, OutputCommittable] = {
     implicit val facetKey: HasKey[OutputEvent] = (_: OutputEvent).body.newValues.id
     Committable
       .mapValueM((event: OutputEvent) =>
@@ -100,9 +98,9 @@ object Processor {
       }
       .mapError(AppError.fromThrowable)
 
-  val pipeline: ZSink[Env.Processor, AppError, InputRecord, OutputCommittable, Unit] =
-    filterEventsFromSupportedUniverses >>> inputToOutput >>> publishEvent >>> commit
+  val pipeline: ZSink[Env.Processor, AppError, StringRecord, OutputCommittable, Unit] =
+    inputToOutput >>> publishEvent >>> commit
 
-  val run: ZIO[Env.Main, AppError, Unit] =
+  val run: ZIO[Env.Processor, AppError, Unit] =
     inputRecordEvents >>> pipeline
 }

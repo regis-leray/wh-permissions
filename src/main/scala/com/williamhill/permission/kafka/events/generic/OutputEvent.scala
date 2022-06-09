@@ -6,7 +6,7 @@ import com.williamhill.permission.domain.{FacetContext, OutputAction, Permission
 import io.circe.*
 import io.circe.generic.semiauto.deriveCodec
 import json.schema.Version.*
-import json.{Json => JsonSchema, Schema}
+import json.{Json as JsonSchema, Schema}
 
 final case class OutputEvent(header: Header, body: OutputBody)
 
@@ -72,4 +72,5 @@ case class Data(
 
 object Data {
   implicit val codec: Codec[Data] = deriveCodec
+//  implicit val codec2: Codec[Map[String, PermissionDenial]] = deriveCodec
 }

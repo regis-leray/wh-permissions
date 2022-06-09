@@ -47,7 +47,7 @@ object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]]
         server =>
           Log
             .infoIO(
-              s"healthcheck API started for ${cfg.identifier} on ${server.address.getHostString()}:${server.address.getPort()}",
+              s"healthcheck API started for ${cfg.identifier} on ${server.address.getHostString}:${server.address.getPort}",
             )
             .toManaged_,
       )

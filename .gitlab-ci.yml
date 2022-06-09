@@ -112,6 +112,21 @@ Run unit tests:
       - ./target
   dependencies: [Run scalafmt and scalafix checks]
 
+Run it tests:
+  extends: .execute-sbt-tasks-with-docker-v3
+  stage: test
+  variables:
+    Sbt_Tasks: "It/test"
+  except: [tags, schedules]
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - ./**/target
+      - ./target
+  dependencies: [Run unit tests]
+  allow_failure: true
+
 # build
 Build docker images:
   extends: .execute-sbt-tasks-with-docker-v3 #see https://gitlab.com/williamhillplc/usa/betting-engine/infra/be-ci/blob/main-v3/parts/tasks/sbt-tasks.yaml

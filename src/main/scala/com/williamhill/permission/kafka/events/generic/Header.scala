@@ -19,6 +19,7 @@ object Header {
     val codec = deriveCodec[Header]
     Codec.from(codec, codec.mapJson(_.dropNullValues))
   }
+
 }
 
 final case class Who(id: String, name: String, `type`: String, ip: Option[String])
@@ -28,4 +29,5 @@ object Who {
     val codec = deriveCodec[Who]
     Codec.from(codec, codec.mapJson(_.dropNullValues))
   }
+
 }
