@@ -4,9 +4,9 @@ import com.github.mlangc.slf4zio.api.Logging
 import com.williamhill.permission.Processor.Config
 import com.williamhill.permission.application.config.{AppConfig, MappingsConfig, RulesConfig}
 import com.williamhill.permission.kafka.EventPublisher
-import com.williamhill.permission.kafka.events.generic.OutputEvent
 import com.williamhill.permission.kafka.serde.AppSerdes
 import com.williamhill.permission.{EventProcessor, FacetContextParser, PermissionLogic}
+import com.williamhill.platform.event.permission.Event as OutputEvent
 import org.http4s.server.Server
 import zio.*
 import zio.blocking.Blocking

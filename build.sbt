@@ -67,6 +67,7 @@ lazy val commonSettings = Seq(
     williamHill.healthcheck.kafka,
     williamHill.tracing.tracing,
     williamHill.tracing.tracingKafka,
+    williamHill.facetEvent,
     enumeratum.circe,
     http4s.dsl,
     kafkaSerdeScala.circe,

@@ -1,7 +1,8 @@
 package com.williamhill.permission
 
 import com.williamhill.permission.application.AppError
-import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
+import com.williamhill.permission.kafka.events.generic.InputEvent
+import com.williamhill.platform.event.permission.Event as OutputEvent
 import zio.clock.Clock
 import zio.{Has, IO, URLayer, ZIO}
 

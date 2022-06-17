@@ -12,7 +12,7 @@ import zio.test.{DefaultRunnableSpec, assert}
 object InputEventSpec extends DefaultRunnableSpec with LazyLogging {
 
   val inputEvent = InputEvent(
-    Header(
+    InputHeader(
       id = "1",
       who = Who(id = "-1", name = "anonymous", `type` = "program", ip = Some("100.77.100.167")),
       universe = "wh-eu-de",

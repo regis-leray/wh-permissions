@@ -4,8 +4,9 @@ import java.time.Instant
 
 import com.williamhill.permission.application.config.MappingsConfig
 import com.williamhill.permission.domain.Fixtures.*
-import com.williamhill.permission.domain.{FacetContext, PermissionStatus, PlayerId}
-import com.williamhill.permission.kafka.events.generic.{Header, InputEvent}
+import com.williamhill.permission.kafka.events.generic.InputEvent
+import com.williamhill.platform.event.common.Header
+import com.williamhill.platform.event.permission.{FacetContext, PermissionStatus}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
@@ -15,7 +16,9 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
 
   behavior of "FacetContextParser"
 
-  val scenarios: TableFor3[String, String, FacetContext] =
+  val scenarios: TableFor3[String, String, FacetContext] = {
+    val universeWhMGA  = "wh-mga"
+    val universeWhEUDK = "wh-eu-dk"
     Table(
       ("topic", "scenario", "expected result"),
       (
@@ -23,16 +26,15 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         "dormant",
         FacetContext(
           Header(
-            "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
-            who,
-            "wh-mga",
-            Instant.parse("2022-02-28T14:22:41.433Z"),
-            Some("5848afcd-8020-11ec-a1d6-5057d25f6201"),
-            None,
+            id = "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+            who = who(universeWhMGA),
+            universe = universeWhMGA,
+            when = "2022-02-28T14:22:41.433Z",
+            traceContext = None,
           ),
           Vector.empty,
-          PlayerId("U00004334"),
-          universe("wh-mga"),
+          "U00004334",
+          universeWhMGA,
           "dormancy",
           PermissionStatus(Vector("Dormant")),
           Some(PermissionStatus(Vector("Active"))),
@@ -43,16 +45,15 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         "prohibited",
         FacetContext(
           Header(
-            "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
-            who,
-            "wh-mga",
-            Instant.parse("2022-01-31T13:22:41.454508Z"),
-            Some("5848afcd-8020-11ec-a1d6-5057d25f6201"),
-            None,
+            id = "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+            who = who(universeWhMGA),
+            universe = universeWhMGA,
+            when = "2022-01-31T13:22:41.454508Z",
+            traceContext = None,
           ),
           Vector.empty,
-          PlayerId("U00004334"),
-          universe("wh-mga"),
+          "U00004334",
+          universeWhMGA,
           "prohibition",
           PermissionStatus(Vector("Prohibited")),
           Some(PermissionStatus(Vector("Allowed"))),
@@ -63,16 +64,15 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         "indefinite",
         FacetContext(
           Header(
-            "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
-            who,
-            "wh-eu-dk",
-            Instant.parse("2021-01-06T11:13:12.441799Z"),
-            Some("445b4e38-84c1-11ec-a8a3-0242ac120002"),
-            Some("48dac344-84c1-11ec-a8a3-0242ac120002"),
+            id = "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+            who = who(universeWhEUDK),
+            universe = universeWhEUDK,
+            when = "2021-01-06T11:13:12.441799Z",
+            traceContext = None,
           ),
           Vector.empty,
-          PlayerId("U00004335"),
-          universe("wh-eu-dk"),
+          "U00004335",
+          universeWhEUDK,
           "excluded",
           PermissionStatus(Vector("indefinite"), Some(Instant.parse("2022-02-11T00:00:00Z"))),
           None,
@@ -83,16 +83,15 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         "permanent",
         FacetContext(
           Header(
-            "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
-            who,
-            "wh-mga",
-            Instant.parse("2021-01-06T11:13:12.441799Z"),
-            Some("445b4e38-84c1-11ec-a8a3-0242ac120002"),
-            Some("48dac344-84c1-11ec-a8a3-0242ac120002"),
+            id = "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+            who = who(universeWhMGA),
+            universe = universeWhMGA,
+            when = "2021-01-06T11:13:12.441799Z",
+            traceContext = None,
           ),
           Vector.empty,
-          PlayerId("U00004336"),
-          universe("wh-mga"),
+          "U00004336",
+          universeWhMGA,
           "excluded",
           PermissionStatus(Vector("permanent"), Some(Instant.parse("2022-02-11T00:00:00Z"))),
           None,
@@ -103,16 +102,15 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         "temporary",
         FacetContext(
           Header(
-            "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
-            who,
-            "wh-mga",
-            Instant.parse("2021-01-06T11:13:12.441799Z"),
-            Some("445b4e38-84c1-11ec-a8a3-0242ac120002"),
-            Some("48dac344-84c1-11ec-a8a3-0242ac120002"),
+            id = "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+            who = who(universeWhMGA),
+            universe = universeWhMGA,
+            when = "2021-01-06T11:13:12.441799Z",
+            traceContext = None,
           ),
           Vector.empty,
-          PlayerId("U00005335"),
-          universe("wh-mga"),
+          "U00005335",
+          universeWhMGA,
           "excluded",
           PermissionStatus(
             Vector("temporary"),
@@ -127,16 +125,15 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         "timeout",
         FacetContext(
           Header(
-            "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
-            who,
-            "wh-mga",
-            Instant.parse("2021-01-06T11:13:12.441799Z"),
-            Some("445b4e38-84c1-11ec-a8a3-0242ac120002"),
-            Some("48dac344-84c1-11ec-a8a3-0242ac120002"),
+            id = "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+            who = who(universeWhMGA),
+            universe = universeWhMGA,
+            when = "2021-01-06T11:13:12.441799Z",
+            traceContext = None,
           ),
           Vector.empty,
-          PlayerId("U00005335"),
-          universe("wh-mga"),
+          "U00005335",
+          universeWhMGA,
           "excluded",
           PermissionStatus(
             Vector("timeout"),
@@ -147,6 +144,7 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
         ),
       ),
     )
+  }
 
   val parser: FacetContextParser = new FacetContextParser(ConfigSource.resources("mappings.conf").loadOrThrow[MappingsConfig])
 

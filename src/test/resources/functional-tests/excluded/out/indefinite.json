@@ -5,12 +5,13 @@
       "id": "-1",
       "name": "anonymous",
       "type": "program",
-      "ip": "100.77.100.167"
+      "ip": "100.77.100.167",
+      "sessionId": "445b4e38-84c1-11ec-a8a3-0242ac120002",
+      "universe" : "wh-eu-dk",
+      "allowedUniverses" : [ "wh-eu-dk" ]
     },
     "universe": "wh-eu-dk",
-    "when": "2021-01-06T11:13:12.441799Z",
-    "sessionId": "445b4e38-84c1-11ec-a8a3-0242ac120002",
-    "traceId": "48dac344-84c1-11ec-a8a3-0242ac120002"
+    "when": "2021-01-06T11:13:12.441799Z"
   },
   "body": {
     "type": "excluded",
@@ -55,7 +56,8 @@
           {
             "type": "notification",
             "name": "block-account",
-            "relatesToPermissions": ["canLoginWithPassword", "canWithdraw", "canDeposit", "canBet", "canGame"]
+            "relatesToPermissions": ["canLoginWithPassword", "canWithdraw", "canDeposit", "canBet", "canGame"],
+            "reasonCode": "self-excluded"
           }
         ]
       }

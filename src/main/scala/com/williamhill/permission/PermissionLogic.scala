@@ -4,8 +4,8 @@ import cats.syntax.either.*
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.RulesConfig
-import com.williamhill.permission.domain.{Action, FacetContext}
 import com.williamhill.permission.dsl.ExpressionEvaluator
+import com.williamhill.platform.event.permission.{Action, FacetContext}
 import io.circe.{Json, JsonObject}
 import zio.clock.Clock
 import zio.{Has, IO, URLayer, ZIO}
@@ -22,7 +22,7 @@ class PermissionLogicLive(config: RulesConfig) extends PermissionLogic {
         Json
           .fromJsonObject(
             JsonObject(
-              "universe" -> Json.fromString(fc.universe.value),
+              "universe" -> Json.fromString(fc.universe),
               "event"    -> Json.fromString(fc.name),
               "statuses" -> Json.arr(fc.newStatus.statuses.map(Json.fromString)*),
             ),

@@ -7,7 +7,8 @@ import scala.util.Using
 
 import com.typesafe.scalalogging.LazyLogging
 import com.williamhill.permission.application.config.{MappingsConfig, RulesConfig}
-import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
+import com.williamhill.permission.kafka.events.generic.InputEvent
+import com.williamhill.platform.event.permission.Event as OutputEvent
 import io.circe.Decoder
 import io.circe.parser.parse
 import zio.blocking.Blocking

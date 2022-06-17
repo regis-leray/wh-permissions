@@ -1,8 +1,8 @@
 package com.williamhill.permission
 
 import com.williamhill.permission.application.config.RulesConfig
-import com.williamhill.permission.domain.Fixtures.{header, universe}
-import com.williamhill.permission.domain.{Action, FacetContext, PermissionStatus, PlayerId}
+import com.williamhill.permission.domain.Fixtures.header
+import com.williamhill.platform.event.permission.{Action, FacetContext, PermissionStatus}
 import zio.test.Assertion.*
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, ZSpec, assert}
@@ -16,8 +16,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
         val facetContext = FacetContext(
           header("wh-eu-de"),
           Vector.empty,
-          PlayerId("U00000001"),
-          universe("wh-eu-de"),
+          "U00000001",
+          "wh-eu-de",
           "dormancy",
           PermissionStatus(Vector("Dormant")),
           None,
@@ -31,6 +31,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
               reasonCode = "closed-dormant",
               denialDescription = "The account is closed as dormant",
               deniedPermissions = List("canLogin", "canBet", "canGame"),
+              deadline = None,
             ),
           ),
         )
@@ -44,8 +45,8 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
         val facet = FacetContext(
           header("wh-foo"),
           Vector.empty,
-          PlayerId("U00000001"),
-          universe("wh-foo"),
+          "U00000001",
+          "wh-foo",
           "dormancy",
           PermissionStatus(Vector("Dormant")),
           None,

@@ -5,7 +5,7 @@ import java.time.Instant
 import io.circe.*
 import io.circe.generic.semiauto.*
 
-final case class Header(
+final case class InputHeader(
     id: String,
     who: Who,
     universe: String,
@@ -14,9 +14,9 @@ final case class Header(
     traceId: Option[String],
 )
 
-object Header {
-  implicit val codec: Codec[Header] = {
-    val codec = deriveCodec[Header]
+object InputHeader {
+  implicit val codec: Codec[InputHeader] = {
+    val codec = deriveCodec[InputHeader]
     Codec.from(codec, codec.mapJson(_.dropNullValues))
   }
 

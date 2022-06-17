@@ -7,10 +7,7 @@ import io.circe.*
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import org.apache.commons.lang3.StringUtils
 
-final case class InputEvent(
-    header: Header,
-    body: Json,
-)
+final case class InputEvent(header: InputHeader, body: Json)
 
 object InputEvent {
 

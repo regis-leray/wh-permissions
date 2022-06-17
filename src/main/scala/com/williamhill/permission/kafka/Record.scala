@@ -1,7 +1,8 @@
 package com.williamhill.permission.kafka
 
 import com.williamhill.permission.application.AppError
-import com.williamhill.permission.kafka.events.generic.{InputEvent, OutputEvent}
+import com.williamhill.permission.kafka.events.generic.InputEvent
+import com.williamhill.platform.event.permission.Event as OutputEvent
 import com.williamhill.platform.kafka.consumer.Committable
 import zio.kafka.consumer.CommittableRecord
 

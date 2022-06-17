@@ -44,6 +44,7 @@ object Dependencies {
   }
 
   object williamHill {
+    val facetEvent = "com.williamhill.platform" %% "facet-event-model" % "0.9.4"
 
     val kafkaLibraryCore = "com.williamhill.bettingengine" %% "be-kafka-library-core" % "1.2.8" excludeAll (ExclusionRule(
       "com.typesafe.akka",

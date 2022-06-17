@@ -7,13 +7,37 @@ import cats.syntax.option.*
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
 import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
-import com.williamhill.permission.domain.{FacetContext, PermissionStatus, PlayerId, Universe}
+import com.williamhill.permission.domain.Universe
 import com.williamhill.permission.dsl.ExpressionEvaluator
 import com.williamhill.permission.dsl.SeqSyntax.SeqExt
-import com.williamhill.permission.kafka.events.generic.InputEvent
+import com.williamhill.permission.kafka.events.generic.{InputEvent, InputHeader}
+import com.williamhill.platform.event.common.Header
+import com.williamhill.platform.event.permission.{FacetContext, PermissionStatus}
 import zio.{Has, URLayer, ZIO}
 
 class FacetContextParser(config: MappingsConfig) {
+
+  private def fromInputHeader(inputHeader: InputHeader): Header =
+    Header(
+      id = inputHeader.id,
+      traceContext = None,
+      universe = inputHeader.universe,
+      when = inputHeader.when.toString,
+      who = Header.Who(
+        id = inputHeader.who.id,
+        name = inputHeader.who.name,
+        `type` = inputHeader.who.`type` match {
+          case "customer" => Header.Who.Type.Customer
+          case "staff"    => Header.Who.Type.Staff
+          case "program"  => Header.Who.Type.Program
+        },
+        sessionId = inputHeader.sessionId,
+        ip = inputHeader.who.ip,
+        universe = Some(inputHeader.universe),
+        // TODO change to allow germany and mga like in Processor (take list from config)
+        allowedUniverses = Some(List(inputHeader.universe)),
+      ),
+    )
 
   def parse(topic: String, input: InputEvent): Either[AppError, FacetContext] = {
     val evaluator = new ExpressionEvaluator(input.body.hcursor)
@@ -31,7 +55,7 @@ class FacetContextParser(config: MappingsConfig) {
       previousValues = evaluator.mapCursor(_.downField("previousValues"))
 
       universe <- Universe(input.header.universe)
-      playerId <- newValues.evaluate[PlayerId](mapping.playerId).left.map(AppError.fromDecodingFailure)
+      playerId <- newValues.evaluate[String](mapping.playerId).left.map(AppError.fromDecodingFailure)
 
       newStatuses <- parsePermissionStatuses(mapping)(newValues)
       oldStatuses <- previousValues.optional.fold(none[PermissionStatus].asRight[AppError])(
@@ -39,10 +63,10 @@ class FacetContextParser(config: MappingsConfig) {
       )
 
     } yield FacetContext(
-      header = input.header,
+      header = fromInputHeader(input.header),
       actions = Vector.empty,
       playerId = playerId,
-      universe = universe,
+      universe = universe.value,
       name = event,
       newStatus = newStatuses,
       previousStatus = oldStatuses,
