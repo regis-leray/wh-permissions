@@ -6,15 +6,15 @@ import sbtassembly.AssemblyPlugin.autoImport._
 import sbtdocker.DockerPlugin.autoImport._
 
 object DockerSettings {
-
+  val pushDockerRegistry = sys.env.getOrElse("NexusUploadRegistry", "nexus-uploads.dtc.prod.williamhill.plc")
+  val pullDockerRegistry = sys.env.getOrElse("NexusDownloadRegistry", "docker-registry.prod.williamhill.plc")
+  val dockerNamespace    = sys.env.getOrElse("Docker_Namespace", "platform")
   def dockerSettings(imageName: String, mainFQCN: String) = {
-    val dockerRegistry  = sys.env.getOrElse("Registry", "nexus-uploads.dtc.prod.williamhill.plc")
-    val dockerNamespace = sys.env.getOrElse("Docker_Namespace", "platform")
 
     List(
       docker / imageNames := Seq(
         ImageName(
-          registry = Some(s"$dockerRegistry/$dockerNamespace"),
+          registry = Some(s"$pushDockerRegistry/$dockerNamespace"),
           repository = name.value,
           tag = Some(FileSystem.gitCommitHashes(1)),
         ),
@@ -31,7 +31,7 @@ object DockerSettings {
     val newrelicAppPath = "/opt/newrelic"
 
     new Dockerfile {
-      from("--platform=linux/amd64 docker-registry.prod.williamhill.plc/betting-engine/rhel7-java-11-newrelic:0.0.9")
+      from(s"--platform=linux/amd64 $pullDockerRegistry/betting-engine/rhel7-java-11-newrelic:0.0.9")
       workDir("/")
       env(
         "NEW_RELIC_ENABLED"     -> "true",

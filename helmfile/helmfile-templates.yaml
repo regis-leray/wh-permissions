@@ -1,7 +1,3 @@
-repositories:
-  - name: nexus
-    url: https://nexus.dtc.prod.williamhill.plc:8443/repository/be-helm/
-
 helmDefaults:
   wait: true
   waitForJobs: true

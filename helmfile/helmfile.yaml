@@ -1,3 +1,7 @@
+repositories:
+  - name: nexus
+    url: '{{ env "HELM_REPOSITORY" | default "https://nexus.dtc.prod.williamhill.plc:8443/repository/be-helm/" }}'
+
 environments:
   default:
     values:
@@ -12,8 +16,10 @@ environments:
       - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/{{ .Environment.Name }}/universes.yaml?ref=master
       - ./envs/default/config.yaml
       - ./envs/default/topics.yaml
+      - ./envs/default/secrets.yaml
       - ./envs/{{ .Environment.Name }}/config.yaml
       - ./envs/{{ .Environment.Name }}/topics.yaml
+      - ./envs/{{ .Environment.Name }}/secrets.yaml
 
   uat:
     <<: *templated-environment

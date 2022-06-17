@@ -5,6 +5,9 @@ creation_rules:
   - path_regex: '.*usd/secrets.yaml'
     kms: 'arn:aws:kms:us-east-1:440010832978:alias/applications'
 
+  - path_regex: '.*gpt/secrets.yaml'
+    kms: 'arn:aws:kms:us-east-1:155749033528:alias/applications'
+
   - path_regex: '.*sit/secrets.yaml'
     kms: 'arn:aws:kms:eu-west-1:858716511135:alias/applications'
 

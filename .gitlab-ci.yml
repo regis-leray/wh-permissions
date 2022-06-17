@@ -12,35 +12,44 @@ stages:
 
 include:
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.1.4
+    ref: 2.2.4
     file: parts/scala-app.yaml
+    rules:
+      - if: $CI_PROJECT_URL =~ /.*williamhillplc.*/
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.1.4
+    ref: 2.2.4
     file: parts/tasks/ISpec-template.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.1.4
+    ref: 2.2.4
     file: parts/tasks/cd-templates.yaml
   - project: williamhillplc/infosec/devsecops/gitlabci-templates
     ref: 1.6.3
     file: security/basic.yml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.1.4
+    ref: 2.2.4
     file: parts/unity-service-cd-tasks.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
     ref: main
     file:
       - gitlab/runners.yaml
       - gitlab/appsec_commons.yaml
+  - project: caesarsdigital/usa/betting-engine/infra/be-ci
+    ref: main-v3
+    file:
+      - parts/tasks/gitlab-runners.yaml
+      - parts/scala-app.yaml
+    rules:
+      - if: $CI_PROJECT_URL =~ /.*caesarsdigital.*/
 
 
 variables:
-  PushImageRegistry: nexus-uploads.dtc.prod.williamhill.plc
-  PullImageRegistry: nexus-aws.dtc.prod.williamhill.plc
+  NexusUploadRegistry: nexus-uploads.dtc.prod.williamhill.plc
+  NexusDownloadRegistry: nexus-aws.dtc.prod.williamhill.plc
   Docker_Namespace: platform
-  IMAGE_NAME: $PushImageRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
+  IMAGE_NAME: $NexusUploadRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
   Source_Images_List: |
       $IMAGE_NAME
-  HELMFILE_IMAGE: nexus-aws.dtc.prod.williamhill.plc/unity/helmfile:0.140.0-3.7.0
+  HELMFILE_IMAGE: $NexusDownloadRegistry/unity/helmfile:0.140.0-3.7.0
   KUBERNETES_CPU_REQUEST: 1
   KUBERNETES_CPU_LIMIT: 3
   KUBERNETES_MEMORY_REQUEST: 2Gi
@@ -84,7 +93,7 @@ scan-permissions-ep-container:
     - container_scanning
     - .eks-dev-gitlab-runner
   variables:
-    DOCKER_IMAGE: $PullImageRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
+    DOCKER_IMAGE: $NexusDownloadRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
     CONTAINER_SCANNING_DISABLED: "false"
 
 
@@ -204,7 +213,7 @@ Publish Helm to Nexus Tag:
 
 # notify
 notify:
-  image: nexus-aws.dtc.prod.williamhill.plc/mirrors/curlimages/curl:7.77.0
+  image: $NexusDownloadRegistry/mirrors/curlimages/curl:7.77.0
   stage: notify
   script: |
     UPSTREAM_COMMIT_AUTHOR="${UPSTREAM_COMMIT_AUTHOR:=n/a}"
