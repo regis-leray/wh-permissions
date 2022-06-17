@@ -65,7 +65,7 @@ releases:
     labels:
       project: unity
       slack_url_var: UNITY_TEAM_D_SLACK_HOOK_URL
-    {{- with (.Values | getOrNil "permissions-ep" | getOrNil "values") }}
+    {{- with (.Values | getOrNil "permissions" | getOrNil "values") }}
     values:
       - {{- toYaml . | nindent 8 }}
     {{- end}}
