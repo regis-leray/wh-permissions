@@ -9,6 +9,7 @@ environments:
       - ./envs/default/topics.yaml
 
   templated-environment: &templated-environment
+    missingFileHandler: Warn
     values:
       - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/default/config.yaml?ref=master
       - git::https://{{ env "UNITY_HELMFILE_USER" }}:{{ env "UNITY_HELMFILE_TOKEN" }}@gitlab.com/williamhillplc/platform-engineering/unity/pipelines/unity-helmfile@envs/{{ .Environment.Name }}/config.yaml?ref=master
