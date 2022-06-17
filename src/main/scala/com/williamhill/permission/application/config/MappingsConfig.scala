@@ -5,7 +5,7 @@ import com.williamhill.permission.dsl.{BooleanExpression, Expression}
 import pureconfig.generic.semiauto.deriveReader
 import pureconfig.{ConfigReader, ConfigSource}
 import zio.blocking.{Blocking, blocking}
-import zio.{Has, URLayer, ZIO}
+import zio.{Has, RLayer, ZIO}
 
 case class EventTypeMapping(value: String, when: BooleanExpression) {
   def toExpression: Expression = Expression.Conditional(Const(value), when = Some(when))
@@ -30,6 +30,6 @@ object MappingsConfig {
   implicit val mappingReader: ConfigReader[Mapping] = deriveReader
   implicit val reader: ConfigReader[MappingsConfig] = deriveReader
 
-  val layer: URLayer[Blocking, Has[MappingsConfig]] =
-    blocking(ZIO.effect(ConfigSource.resources("mappings.conf").loadOrThrow[MappingsConfig])).orDie.toLayer
+  val live: RLayer[Blocking, Has[MappingsConfig]] =
+    blocking(ZIO.effect(ConfigSource.resources("mappings.conf").loadOrThrow[MappingsConfig])).toLayer
 }

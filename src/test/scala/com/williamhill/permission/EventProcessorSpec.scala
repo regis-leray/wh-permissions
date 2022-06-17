@@ -21,7 +21,7 @@ import zio.{Has, URLayer, ZIO, ZLayer}
 object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
 
   private val configsLayer: URLayer[Blocking, Has[MappingsConfig] & Has[RulesConfig]] =
-    MappingsConfig.layer ++ RulesConfig.layer
+    MappingsConfig.live.orDie ++ RulesConfig.live.orDie
 
   private val componentsLayer: URLayer[Has[MappingsConfig] & Has[RulesConfig] & Clock, Has[FacetContextParser] & Has[PermissionLogic]] =
     FacetContextParser.layer ++ PermissionLogic.layer
@@ -32,7 +32,7 @@ object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
       EventProcessor.layer
 
   private val baseFolder: File =
-    new File(getClass.getClassLoader.getResource("functional-tests").getFile).ensuring(_.exists())
+    new File(getClass.getClassLoader.getResource("functional-tests/").getFile).ensuring(_.exists())
 
   private def listFiles(file: File): List[File] =
     List.from(file.ensuring(_.isDirectory).listFiles())
@@ -49,7 +49,6 @@ object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
       for {
         inputFiles  <- allFiles("in")
         outputFiles <- allFiles("out")
-
         inputFileNames  = inputFiles.map(_.getName)
         outputFileNames = outputFiles.map(_.getName)
 

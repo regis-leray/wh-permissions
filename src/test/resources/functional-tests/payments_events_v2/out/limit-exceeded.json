@@ -1,0 +1,72 @@
+{
+  "header": {
+    "id": "1b00ec09-cc5d-4ac9-ba0c-a5612b63aafd",
+    "universe": "wh-mga",
+    "when": "2021-12-08T20:03:55.812585Z",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "0.0.0.0",
+      "universe": "wh-mga",
+      "allowedUniverses": ["wh-mga"]
+    }
+  },
+  "body": {
+    "type": "limit-exceeded-authorise-deposit",
+    "newValues": {
+      "id": "EXW",
+      "universe": "wh-mga",
+      "data": {
+        "permissionDenials": {
+          "canLoginWithPassword": [
+            {
+              "reasonCode": "lifetime-limit-breached",
+              "description": "Permission not granted because of breach in the deposit account lifetime limit"
+            }
+          ],
+          "canWithdraw": [
+            {
+              "reasonCode": "lifetime-limit-breached",
+              "description": "Permission not granted because of breach in the deposit account lifetime limit"
+            }
+          ],
+          "canDeposit": [
+            {
+              "reasonCode": "lifetime-limit-breached",
+              "description": "Permission not granted because of breach in the deposit account lifetime limit"
+            }
+          ],
+          "canBet": [
+            {
+              "reasonCode": "lifetime-limit-breached",
+              "description": "Permission not granted because of breach in the deposit account lifetime limit"
+            }
+          ],
+          "canGame": [
+            {
+              "reasonCode": "lifetime-limit-breached",
+              "description": "Permission not granted because of breach in the deposit account lifetime limit"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "notification",
+            "name": "block-lifetime-limit-account",
+            "reasonCode": "lifetime-limit-breached",
+            "relatesToPermissions": [
+              "canLoginWithPassword",
+              "canWithdraw",
+              "canDeposit",
+              "canBet",
+              "canGame"
+            ]
+          }
+        ]
+      }
+    }
+
+  }
+}
+

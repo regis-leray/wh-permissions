@@ -63,7 +63,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
   }
   object Internal {
     val configLayer: RLayer[ZEnv, ZEnv & Has[RulesConfig] & Has[PermissionLogic]] =
-      ZEnv.live >+> RulesConfig.layer >+> PermissionLogic.layer
+      ZEnv.live >+> RulesConfig.live >+> PermissionLogic.layer
   }
 
 }

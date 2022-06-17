@@ -2,9 +2,9 @@ import com.williamhill.bettingengine.sbt.{FileSystem, WHNexus}
 import Dependencies._
 import DockerSettings._
 
-lazy val scalaVer = "2.13.8"
+lazy val scala213 = "2.13.8"
 
-ThisBuild / scalaVersion  := scalaVer
+ThisBuild / scalaVersion  := scala213
 ThisBuild / versionScheme := Some("early-semver")
 
 // Scalafix configuration
@@ -19,7 +19,7 @@ ThisBuild / javaOptions ++= Seq(
 )
 
 lazy val commonSettings = Seq(
-  scalaVersion := scalaVer,
+  scalaVersion := scala213,
   organization := "com.williamhill.platform",
   resolvers ++= Seq(
     WHNexus.Releases,

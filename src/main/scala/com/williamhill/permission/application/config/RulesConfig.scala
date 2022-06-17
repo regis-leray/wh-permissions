@@ -4,7 +4,7 @@ import com.williamhill.permission.dsl.Expression
 import pureconfig.generic.semiauto.deriveReader
 import pureconfig.{ConfigReader, ConfigSource}
 import zio.blocking.{Blocking, blocking}
-import zio.{Has, URLayer, ZIO}
+import zio.{Has, RLayer, ZIO}
 
 final case class ActionDefinition(
     name: String,
@@ -26,6 +26,6 @@ final case class RulesConfig(
 object RulesConfig {
   implicit val reader: ConfigReader[RulesConfig] = deriveReader
 
-  val layer: URLayer[Blocking, Has[RulesConfig]] =
-    blocking(ZIO.effect(ConfigSource.resources("rules.conf").loadOrThrow[RulesConfig])).orDie.toLayer
+  val live: RLayer[Blocking, Has[RulesConfig]] =
+    blocking(ZIO.effect(ConfigSource.resources("rules.conf").loadOrThrow[RulesConfig])).toLayer
 }

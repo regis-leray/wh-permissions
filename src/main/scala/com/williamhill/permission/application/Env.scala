@@ -47,8 +47,8 @@ object Env {
     ZLayer.wireSome[ZEnv, Main](
       Logging.global,
       AppConfig.layer,
-      RulesConfig.layer,
-      MappingsConfig.layer,
+      RulesConfig.live,
+      MappingsConfig.live,
       FacetContextParser.layer,
       PermissionLogic.layer,
       EventProcessor.layer,

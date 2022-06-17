@@ -28,9 +28,10 @@ object BooleanExpression {
   def twoPropsExpression[A](key1: String, key2: String)(f: (Expression, Expression) => A): ConfigReader[A] =
     propertyReader(key1, Expression.reader).zip(propertyReader(key2, Expression.reader)).map(f.tupled)
 
-  val equalsReader: ConfigReader[Equals]             = twoPropsExpression("src", "equals")(Equals)
-  val includesReader: ConfigReader[Includes]         = twoPropsExpression("src", "includes")(Includes)
-  val oneOfReader: ConfigReader[OneOf]               = twoPropsExpression("src", "one-of")(OneOf)
+  val equalsReader: ConfigReader[Equals]     = twoPropsExpression("src", "equals")(Equals)
+  val includesReader: ConfigReader[Includes] = twoPropsExpression("src", "includes")(Includes)
+  val oneOfReader: ConfigReader[OneOf]       = twoPropsExpression("src", "one-of")(OneOf)
+  // TODO rename intersect
   val intersectsReader: ConfigReader[Overlaps]       = twoPropsExpression("src", "overlaps")(Overlaps)
   val definedReader: ConfigReader[BooleanExpression] = propertyReader("defined", Expression.JsonPath.reader.map(Defined))
   def andReader: ConfigReader[BooleanExpression]     = propertyReader("all", ConfigReader[List[BooleanExpression]].map(And))
