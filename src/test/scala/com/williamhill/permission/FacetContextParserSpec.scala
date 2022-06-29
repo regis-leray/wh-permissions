@@ -36,11 +36,14 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           "U00004334",
           universeWhMGA,
           "dormancy",
-          PermissionStatus(Vector("Dormant")),
-          Some(PermissionStatus(Vector("Active"))),
+          PermissionStatus(Vector("dormant")),
+          Some(PermissionStatus(Vector("active"))),
         ),
       ),
       (
+        // Right(FacetContext(Header(c321d02c-9544-4aca-ba6e-6ad404ea32c9,None,wh-mga,2022-01-31T13:22:41.454508Z,Who(-1,anonymous,program,Some(100.77.100.167),Some(445b4e38-84c1-11ec-a8a3-0242ac120002),Some(wh-mga),Some(List(wh-mga)))),Vector(),U00004334,wh-mga,prohibition,PermissionStatus(Vector(),None,None),Some(PermissionStatus(Vector(),None,None))))
+        // was not equal to
+        // Right(FacetContext(Header(c321d02c-9544-4aca-ba6e-6ad404ea32c9,None,wh-mga,2022-01-31T13:22:41.454508Z,Who(-1,anonymous,program,Some(100.77.100.167),Some(445b4e38-84c1-11ec-a8a3-0242ac120002),Some(wh-mga),Some(List(wh-mga)))),Vector(),U00004334,wh-mga,prohibition,PermissionStatus(Vector(prohibited),None,None),Some(PermissionStatus(Vector(allowed),None,None))))
         "prohibition",
         "prohibited",
         FacetContext(
@@ -55,8 +58,8 @@ class FacetContextParserSpec extends AnyFlatSpec with Matchers with TableDrivenP
           "U00004334",
           universeWhMGA,
           "prohibition",
-          PermissionStatus(Vector("Prohibited")),
-          Some(PermissionStatus(Vector("Allowed"))),
+          PermissionStatus(Vector("prohibited")),
+          Some(PermissionStatus(Vector("allowed"))),
         ),
       ),
       (

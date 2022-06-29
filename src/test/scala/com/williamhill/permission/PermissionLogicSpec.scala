@@ -19,7 +19,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           "U00000001",
           "wh-eu-de",
           "dormancy",
-          PermissionStatus(Vector("Dormant")),
+          PermissionStatus(Vector("dormant")),
           None,
         )
 
@@ -27,7 +27,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
           Vector(
             Action(
               `type` = "notification",
-              name = "sendDormancyNotification",
+              name = "sendDormancyNotificationDormant",
               reasonCode = "closed-dormant",
               denialDescription = "The account is closed as dormant",
               deniedPermissions = List("canLogin", "canBet", "canGame"),

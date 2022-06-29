@@ -44,7 +44,7 @@
         "actions": [
           {
             "type": "notification",
-            "name": "sendDormancyNotification",
+            "name": "sendDormancyNotificationDormant",
             "relatesToPermissions": [
               "canLogin",
               "canBet",

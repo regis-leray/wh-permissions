@@ -17,14 +17,18 @@
       "id": "U00004334",
       "universe": "wh-mga",
       "data": {
-        "status": "Prohibited"
+        "status": {
+          "type": "prohibited"
+        }
       }
     },
     "previousValues": {
       "id": "U00004334",
       "universe": "wh-mga",
       "data": {
-        "status": "Allowed"
+        "status": {
+          "type": "allowed"
+        }
       }
     }
   }
