@@ -1,0 +1,162 @@
+{
+  "header": {
+    "id": "e74f3c1f-b669-43b7-81be-6be0e31cedf8",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "127.0.0.1"
+    },
+    "universe": "wh-eu-dk",
+    "when": "2021-01-06T11:13:12.021575Z"
+  },
+  "body": {
+    "type": "limits_set",
+    "newValues": {
+      "accountId": "U00000S68F",
+      "universe": "wh-eu-dk",
+      "limits": [
+        {
+          "name": "daily",
+          "initialLimit": {
+            "value": 60,
+            "createdAt": "2020-01-06T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "updatedLimit": {
+            "createdAt": "2020-01-06T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "owner": "player"
+        },
+        {
+          "name": "daily",
+          "initialLimit": {
+            "value": 70,
+            "createdAt": "2020-01-06T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "updatedLimit": {
+            "createdAt": "2020-01-07T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "owner": "responsible-gambling"
+        },
+        {
+          "name": "weekly",
+          "initialLimit": {
+            "value": 50,
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "updatedLimit": {
+
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "owner": "responsible-gambling"
+        },
+        {
+          "name": "weekly",
+          "initialLimit": {
+            "value": 50,
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "updatedLimit": {
+
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "owner": "player"
+        },
+        {
+          "name": "monthly",
+          "initialLimit": {
+            "value": 2000,
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-08-01T00:00:00.000Z"
+          },
+          "updatedLimit": {
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-08-01T00:00:00.000Z"
+          },
+          "owner": "player"
+        }
+      ]
+    },
+    "previousValues": {
+      "accountId": "U00000S68F",
+      "universe": "wh-eu-dk",
+      "limits": [
+        {
+          "name": "daily",
+          "initialLimit": {
+            "value": 60,
+            "createdAt": "2020-01-06T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "updatedLimit": {
+            "createdAt": "2020-01-06T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "owner": "player"
+        },
+        {
+          "name": "daily",
+          "initialLimit": {
+            "value": 70,
+            "createdAt": "2020-01-06T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "updatedLimit": {
+            "createdAt": "2020-01-07T14:00:00.000Z",
+            "effectiveAt": "2021-01-07T00:00:00.000Z"
+          },
+          "owner": "responsible-gambling"
+        },
+        {
+          "name": "weekly",
+          "initialLimit": {
+            "value": 50,
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "updatedLimit": {
+
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "owner": "responsible-gambling"
+        },
+        {
+          "name": "weekly",
+          "initialLimit": {
+            "value": 50,
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "updatedLimit": {
+
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-06-06T14:00:00.000Z"
+          },
+          "owner": "player"
+        },
+        {
+          "name": "monthly",
+          "initialLimit": {
+            "value": 2000,
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-08-01T00:00:00.000Z"
+          },
+          "updatedLimit": {
+            "createdAt": "2021-06-06T14:00:00.000Z",
+            "effectiveAt": "2021-08-01T00:00:00.000Z"
+          },
+          "owner": "player"
+        }
+      ]
+    }
+  }
+}
