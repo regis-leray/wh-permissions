@@ -1,10 +1,16 @@
 package com.williamhill.permission
 
 import com.github.mlangc.slf4zio.api.logging as Log
-import com.williamhill.permission.application.{Env, Kamon}
-import zio.{App, ExitCode, URIO, ZEnv}
+import com.williamhill.permission.application.Env
+import zio._
 
-object Main extends App {
+object PermissionEp extends App {
+
+  object Kamon {
+    val asResource: TaskManaged[kamon.Kamon.type] =
+      ZManaged.make(ZIO.effect { kamon.Kamon.init(); kamon.Kamon })(kamon => ZIO.fromFuture(_ => kamon.stop()).orDie)
+  }
+
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
     Kamon.asResource
       .use_(

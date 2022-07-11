@@ -1,6 +1,5 @@
 package com.williamhill.permission.config
 
-import com.williamhill.permission.application.config.MappingsConfig
 import zio.ZIO
 import zio.test.{DefaultRunnableSpec, ZSpec, assertCompletes}
 

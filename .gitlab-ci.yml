@@ -12,13 +12,15 @@ stages:
 
 include:
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
+    ref: main
+    file:
+      - gitlab/runners.yaml
+      - gitlab/appsec_commons.yaml
+  - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
     ref: 2.2.4
     file: parts/scala-app.yaml
     rules:
       - if: $CI_PROJECT_URL =~ /.*williamhillplc.*/
-  - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
-    ref: 2.2.4
-    file: parts/tasks/ISpec-template.yaml
   - project: williamhillplc/platform-engineering/unity/pipelines/ci-templates
     ref: 2.2.4
     file: parts/tasks/cd-templates.yaml
@@ -44,11 +46,10 @@ include:
 
 variables:
   NexusUploadRegistry: nexus-uploads.dtc.prod.williamhill.plc
-  NexusDownloadRegistry: nexus-aws.dtc.prod.williamhill.plc
   Docker_Namespace: platform
-  IMAGE_NAME: $NexusUploadRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
+  IMAGE_NAME: ${NexusUploadRegistry}/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
   Source_Images_List: |
-      $IMAGE_NAME
+    $IMAGE_NAME
   HELMFILE_IMAGE: $NexusDownloadRegistry/unity/helmfile:0.140.0-3.7.0
   KUBERNETES_CPU_REQUEST: 1
   KUBERNETES_CPU_LIMIT: 3
@@ -93,52 +94,81 @@ scan-permissions-ep-container:
     - container_scanning
     - .eks-dev-gitlab-runner
   variables:
-    DOCKER_IMAGE: $NexusDownloadRegistry/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
+    DOCKER_IMAGE: ${NexusDownloadRegistry}/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
     CONTAINER_SCANNING_DISABLED: "false"
 
 
 # lint checks
-Run scalafmt and scalafix checks:
-  extends: .execute-sbt-task-v3
+Lint checks:
+  extends:
+    - .eks-dev-gitlab-runner
+  image: "docker-registry.prod.williamhill.plc/unity/scala-sbt:11.0.14.1_1.6.2_2.13.8"
   stage: test
-  variables:
-    Sbt_Java_Version: 11
-    Sbt_Tasks: "lint-checks"
+  script:
+    - sbt lint-checks
   except: [tags, triggers]
 
-# test
-Run unit tests:
-  extends: .execute-sbt-tasks-with-docker-v3
+Run Tests:
+  extends:
+    - .eks-dev-gitlab-runner
+  image: "docker-registry.prod.williamhill.plc/unity/scala-sbt:11.0.14.1_1.6.2_2.13.8"
   stage: test
-  variables:
-    Sbt_Tasks: "clean coverage test"
-  except: [tags, schedules]
+  before_script:
+    # This cannot be a variable, because it will propagate into `services` containers and destroy everything you hold dear
+    - export JAVA_HOME=/jdk-11
+  script:
+    - sbt clean coverage test coverageReport coverageAggregate
+  coverage: '/(?:Aggregation complete. Coverage was\s*\[\s*(\d+(?:\.\d+)?)*\])/'
   artifacts:
     when: always
     expire_in: 1 day
     paths:
       - ./**/target
       - ./target
-  dependencies: [Run scalafmt and scalafix checks]
+    reports:
+      junit:
+        - ./**/target/**/TEST*.xml
+  variables:
+    no_proxy: "localhost,postgres,kafka,zookeeper,schema-registry"
+    JAVA_TOOL_OPTIONS: -Dhttp.nonProxyHosts=localhost|postgres|kafka|zookeeper|schema-registry -Dhttps.nonProxyHosts=localhost|postgres|kafka|zookeeper|schema-registry
+    # Sadly, `variables` scoped per service are only supported from gitlab 14.5
+    # so they are all glommed below:
+    # TODO: move them into the appropriate services once we have a gitlab runner >= 14.5
+    ZOOKEEPER_CLIENT_PORT: 2181
+    ZOOKEEPER_TICK_TIME: 2000
 
-Run it tests:
-  extends: .execute-sbt-tasks-with-docker-v3
-  stage: test
-  variables:
-    Sbt_Tasks: "It/test"
-  except: [tags, schedules]
-  artifacts:
-    when: always
-    expire_in: 1 day
-    paths:
-      - ./**/target
-      - ./target
-  dependencies: [Run unit tests]
-  allow_failure: true
+    KAFKA_SERVERS: kafka:9092
+    KAFKA_BROKER_ID: 1
+    KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT
+    KAFKA_LISTENERS: INSIDE://kafka:9092
+    KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9092
+    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+    KAFKA_CREATE_TOPICS: "exclusion_events_v1:1:1,permission_facet_events_v1:1:1,payments_events_v2:1:1,player_events_v4:1:1,dormancy_events_v1:1:1"
+
+    SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    SCHEMA_REGISTRY_HOST_NAME: schema-registry
+    SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+    # These are meant for the `k8s-us-usd` runner
+    KUBERNETES_CPU_REQUEST: 4
+    KUBERNETES_CPU_LIMIT: 4
+    KUBERNETES_MEMORY_REQUEST: 8Gi
+    KUBERNETES_MEMORY_LIMIT: 8Gi
+  services:
+    - name: ${NexusDownloadRegistry}/mirrors/digitalwonderland/zookeeper:latest
+      alias: zookeeper
+    - name: ${NexusDownloadRegistry}/mirrors/wurstmeister/kafka:2.12-2.5.0
+      alias: kafka
+    - name: ${NexusDownloadRegistry}/mirrors/confluentinc/cp-schema-registry:5.5.1
+      alias: schema-registry
 
 # build
 Build docker images:
-  extends: .execute-sbt-tasks-with-docker-v3 #see https://gitlab.com/williamhillplc/usa/betting-engine/infra/be-ci/blob/main-v3/parts/tasks/sbt-tasks.yaml
+  extends:
+    - .eks-dev-gitlab-runner
+    - .execute-sbt-tasks-with-docker-v3 #see https://gitlab.com/williamhillplc/usa/betting-engine/infra/be-ci/blob/main-v3/parts/tasks/sbt-tasks.yaml
   stage: build
   variables:
     Sbt_Java_Version: 11
@@ -152,7 +182,9 @@ Build docker images:
 
 # distribute
 Add extra docker tags and mirror:
-  extends: .add-extra-docker-tags-v2
+  extends:
+    - .eks-dev-gitlab-runner
+    - .add-extra-docker-tags-v2
   before_script:
     - export Input_Images=$Source_Images_List
     - export Extra_Retag_Args="--target-tag $CI_BUILD_REF_SLUG"
@@ -160,7 +192,9 @@ Add extra docker tags and mirror:
   except: [tags, schedules]
 
 Add extra docker tags and mirror for git tag:
-  extends: .add-extra-docker-tags-v2
+  extends:
+    - .eks-dev-gitlab-runner
+    - .add-extra-docker-tags-v2
   before_script:
     - export Input_Images=$Source_Images_List
     - export Extra_Retag_Args="--target-tag $CI_COMMIT_TAG"

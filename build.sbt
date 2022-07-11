@@ -1,5 +1,4 @@
-import com.williamhill.bettingengine.sbt.{FileSystem, WHNexus}
-import Dependencies._
+import com.williamhill.bettingengine.sbt.WHNexus
 import DockerSettings._
 
 lazy val scala213 = "2.13.8"
@@ -17,6 +16,16 @@ ThisBuild / javaOptions ++= Seq(
   // ZIO Interop Log4j2
   "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
 )
+
+//TODO migrate to ZIO.2.0
+val ZioVersion = "1.0.13"
+
+val CirceVersion           = "0.14.1"
+val KafkaSerdeCirceVersion = "0.6.5"
+val ZioTracingVersion      = "0.1.1"
+val JsonSchemaVersion      = "0.7.8"
+val KamonVersion           = "2.2.2"
+val MonocleVersion         = "3.1.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := scala213,
@@ -41,42 +50,42 @@ lazy val commonSettings = Seq(
   ),
   Compile / console / scalacOptions ~= (_.filterNot(Set("-Xfatal-warnings"))),
   libraryDependencies ++= List(
-    zio.core,
-    zio.slf4zio,
-    zio.test,
-    zio.`test-sbt`,
-    zio.`test-scalacheck`,
-    zio.kafka,
-    zio.magic,
-    zio.stream,
-    scalaTest,
-    circe.core,
-    circe.generic,
-    circe.jawn,
-    confluent.jsonSchemaSerializer,
-    confluent.schemaRegistryClient,
-    andyglow.core,
-    andyglow.circeJson,
-    andyglow.jsonSchemaCats,
-    kamon.bundle,
-    kamon.newRelic,
-    kamon.newRelicAppender,
-    williamHill.kafkaLibraryCore,
-    williamHill.kafkaExtensions,
-    williamHill.healthcheck.http4s,
-    williamHill.healthcheck.kafka,
-    williamHill.tracing.tracing,
-    williamHill.tracing.tracingKafka,
-    williamHill.facetEvent,
-    enumeratum.circe,
-    http4s.dsl,
-    kafkaSerdeScala.circe,
-    testContainers.scalaKafka % IntegrationTest,
-    logback.logstashLogbackEncoder,
-    monocle.core,
-    monocle.`macro`,
-    "org.scalactic" %% "scalactic" % "3.2.12",
-    "org.scalatest" %% "scalatest" % "3.2.12" % "it",
+    "dev.zio" %% "zio"                 % ZioVersion,
+    "dev.zio" %% "zio-streams"         % ZioVersion,
+    "dev.zio" %% "zio-test-sbt"        % ZioVersion % Test,
+    "dev.zio" %% "zio-test-scalacheck" % ZioVersion % Test,
+    "dev.zio" %% "zio-test"            % ZioVersion % Test,
+    // TODO remove scalatest
+    "org.scalatest"                      %% "scalatest"                    % "3.2.11" % Test,
+    "dev.zio"                            %% "zio-kafka"                    % "0.17.5",
+    "io.github.kitlangton"               %% "zio-magic"                    % "0.3.12",
+    "io.circe"                           %% "circe-core"                   % CirceVersion,
+    "io.circe"                           %% "circe-generic"                % CirceVersion,
+    "io.circe"                           %% "circe-jawn"                   % CirceVersion,
+    "io.github.azhur"                    %% "kafka-serde-circe"            % "0.6.5",
+    "io.confluent"                        % "kafka-json-schema-serializer" % "7.0.1",
+    "io.confluent"                        % "kafka-schema-registry-client" % "5.3.0",
+    "com.github.andyglow"                %% "scala-jsonschema-core"        % JsonSchemaVersion,
+    "com.github.andyglow"                %% "scala-jsonschema-circe-json"  % JsonSchemaVersion,
+    "com.github.andyglow"                %% "scala-jsonschema-cats"        % JsonSchemaVersion,
+    "io.kamon"                           %% "kamon-bundle"                 % KamonVersion,
+    "io.kamon"                           %% "kamon-newrelic"               % KamonVersion,
+    "com.williamhill.platform.libraries" %% "newrelic-log-appender"        % "0.1.4",
+    "com.williamhill.bettingengine"      %% "be-kafka-library-core"        % "1.2.8" excludeAll (ExclusionRule(
+      "com.typesafe.akka",
+      "akka-stream-kafka",
+    )),
+    "com.williamhill.platform"         %% "zio-kafka-extensions"     % "0.4.0-SNAPSHOT",
+    "com.williamhill.platform"         %% "http4s-healthcheck"       % "0.1.10",
+    "com.williamhill.platform"         %% "kafka-healthcheck"        % "0.1.10",
+    "com.williamhill.platform.tracing" %% "zio-tracing"              % ZioTracingVersion,
+    "com.williamhill.platform.tracing" %% "zio-tracing-kafka"        % "0.1.1",
+    "com.williamhill.platform"         %% "facet-event-model"        % "0.9.4",
+    "com.beachape"                     %% "enumeratum-circe"         % "1.7.0",
+    "org.http4s"                       %% "http4s-dsl"               % "0.23.7", // TODO replace by ZIO http
+    "net.logstash.logback"              % "logstash-logback-encoder" % "7.2",
+    "dev.optics"                       %% s"monocle-core"            % MonocleVersion,
+    "dev.optics"                       %% s"monocle-macro"           % MonocleVersion,
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
   ),
 )
@@ -95,8 +104,8 @@ val testSettings = Seq(
   Test / fork               := true,
   Test / testForkedParallel := true,
   Test / parallelExecution  := true,
+  // TODO validate this needed ??? replace logback by log4j ???
   Test / javaOptions ++= Seq(
-    "-Dconfig.resource=/test.conf",
     // ZIO Interop Log4j2
     "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
     "-Dsbt.io.implicit.relative.glob.conversion=allow",
@@ -105,6 +114,7 @@ val testSettings = Seq(
   coverageDataDir := crossTarget.value / "scoverage-report",
 )
 
+//TODO remove use PackPlugin
 lazy val assemblySettings = List(
   assembly / assemblyMergeStrategy := {
     case x if Assembly.isConfigFile(x) => MergeStrategy.concat
@@ -128,17 +138,13 @@ lazy val assemblySettings = List(
   publish / skip  := true,
 )
 
-lazy val permissionsEpMain = "com.williamhill.permission.Main"
-
 lazy val `permissions-ep` = project
   .in(file("."))
   .settings(commonSettings: _*)
   .settings(testSettings: _*)
-  .configs(IntegrationTest)
-  .settings(Defaults.itSettings)
   .settings(assemblySettings: _*)
-  .settings(Compile / mainClass := Some(permissionsEpMain))
-  .settings(dockerSettings("permissions-ep", permissionsEpMain): _*)
+  .settings(Compile / mainClass := Some("com.williamhill.permission.PermissionEp"))
+  .settings(dockerSettings("permissions-ep", "com.williamhill.permission.PermissionEp"): _*)
   .enablePlugins(DockerPlugin)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges

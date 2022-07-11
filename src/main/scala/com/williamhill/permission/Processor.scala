@@ -2,43 +2,29 @@ package com.williamhill.permission
 
 import cats.implicits.catsSyntaxEitherId
 import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
-import com.williamhill.permission.application.config.AppConfig
 import com.williamhill.permission.application.{AppError, Env}
+import com.williamhill.permission.config.{AppConfig, ProcessorConfig}
 import com.williamhill.permission.kafka.Record.{OutputCommittable, StringRecord}
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import com.williamhill.permission.kafka.{EventPublisher, HasKey}
 import com.williamhill.platform.event.permission.Event as OutputEvent
-import com.williamhill.platform.kafka.config.{CommaSeparatedList, TopicConfig}
 import com.williamhill.platform.kafka.consumer.Committable
 import com.williamhill.platform.library.kafka.TracingConsumer
-import pureconfig.ConfigReader
-import pureconfig.generic.semiauto.deriveReader
 import zio.*
 import zio.kafka.consumer.*
 import zio.kafka.serde.Serde as ZioSerde
 import zio.stream.*
 
 object Processor {
-  // TODO: should we move all configs in application.config package?
-  final case class Config(
-      inputEvents: TopicConfig,
-      outputEvents: TopicConfig,
-      configuredUniverses: CommaSeparatedList,
-      tracingIdentifiers: Config.TracingIdentifiers,
-  )
 
-  object Config {
-    final case class TracingIdentifiers(groupId: String, clientId: String)
-    implicit val tracingIdentifiersReader: ConfigReader[TracingIdentifiers] = deriveReader
-    implicit val reader: ConfigReader[Config]                               = deriveReader
-  }
-  val inputRecordEvents: ZStream[Has[Consumer] & Has[AppConfig] & Has[Config], AppError, StringRecord] = {
+  val inputRecordEvents: ZStream[Has[Consumer] & Has[AppConfig] & Has[ProcessorConfig], AppError, StringRecord] = {
 
     (for {
-      config <- ZStream.service[Config]
+      config <- ZStream.service[ProcessorConfig]
       subscription = Subscription.topics(config.inputEvents.topics.head, config.inputEvents.topics.tail*)
       rec <- Consumer
         .subscribeAnd(subscription)
+        // TODO change serdes with InputEvent
         .plainStream(ZioSerde.string, ZioSerde.string)
         .tap { rec =>
           Task {
@@ -53,11 +39,11 @@ object Processor {
 
   }
 
-  val inputToOutput: ZTransducer[Has[EventProcessor] & Has[Config] & Logging, AppError, StringRecord, OutputCommittable] =
+  val inputToOutput: ZTransducer[Has[EventProcessor] & Has[ProcessorConfig] & Logging, AppError, StringRecord, OutputCommittable] =
     Committable
       .filterMapCommittableRecordM { (inputRecord: StringRecord) =>
-        val result: ZIO[Has[EventProcessor] & Has[Config], AppError, OutputEvent] = for {
-          config     <- ZIO.service[Config]
+        val result: ZIO[Has[EventProcessor] & Has[ProcessorConfig], AppError, OutputEvent] = for {
+          config     <- ZIO.service[ProcessorConfig]
           inputEvent <- ZIO.fromEither(InputEvent.produce(inputRecord.record.value()))
           universe            = inputEvent.header.universe
           maybeSupportedEvent = config.configuredUniverses.unwrap.find(_ == inputEvent.header.universe).map(_ => inputEvent)
@@ -75,14 +61,15 @@ object Processor {
       }
       .mapError(AppError.fromThrowable)
 
-  val publishEvent
-      : ZTransducer[Has[EventPublisher] & Has[Config] & Has[ZioSerde[Any, OutputEvent]], AppError, OutputCommittable, OutputCommittable] = {
+  val publishEvent: ZTransducer[Has[EventPublisher] & Has[ProcessorConfig] & Has[
+    ZioSerde[Any, OutputEvent],
+  ], AppError, OutputCommittable, OutputCommittable] = {
     implicit val facetKey: HasKey[OutputEvent] = (_: OutputEvent).body.newValues.id
     Committable
       .mapValueM((event: OutputEvent) =>
         for {
           publisher <- ZIO.service[EventPublisher]
-          cfg       <- ZIO.service[Config]
+          cfg       <- ZIO.service[ProcessorConfig]
           _         <- publisher.publish(cfg.outputEvents.topics.head, event)
         } yield event.asRight[AppError],
       )

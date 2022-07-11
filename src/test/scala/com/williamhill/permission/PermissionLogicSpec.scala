@@ -1,6 +1,6 @@
 package com.williamhill.permission
 
-import com.williamhill.permission.application.config.RulesConfig
+import com.williamhill.permission.config.RulesConfig
 import com.williamhill.permission.domain.Fixtures.header
 import com.williamhill.platform.event.permission.{Action, FacetContext, PermissionStatus}
 import zio.test.Assertion.*

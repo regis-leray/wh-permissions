@@ -2,7 +2,7 @@ package com.williamhill.permission
 
 import java.time.Instant
 
-import com.williamhill.permission.application.config.MappingsConfig
+import com.williamhill.permission.config.MappingsConfig
 import com.williamhill.permission.domain.Fixtures.*
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import com.williamhill.platform.event.common.Header

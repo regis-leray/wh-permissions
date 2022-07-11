@@ -1,4 +1,4 @@
-package com.williamhill.permission.application.config
+package com.williamhill.permission.config
 
 import com.williamhill.permission.dsl.Expression.Const
 import com.williamhill.permission.dsl.{BooleanExpression, Expression}

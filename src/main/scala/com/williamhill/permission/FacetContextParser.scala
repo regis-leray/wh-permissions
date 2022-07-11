@@ -6,7 +6,7 @@ import cats.syntax.either.*
 import cats.syntax.option.*
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
-import com.williamhill.permission.application.config.{Mapping, MappingsConfig}
+import com.williamhill.permission.config.{Mapping, MappingsConfig}
 import com.williamhill.permission.domain.Universe
 import com.williamhill.permission.dsl.ExpressionEvaluator
 import com.williamhill.permission.dsl.SeqSyntax.SeqExt

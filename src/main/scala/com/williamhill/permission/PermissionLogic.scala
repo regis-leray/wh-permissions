@@ -3,7 +3,7 @@ package com.williamhill.permission
 import cats.syntax.either.*
 import cats.syntax.traverse.*
 import com.williamhill.permission.application.AppError
-import com.williamhill.permission.application.config.RulesConfig
+import com.williamhill.permission.config.RulesConfig
 import com.williamhill.permission.dsl.ExpressionEvaluator
 import com.williamhill.platform.event.permission.{Action, FacetContext}
 import io.circe.{Json, JsonObject}

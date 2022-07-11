@@ -1,6 +1,7 @@
-package com.williamhill.permission.application
+package com.williamhill.permission
 
 import com.typesafe.scalalogging.Logger
+import com.williamhill.permission.application.AppError
 
 package object logging {
 

@@ -4,29 +4,16 @@ import cats.Eq
 import cats.syntax.either.*
 import com.williamhill.permission.application.AppError
 import io.circe.*
-import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import io.circe.generic.semiauto.deriveCodec
+import io.github.azhur.kafkaserdecirce.CirceSupport
 import org.apache.commons.lang3.StringUtils
+import org.apache.kafka.common.serialization.Serde as KafkaSerde
 
 final case class InputEvent(header: InputHeader, body: Json)
 
 object InputEvent {
-
-  implicit val encoder: Encoder[InputEvent] = deriveEncoder
-
-//  private val decoderStrict: Decoder[InputEvent] = deriveDecoder
-//  private val decoderClean: Decoder[InputEvent] =
-//    Decoder.decodeString.emap { s =>
-//      val startIndex = StringUtils.indexOf(s, "{")
-//      val endIndex   = StringUtils.lastIndexOf(s, "}") + 1
-//      val clean      = StringUtils.substring(s, startIndex, endIndex)
-//      for {
-//        json  <- parser.parse(s).leftMap(pf => pf.message)
-//        value <- decoderStrict.decodeJson(json).leftMap(df => df.message)
-//      } yield value
-//
-//    }
-
-  implicit val decoder: Decoder[InputEvent] = deriveDecoder
+  implicit val codec: Codec[InputEvent]       = deriveCodec
+  implicit val kserde: KafkaSerde[InputEvent] = CirceSupport.toSerde
 
   implicit val eq: Eq[InputEvent] = Eq.fromUniversalEquals[InputEvent]
 
@@ -42,7 +29,13 @@ object InputEvent {
     val cleanSource = clean(source)
     for {
       json  <- parser.parse(cleanSource).leftMap(pf => AppError.fromMessage(pf.message))
-      value <- decoder.decodeJson(json).leftMap(AppError.fromDecodingFailure)
+      value <- codec.decodeJson(json).leftMap(AppError.fromDecodingFailure)
     } yield value
   }
+}
+
+object OutputEvent {
+  type OutputEvent = com.williamhill.platform.event.permission.Event
+
+  implicit val kserde: KafkaSerde[OutputEvent] = CirceSupport.toSerde
 }
