@@ -51,6 +51,7 @@ variables:
   Source_Images_List: |
     $IMAGE_NAME
   HELMFILE_IMAGE: $NexusDownloadRegistry/unity/helmfile:0.140.0-3.7.0
+  SbtBuildImage: $NexusDownloadRegistry/unity/scala-sbt:11.0.14.1_1.6.2_2.13.8
   KUBERNETES_CPU_REQUEST: 1
   KUBERNETES_CPU_LIMIT: 3
   KUBERNETES_MEMORY_REQUEST: 2Gi
@@ -102,7 +103,7 @@ scan-permissions-ep-container:
 Lint checks:
   extends:
     - .eks-dev-gitlab-runner
-  image: "docker-registry.prod.williamhill.plc/unity/scala-sbt:11.0.14.1_1.6.2_2.13.8"
+  image: $SbtBuildImage
   stage: test
   script:
     - sbt lint-checks
@@ -111,7 +112,7 @@ Lint checks:
 Run Tests:
   extends:
     - .eks-dev-gitlab-runner
-  image: "docker-registry.prod.williamhill.plc/unity/scala-sbt:11.0.14.1_1.6.2_2.13.8"
+  image: $SbtBuildImage
   stage: test
   before_script:
     # This cannot be a variable, because it will propagate into `services` containers and destroy everything you hold dear
@@ -146,7 +147,7 @@ Run Tests:
     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-    KAFKA_CREATE_TOPICS: "exclusion_events_v1:1:1,permission_facet_events_v1:1:1,payments_events_v2:1:1,player_events_v4:1:1,dormancy_events_v1:1:1"
+    KAFKA_CREATE_TOPICS: "exclusion_events_v1:1:1,permission_facet_events_v1:1:1,payments_events_v2:1:1,player_events_v4:1:1,dormancy_events_v1:1:1,prohibited_player_events_v1:1:1"
 
     SCHEMA_REGISTRY_URL: http://schema-registry:8081
     SCHEMA_REGISTRY_HOST_NAME: schema-registry
