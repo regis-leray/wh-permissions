@@ -1,22 +1,21 @@
-package com.williamhill.permission.application
+package com.williamhill.permission.endpoints
 
-import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
+import com.github.mlangc.slf4zio.api.{Logging, logging => Log}
 import com.williamhill.permission.config.HealthcheckConfig
 import com.williamhill.platform.healthcheck.OkHealthCheck
 import com.williamhill.platform.healthcheck.http4s.server.HealthCheckRoutes
 import com.williamhill.platform.healthcheck.kafka.KafkaHealthCheck
-import org.http4s.*
+import org.http4s.HttpRoutes
 import org.http4s.blaze.server.BlazeServerBuilder
-import org.http4s.implicits.*
 import org.http4s.server.{Router, Server}
-import zio.*
-import zio.blocking.*
-import zio.clock.*
+import zio.blocking.Blocking
+import zio.clock.Clock
 import zio.duration.Duration
 import zio.interop.catz.*
+import zio.{Cause, RManaged}
 
-object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]] {
-  def routes(config: HealthcheckConfig): HttpRoutes[RIO[Clock & Blocking, _]] =
+object HealthcheckApi extends org.http4s.dsl.Http4sDsl[Effect] {
+  def routes(config: HealthcheckConfig): HttpRoutes[Effect] =
     new HealthCheckRoutes(
       config.identifier,
       new OkHealthCheck(config.identifier),
@@ -24,7 +23,7 @@ object HealthcheckApi extends org.http4s.dsl.Http4sDsl[RIO[Clock & Blocking, _]]
     ).routes
 
   def asResource(cfg: HealthcheckConfig): RManaged[Blocking & Clock & Logging, Server] =
-    BlazeServerBuilder[RIO[Clock & Blocking, _]]
+    BlazeServerBuilder[Effect]
       .bindHttp(cfg.port, cfg.host)
       .withHttpApp(Router("/" -> routes(cfg)).orNotFound)
       .resource

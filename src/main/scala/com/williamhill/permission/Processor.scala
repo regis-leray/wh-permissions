@@ -3,7 +3,7 @@ package com.williamhill.permission
 import cats.implicits.catsSyntaxEitherId
 import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
 import com.williamhill.permission.application.{AppError, Env}
-import com.williamhill.permission.config.{AppConfig, ProcessorConfig}
+import com.williamhill.permission.config.AppConfig
 import com.williamhill.permission.kafka.Record.{OutputCommittable, StringRecord}
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import com.williamhill.permission.kafka.{EventPublisher, HasKey}
@@ -17,10 +17,10 @@ import zio.stream.*
 
 object Processor {
 
-  val inputRecordEvents: ZStream[Has[Consumer] & Has[AppConfig] & Has[ProcessorConfig], AppError, StringRecord] = {
+  val inputRecordEvents: ZStream[Has[Consumer] & Has[AppConfig], AppError, StringRecord] = {
 
     (for {
-      config <- ZStream.service[ProcessorConfig]
+      config <- ZStream.service[AppConfig].map(_.processorSettings)
       subscription = Subscription.topics(config.inputEvents.topics.head, config.inputEvents.topics.tail*)
       rec <- Consumer
         .subscribeAnd(subscription)
@@ -39,11 +39,11 @@ object Processor {
 
   }
 
-  val inputToOutput: ZTransducer[Has[EventProcessor] & Has[ProcessorConfig] & Logging, AppError, StringRecord, OutputCommittable] =
+  val inputToOutput: ZTransducer[Has[EventProcessor] & Has[AppConfig] & Logging, AppError, StringRecord, OutputCommittable] =
     Committable
       .filterMapCommittableRecordM { (inputRecord: StringRecord) =>
-        val result: ZIO[Has[EventProcessor] & Has[ProcessorConfig], AppError, OutputEvent] = for {
-          config     <- ZIO.service[ProcessorConfig]
+        val result: ZIO[Has[EventProcessor] & Has[AppConfig], AppError, OutputEvent] = for {
+          config     <- ZIO.service[AppConfig].map(_.processorSettings)
           inputEvent <- ZIO.fromEither(InputEvent.produce(inputRecord.record.value()))
           universe            = inputEvent.header.universe
           maybeSupportedEvent = config.configuredUniverses.unwrap.find(_ == inputEvent.header.universe).map(_ => inputEvent)
@@ -61,7 +61,7 @@ object Processor {
       }
       .mapError(AppError.fromThrowable)
 
-  val publishEvent: ZTransducer[Has[EventPublisher] & Has[ProcessorConfig] & Has[
+  val publishEvent: ZTransducer[Has[EventPublisher] & Has[AppConfig] & Has[
     ZioSerde[Any, OutputEvent],
   ], AppError, OutputCommittable, OutputCommittable] = {
     implicit val facetKey: HasKey[OutputEvent] = (_: OutputEvent).body.newValues.id
@@ -69,7 +69,7 @@ object Processor {
       .mapValueM((event: OutputEvent) =>
         for {
           publisher <- ZIO.service[EventPublisher]
-          cfg       <- ZIO.service[ProcessorConfig]
+          cfg       <- ZIO.service[AppConfig].map(_.processorSettings)
           _         <- publisher.publish(cfg.outputEvents.topics.head, event)
         } yield event.asRight[AppError],
       )

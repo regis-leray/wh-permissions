@@ -18,7 +18,7 @@ ThisBuild / javaOptions ++= Seq(
 )
 
 //TODO migrate to ZIO.2.0
-val ZioVersion = "1.0.13"
+val ZioVersion = "1.0.15"
 
 val CirceVersion           = "0.14.1"
 val KafkaSerdeCirceVersion = "0.6.5"
@@ -37,26 +37,29 @@ lazy val commonSettings = Seq(
     "Confluent" at "https://packages.confluent.io/maven/",
     "jitpack.io" at "https://jitpack.io/",
   ),
-  scalacOptions ++= List(
+  scalacOptions ++= Seq(
     "-unchecked",
     "-deprecation",
     "-encoding",
     "utf8",
     "-Xfatal-warnings",
-    "-feature",
-    "-Wunused:imports",
-    "-P:kind-projector:underscore-placeholders",
-    "-Xsource:3", // Enable simpler smart constructor - https://gist.github.com/tpolecat/a5cb0dc9adeacc93f846835ed21c92d2#gistcomment-3386246
+    "-language:postfixOps",
+    "-Wconf:cat=w-flag-dead-code:silent",
+    "-Wunused:_,-implicits",
+    // helps with unused implicits warning
+    "-Ywarn-macros:after",
+    "-Xsource:3",
   ),
+  addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.2" cross CrossVersion.full),
+  addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   Compile / console / scalacOptions ~= (_.filterNot(Set("-Xfatal-warnings"))),
   libraryDependencies ++= List(
-    "dev.zio" %% "zio"                 % ZioVersion,
-    "dev.zio" %% "zio-streams"         % ZioVersion,
-    "dev.zio" %% "zio-test-sbt"        % ZioVersion % Test,
-    "dev.zio" %% "zio-test-scalacheck" % ZioVersion % Test,
-    "dev.zio" %% "zio-test"            % ZioVersion % Test,
-    // TODO remove scalatest
-    "org.scalatest"                      %% "scalatest"                    % "3.2.11" % Test,
+    "dev.zio"                            %% "zio"                          % ZioVersion,
+    "dev.zio"                            %% "zio-streams"                  % ZioVersion,
+    "dev.zio"                            %% "zio-test-sbt"                 % ZioVersion % Test,
+    "dev.zio"                            %% "zio-test-scalacheck"          % ZioVersion % Test,
+    "dev.zio"                            %% "zio-test"                     % ZioVersion % Test,
+    "org.scalatest"                      %% "scalatest"                    % "3.2.11"   % Test, // TODO remove scalatest
     "dev.zio"                            %% "zio-kafka"                    % "0.17.5",
     "io.github.kitlangton"               %% "zio-magic"                    % "0.3.12",
     "io.circe"                           %% "circe-core"                   % CirceVersion,
@@ -75,17 +78,19 @@ lazy val commonSettings = Seq(
       "com.typesafe.akka",
       "akka-stream-kafka",
     )),
-    "com.williamhill.platform"         %% "zio-kafka-extensions"     % "0.4.0-SNAPSHOT",
-    "com.williamhill.platform"         %% "http4s-healthcheck"       % "0.1.10",
-    "com.williamhill.platform"         %% "kafka-healthcheck"        % "0.1.10",
-    "com.williamhill.platform.tracing" %% "zio-tracing"              % ZioTracingVersion,
-    "com.williamhill.platform.tracing" %% "zio-tracing-kafka"        % "0.1.1",
-    "com.williamhill.platform"         %% "facet-event-model"        % "0.9.4",
-    "com.beachape"                     %% "enumeratum-circe"         % "1.7.0",
-    "org.http4s"                       %% "http4s-dsl"               % "0.23.7", // TODO replace by ZIO http
-    "net.logstash.logback"              % "logstash-logback-encoder" % "7.2",
-    "dev.optics"                       %% s"monocle-core"            % MonocleVersion,
-    "dev.optics"                       %% s"monocle-macro"           % MonocleVersion,
+    "com.williamhill.platform"         %% "zio-kafka-extensions" % "0.4.0-SNAPSHOT",
+    "com.williamhill.platform"         %% "http4s-healthcheck"   % "0.1.10",
+    "com.williamhill.platform"         %% "kafka-healthcheck"    % "0.1.10",
+    "com.williamhill.platform.tracing" %% "zio-tracing"          % ZioTracingVersion,
+    "com.williamhill.platform.tracing" %% "zio-tracing-kafka"    % "0.1.1",
+    "com.williamhill.platform"         %% "facet-event-model"    % "0.9.4",
+    "com.beachape"                     %% "enumeratum-circe"     % "1.7.0",
+    "org.http4s"                       %% "http4s-dsl"           % "0.23.7", // TODO replace by ZIO http
+    "org.http4s"                       %% "http4s-blaze-client"  % "0.23.7", // TODO replace by ZIO http
+
+    "net.logstash.logback" % "logstash-logback-encoder" % "7.2",
+    "dev.optics"          %% s"monocle-core"            % MonocleVersion,
+    "dev.optics"          %% s"monocle-macro"           % MonocleVersion,
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
   ),
 )
@@ -102,8 +107,8 @@ ThisBuild / credentials += Credentials(
 val testSettings = Seq(
   Test / logBuffered        := false,
   Test / fork               := true,
-  Test / testForkedParallel := true,
-  Test / parallelExecution  := true,
+  Test / testForkedParallel := false,
+  Test / parallelExecution  := false,
   // TODO validate this needed ??? replace logback by log4j ???
   Test / javaOptions ++= Seq(
     // ZIO Interop Log4j2

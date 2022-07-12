@@ -106,7 +106,7 @@ Lint checks:
   image: $SbtBuildImage
   stage: test
   script:
-    - sbt lint-checks
+    - sbt fmt-check
   except: [tags, triggers]
 
 Run Tests:

@@ -3,10 +3,11 @@ package com.williamhill.permission
 import java.time.Instant
 import java.util.UUID
 
+import cats.data.NonEmptyList
 import com.whbettingengine.kafka.serialization.TopicNameStrategy
 import com.whbettingengine.kafka.serialization.json.JsonSerializerConfig
 import com.williamhill.permission.application.Env
-import com.williamhill.permission.config.AppConfig
+import com.williamhill.permission.config.{AppConfig, MappingsConfig, RulesConfig}
 import com.williamhill.permission.kafka.events.generic.OutputEvent.OutputEvent
 import com.williamhill.permission.kafka.events.generic.{InputEvent, InputHeader, Who}
 import com.williamhill.platform.kafka.JsonSerialization
@@ -20,6 +21,8 @@ import zio.duration.durationInt
 import zio.kafka.consumer.{Consumer, ConsumerSettings, Subscription}
 import zio.kafka.producer.{Producer, ProducerSettings}
 import zio.kafka.serde.Serde as ZSerde
+import zio.magic.*
+import zio.random.Random
 import zio.stream.ZStream
 import zio.test.Assertion.*
 import zio.test.*
@@ -48,32 +51,50 @@ object ProcessorSpec extends DefaultRunnableSpec {
               """.stripMargin).toOption.get,
   )
 
+  private val testConfig: ZLayer[Blocking & Random, Throwable, Has[AppConfig]] = ZIO
+    .service[Random.Service]
+    .flatMap(_.nextLongBetween(1, 1000000).map("Test_" + _))
+    .toLayer
+    .flatMap { randomTopic =>
+      AppConfig.live.update[AppConfig] { config =>
+        val procConf        = config.processorSettings
+        val newOutputEvents = procConf.outputEvents.copy(NonEmptyList.one(randomTopic.get))
+        config.copy(processorSettings = procConf.copy(outputEvents = newOutputEvents))
+      }
+    }
+
   def spec: ZSpec[Environment, Failure] = {
-    suite("ProcessorSpec")(
-      testM("should process a dormant message") {
-        for {
-          fiber  <- Processor.run.fork
-          config <- ZIO.service[AppConfig]
-
-          producer <- InputEventProducer.producer(config.producerSettings, "dormancy_events_v1")
-          _        <- producer.publish(UUID.randomUUID().toString, event)
-          consumer <- OutputEventConsumer.consume(
-            config.consumerSettings,
-            config.processorSettings.outputEvents.schemaRegistrySettings.schemaRegistryUrl,
-            "permission_facet_events_v1",
-          )
-          queue <- Queue.unbounded[OutputEvent]
-          _     <- consumer.stream(r => queue.offer(r.value()).as(())).take(1).runDrain
-          list  <- queue.takeAll
-          _     <- fiber.interrupt
-        } yield assert(list)(hasSize(equalTo(1)))
-      },
-    )
-  }.provideSomeLayer(
-    (Clock.live ++ Blocking.live) >>> Env.layer,
-  ).mapError(TestFailure.fail)
-    .@@(TestAspect.timeout(10.seconds))
-
+    {
+      suite("ProcessorSpec")(
+        testM("should process a dormant message") {
+          for {
+            fiber    <- Processor.run.fork
+            config   <- ZIO.service[AppConfig]
+            producer <- InputEventProducer.producer(config.producerSettings, "dormancy_events_v1")
+            _        <- producer.publish(UUID.randomUUID().toString, event)
+            consumer <- OutputEventConsumer.consumer(
+              config.consumerSettings.withClientId(UUID.randomUUID().toString),
+              config.processorSettings.outputEvents.schemaRegistrySettings.schemaRegistryUrl,
+              config.processorSettings.outputEvents.topics.head,
+            )
+            queue <- Queue.unbounded[OutputEvent]
+            _     <- consumer.stream(r => queue.offer(r.value()).as(())).take(1).runDrain
+            list  <- queue.takeAll
+            _     <- fiber.interrupt
+          } yield assert(list)(hasSize(equalTo(1)))
+        },
+      )
+    }.injectShared(
+      Clock.live,
+      Blocking.live,
+      Random.live,
+      RulesConfig.live,
+      MappingsConfig.live,
+      testConfig,
+      Env.core,
+    ).mapError(TestFailure.fail)
+      .@@(TestAspect.timeout(10.seconds))
+  }
 }
 
 object OutputEventConsumer {
@@ -82,7 +103,7 @@ object OutputEventConsumer {
     def stream(f: ConsumerRecord[K, V] => Task[Unit]): ZStream[Clock & Blocking, Throwable, Unit]
   }
 
-  def consume(settings: ConsumerSettings, schemaRegistryUrl: String, topic: String): Task[EventConsumer[String, OutputEvent]] = {
+  def consumer(settings: ConsumerSettings, schemaRegistryUrl: String, topic: String): Task[EventConsumer[String, OutputEvent]] = {
     val layer        = ZLayer.fromManaged(Consumer.make(settings))
     val subscription = Subscription.topics(topic)
     val log          = org.log4s.getLogger

@@ -1,6 +1,6 @@
 package com.williamhill.permission.kafka.serde
 
-import com.williamhill.permission.config.ProcessorConfig
+import com.williamhill.permission.config.AppConfig
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import com.williamhill.platform.event.permission.Event as OutputEvent
 import com.williamhill.platform.kafka.JsonSerialization
@@ -19,8 +19,8 @@ object AppSerdes extends CirceSupport {
 
   val inputSerdeLayer: TaskLayer[Has[ZioSerde[Any, InputEvent]]] = inputSerdes.toLayer
 
-  val outputSerdeLayer: RLayer[Has[ProcessorConfig], Has[ZioSerde[Any, OutputEvent]]] = (for {
-    config       <- ZIO.service[ProcessorConfig]
+  val outputSerdeLayer: RLayer[Has[AppConfig], Has[ZioSerde[Any, OutputEvent]]] = (for {
+    config       <- ZIO.service[AppConfig].map(_.processorSettings)
     deserializer <- JsonSerialization.valueDeserializer[OutputEvent](config.outputEvents.schemaRegistrySettings)
     serializer   <- JsonSerialization.valueSerializer[OutputEvent](config.outputEvents.schemaRegistrySettings)
     serde = ZioSerde.apply(deserializer)(serializer)
