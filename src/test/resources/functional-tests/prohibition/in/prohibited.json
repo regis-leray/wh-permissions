@@ -1,20 +1,20 @@
 {
   "header": {
     "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+    "universe": "wh-mga",
+    "when": "2022-07-08T15:41:13.217051Z",
     "who": {
       "id": "-1",
       "name": "anonymous",
       "type": "program",
-      "ip": "100.77.100.167"
-    },
-    "sessionId": "445b4e38-84c1-11ec-a8a3-0242ac120002",
-    "universe": "wh-mga",
-    "when": "2022-01-31T13:22:41.454508Z"
+      "universe": "wh-mga",
+      "ip": "127.0.0.1"
+    }
   },
   "body": {
     "type": "Prohibition",
     "newValues": {
-      "id": "U00004334",
+      "id": "U000002Z3C",
       "universe": "wh-mga",
       "data": {
         "status": {
@@ -23,7 +23,7 @@
       }
     },
     "previousValues": {
-      "id": "U00004334",
+      "id": "U000002Z3C",
       "universe": "wh-mga",
       "data": {
         "status": {

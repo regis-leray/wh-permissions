@@ -5,51 +5,50 @@
       "id": "-1",
       "name": "anonymous",
       "type": "program",
-      "ip": "127.0.0.1",
       "universe" : "wh-mga",
+      "ip": "127.0.0.1",
       "allowedUniverses" : [ "wh-mga" ]
     },
-
     "universe": "wh-mga",
-    "when": "2022-02-28T14:22:41.433Z"
+    "when": "2022-07-08T15:41:13.217051Z"
   },
   "body": {
-    "type": "dormancy",
+    "type": "prohibition",
     "newValues": {
-      "id": "U00004334",
+      "id": "U000002Z3C",
       "universe": "wh-mga",
       "data": {
         "context": {},
         "permissionDenials": {
           "canLogin": [
             {
-              "reasonCode": "closed-dormant",
-              "description": "The account is closed as dormant"
+              "reasonCode": "closed-prohibited",
+              "description": "The account is closed as prohibited"
             }
           ],
           "canBet": [
             {
-              "reasonCode": "closed-dormant",
-              "description": "The account is closed as dormant"
+              "reasonCode": "closed-prohibited",
+              "description": "The account is closed as prohibited"
             }
           ],
           "canGame": [
             {
-              "reasonCode": "closed-dormant",
-              "description": "The account is closed as dormant"
+              "reasonCode": "closed-prohibited",
+              "description": "The account is closed as prohibited"
             }
           ]
         },
         "actions": [
           {
             "type": "notification",
-            "name": "sendDormancyNotificationDormant",
+            "name": "sendProhibitionNotificationProhibited",
             "relatesToPermissions": [
               "canLogin",
               "canBet",
               "canGame"
             ],
-            "reasonCode": "closed-dormant"
+            "reasonCode": "closed-prohibited"
           }
         ]
       }

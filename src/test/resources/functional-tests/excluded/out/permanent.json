@@ -5,8 +5,7 @@
       "id": "-1",
       "name": "anonymous",
       "type": "program",
-      "ip": "100.77.100.167",
-      "sessionId": "445b4e38-84c1-11ec-a8a3-0242ac120002",
+      "ip": "127.0.0.1",
       "universe": "wh-mga",
       "allowedUniverses" : [ "wh-mga" ]
     },

@@ -7,7 +7,7 @@
       "id": "-1",
       "name": "anonymous",
       "type": "program",
-      "ip": "0.0.0.0",
+      "ip": "127.0.0.1",
       "universe": "wh-mga",
       "allowedUniverses": ["wh-mga"]
     }

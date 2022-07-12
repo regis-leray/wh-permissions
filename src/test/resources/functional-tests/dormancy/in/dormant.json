@@ -5,9 +5,8 @@
       "id": "-1",
       "name": "anonymous",
       "type": "program",
-      "ip": "100.77.100.167"
+      "ip": "127.0.0.1"
     },
-    "sessionId": "445b4e38-84c1-11ec-a8a3-0242ac120002",
     "universe": "wh-mga",
     "when": "2022-02-28T14:22:41.433Z"
   },

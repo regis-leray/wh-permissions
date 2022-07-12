@@ -95,3 +95,6 @@ object EventProcessorSpec extends DefaultRunnableSpec with LazyLogging {
     suite("EventProcessor")(tests*)
 
 }
+
+//Header(c321d02c-9544-4aca-ba6e-6ad404ea32c9,None,wh-mga,2022-07-08T15:41:13.217051Z,Who(-1,anonymous,program,Some(127.0.0.1),None,Some(wh-mga),Some(List(wh-mga)))) did not satisfy equalTo(
+//Header(c321d02c-9544-4aca-ba6e-6ad404ea32c9,None,wh-mga,2022-07-08T15:41:13.217051Z,Who(-1,anonymous,program,None,None,Some(wh-mga),Some(List(wh-mga)))))
