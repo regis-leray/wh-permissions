@@ -129,7 +129,7 @@ object FacetParserSpec extends DefaultRunnableSpec {
       val inputEvent = FileReader.fromResources[InputEvent](s"functional-tests/excluded/in/temporary.json")
       assert(parser.parse("excluded", inputEvent))(isRight(equalTo(expected)))
     },
-    test("payments/limit-exceed") {
+    test("payments/deposit-lifetime-limit-exceed") {
       val expected = FacetContext(
         Header(
           id = "1b00ec09-cc5d-4ac9-ba0c-a5612b63aafd",
@@ -141,7 +141,7 @@ object FacetParserSpec extends DefaultRunnableSpec {
         Vector.empty,
         "EXW",
         "wh-mga",
-        "limit-exceeded-authorise-deposit",
+        "limit-exceeded-lifetime-deposit",
         PermissionStatus(
           Vector("activated"),
           None,
@@ -150,7 +150,7 @@ object FacetParserSpec extends DefaultRunnableSpec {
         None,
       )
 
-      val inputEvent = FileReader.fromResources[InputEvent](s"functional-tests/payments_events_v2/in/limit-exceeded.json")
+      val inputEvent = FileReader.fromResources[InputEvent](s"functional-tests/payments_events_v2/in/lifetime-limit-exceeded.json")
       assert(parser.parse("payments_events_v2", inputEvent))(isRight(equalTo(expected)))
     },
     test("payments_limits_v1/deposit-limit") {

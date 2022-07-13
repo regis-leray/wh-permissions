@@ -11,7 +11,7 @@
     }
   },
   "body": {
-    "type": "limit-exceeded-authorise-deposit",
+    "type": "limit-exceeded-lifetime-deposit",
     "newValues": {
       "detailedPaymentType": "DJgvTAmaL",
       "provider": "ZiSziKoOiZ",

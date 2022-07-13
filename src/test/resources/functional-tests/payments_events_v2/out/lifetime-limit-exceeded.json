@@ -13,7 +13,7 @@
     }
   },
   "body": {
-    "type": "limit-exceeded-authorise-deposit",
+    "type": "limit-exceeded-lifetime-deposit",
     "newValues": {
       "id": "EXW",
       "universe": "wh-mga",
@@ -48,6 +48,18 @@
               "reasonCode": "lifetime-limit-breached",
               "description": "Permission not granted because of breach in the deposit account lifetime limit"
             }
+          ],
+          "canVerify": [
+            {
+              "reasonCode": "lifetime-limit-breached",
+              "description": "Permission not granted because of breach in the deposit account lifetime limit"
+            }
+          ],
+          "canResetPassword": [
+            {
+              "reasonCode": "lifetime-limit-breached",
+              "description": "Permission not granted because of breach in the deposit account lifetime limit"
+            }
           ]
         },
         "actions": [
@@ -60,7 +72,9 @@
               "canWithdraw",
               "canDeposit",
               "canBet",
-              "canGame"
+              "canGame",
+              "canVerify",
+              "canResetPassword"
             ]
           }
         ]
