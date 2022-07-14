@@ -21,7 +21,7 @@
       "data": {
         "context": {},
         "permissionDenials": {
-          "canLogin": [
+          "canLoginWithPassword": [
             {
               "reasonCode": "closed-dormant",
               "description": "The account is closed as dormant"
@@ -45,7 +45,7 @@
             "type": "notification",
             "name": "sendDormancyNotificationDormant",
             "relatesToPermissions": [
-              "canLogin",
+              "canLoginWithPassword",
               "canBet",
               "canGame"
             ],

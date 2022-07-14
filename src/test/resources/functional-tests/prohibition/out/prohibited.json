@@ -20,7 +20,7 @@
       "data": {
         "context": {},
         "permissionDenials": {
-          "canLogin": [
+          "canLoginWithPassword": [
             {
               "reasonCode": "closed-prohibited",
               "description": "The account is closed as prohibited"
@@ -44,7 +44,7 @@
             "type": "notification",
             "name": "sendProhibitionNotificationProhibited",
             "relatesToPermissions": [
-              "canLogin",
+              "canLoginWithPassword",
               "canBet",
               "canGame"
             ],

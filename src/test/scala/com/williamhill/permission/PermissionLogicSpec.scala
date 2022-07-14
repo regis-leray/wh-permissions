@@ -30,7 +30,7 @@ object PermissionLogicSpec extends DefaultRunnableSpec {
               name = "sendDormancyNotificationDormant",
               reasonCode = "closed-dormant",
               denialDescription = "The account is closed as dormant",
-              deniedPermissions = List("canLogin", "canBet", "canGame"),
+              deniedPermissions = List("canLoginWithPassword", "canBet", "canGame"),
               deadline = None,
             ),
           ),
