@@ -17,4 +17,6 @@ permissions:
         permissions-ep:
           enabled: true
           envVars:
-            KAFKA_INPUT_TOPICS: [ "exclusion_events_v1", "player_events_v4", "payments_events_v2" ]
+            KAFKA_INPUT_TOPICS.0: exclusion_events_v1
+            KAFKA_INPUT_TOPICS.1: player_events_v4
+            KAFKA_INPUT_TOPICS.2: payments_events_v2
