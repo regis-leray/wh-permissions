@@ -31,12 +31,6 @@ environments:
   uat:
     <<: *templated-environment
 
-  usd:
-    <<: *templated-environment
-
-  gpt:
-    <<: *templated-environment
-
   sit:
     <<: *templated-environment
 

@@ -1,8 +1,0 @@
-# gpt
-# https://conf.willhillatlas.com/display/UNITY/Kafka+topics
-topics:
-  permission_facet_events_v1:
-    config:
-      retention.ms: 86400000
-    partitions: 3
-    replication_factor: 3

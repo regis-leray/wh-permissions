@@ -35,14 +35,6 @@ include:
     file:
       - gitlab/runners.yaml
       - gitlab/appsec_commons.yaml
-  - project: caesarsdigital/usa/betting-engine/infra/be-ci
-    ref: main-v3
-    file:
-      - parts/tasks/gitlab-runners.yaml
-      - parts/scala-app.yaml
-    rules:
-      - if: $CI_PROJECT_URL =~ /.*caesarsdigital.*/
-
 
 variables:
   NexusUploadRegistry: nexus-uploads.dtc.prod.williamhill.plc

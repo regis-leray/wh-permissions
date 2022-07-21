@@ -18,11 +18,6 @@ if [ $status  == "success" ]; then
     exit 0
 fi
 
-if [ $Environment  == "usd" ]; then
-    echo "Notifications on ${Environment} are disabled. Skipping."
-    exit 0
-fi
-
 echo Release ${release} failed. Sending notification to ${slack_url_var}
 
 get_notification_message() {
