@@ -47,11 +47,16 @@ include:
 variables:
   NexusUploadRegistry: nexus-uploads.dtc.prod.williamhill.plc
   Docker_Namespace: platform
-  IMAGE_NAME: ${NexusUploadRegistry}/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
+  ECRRegistry: 491326712076.dkr.ecr.eu-west-1.amazonaws.com
+  ECRRepository: $ECRRegistry #ci-templates use ECRRepository
+  ECRNamespace: pam
+  ECRRegion: eu-west-1
   Source_Images_List: |
-    $IMAGE_NAME
-  HELMFILE_IMAGE: $NexusDownloadRegistry/unity/helmfile:0.140.0-3.7.0
+    $ECRRegistry/$ECRNamespace/permissions-ep:$CI_COMMIT_SHORT_SHA
+  HELMFILE_IMAGE: $NexusDownloadRegistry/unity/helmfile:0.144.0-3.8.2
+  HELM_REPOSITORY: https://docker-registry.prod.williamhill.plc:8443/repository/be-helm
   SbtBuildImage: $NexusDownloadRegistry/unity/scala-sbt:11.0.14.1_1.6.2_2.13.8
+  HelmNamespace: pam
   KUBERNETES_CPU_REQUEST: 1
   KUBERNETES_CPU_LIMIT: 3
   KUBERNETES_MEMORY_REQUEST: 2Gi
@@ -95,7 +100,7 @@ scan-permissions-ep-container:
     - container_scanning
     - .eks-dev-gitlab-runner
   variables:
-    DOCKER_IMAGE: ${NexusDownloadRegistry}/$Docker_Namespace/permissions-ep:$CI_COMMIT_SHORT_SHA
+    DOCKER_IMAGE: ${ECRRegistry}/$ECRNamespace/permissions-ep:$CI_COMMIT_SHORT_SHA
     CONTAINER_SCANNING_DISABLED: "false"
 
 
@@ -168,13 +173,13 @@ Run Tests:
 # build
 Build docker images:
   extends:
-    - .eks-dev-gitlab-runner
-    - .execute-sbt-tasks-with-docker-v3 #see https://gitlab.com/williamhillplc/usa/betting-engine/infra/be-ci/blob/main-v3/parts/tasks/sbt-tasks.yaml
+    - .execute-sbt-tasks-with-docker-v4
+    - .ec2-prod-gitlab-runner
   stage: build
   variables:
     Sbt_Java_Version: 11
     Sbt_Tasks: >-
-      -mem 2048 docker
+      docker
   before_script:
     - export Images_To_Push_After=$Source_Images_List
   except: [tags, schedules]
@@ -182,38 +187,58 @@ Build docker images:
 
 
 # distribute
+.distribute-common:
+  extends: .add-extra-docker-tags-v2 #see https://gitlab.com/williamhillplc/platform-engineering/unity/pipelines/ci-templates/blob/main/parts/tasks/retag-docker-images.yaml
+  stage: distribute
+  variables: { GIT_STRATEGY: none }
+  dependencies: [ ]
+  except: [ ]
+
 Add extra docker tags and mirror:
-  extends:
-    - .eks-dev-gitlab-runner
-    - .add-extra-docker-tags-v2
+  extends: .distribute-common
   before_script:
     - export Input_Images=$Source_Images_List
-    - export Extra_Retag_Args="--target-tag $CI_BUILD_REF_SLUG"
-  stage: distribute
-  except: [tags, schedules]
+    - export Extra_Retag_Args="--target-tag $CI_BUILD_REF_SLUG --target-registry $ECRRegistry/$ECRNamespace"
+  except: [tags,schedules]
 
 Add extra docker tags and mirror for git tag:
-  extends:
-    - .eks-dev-gitlab-runner
-    - .add-extra-docker-tags-v2
+  extends: .distribute-common
   before_script:
     - export Input_Images=$Source_Images_List
-    - export Extra_Retag_Args="--target-tag $CI_COMMIT_TAG"
-  stage: distribute
+    - export Extra_Retag_Args="--target-tag $CI_COMMIT_TAG --target-registry $ECRRegistry/$ECRNamespace"
   only: [tags]
 
 # publish
-Publish Helm to Nexus:
+Publish Helm to ECR:
   extends:
-    - .helm-push-nexus-v1-k8s
-    - .eks-dev-gitlab-runner
+    - .eks-prod-gitlab-runner
+  image: $HELMFILE_IMAGE
   stage: publish
-
-Publish Helm to Nexus Tag:
-  extends:
-    - .helm-push-nexus-v1-tags-k8s
-    - .eks-dev-gitlab-runner
-  stage: publish
+  variables:
+    HelmChartRepository: $ECRRegistry/$HelmNamespace
+  script:
+    # ECR Login
+    - aws ecr get-login-password --region $ECRRegion | helm registry login --username AWS --password-stdin $HelmChartRepository
+    - helm repo add be $HELM_REPOSITORY
+    # Force single quotes to all versions
+    - yq e '.base.version style="single"' -i .helm/values.yaml
+    - yq e '.version style="single"' -i .helm/Chart.yaml
+    - yq e '.appVersion style="single"' -i .helm/Chart.yaml
+    # Replace version with commit hash
+    - export SEMVER=0.0.0-$CI_COMMIT_SHORT_SHA
+    - yq e '.base.version = env(CI_COMMIT_SHORT_SHA)' -i .helm/values.yaml
+    - yq e '.version = env(SEMVER)' -i .helm/Chart.yaml
+    - yq e '.appVersion = env(CI_COMMIT_SHORT_SHA)' -i .helm/Chart.yaml
+    # Package and publish
+    - helm dependency build .helm
+    ## CI_COMMIT_SHORT_SHA
+    - helm package .helm -d /tmp/$CI_COMMIT_SHORT_SHA --version 0.0.0-$CI_COMMIT_SHORT_SHA
+    - helm push /tmp/$CI_COMMIT_SHORT_SHA/permissions-0.0.0-$CI_COMMIT_SHORT_SHA.tgz oci://$HelmChartRepository
+    ## TAG_OR_BRANCH_NAME
+    - export TAG_OR_BRANCH_NAME="${CI_COMMIT_TAG:-$CI_COMMIT_REF_SLUG}"
+    - export TAG_OR_BRANCH_VERSION="${CI_COMMIT_TAG:-0.0.0-$CI_COMMIT_REF_SLUG}"
+    - helm package .helm -d /tmp/$TAG_OR_BRANCH_NAME --version $TAG_OR_BRANCH_VERSION
+    - helm push /tmp/$TAG_OR_BRANCH_NAME/permissions-$TAG_OR_BRANCH_VERSION.tgz oci://$HelmChartRepository
 
 #plan
 ## unity release steps
@@ -222,6 +247,7 @@ Publish Helm to Nexus Tag:
   stage: plan
   script:
     - env
+    - export ECR_PASSWORD=$(aws ecr get-login-password --region $ECRRegion)
     - cd helmfile
     - helmfile -e $Environment -n $Namespace $SELECTOR diff
 
@@ -230,6 +256,7 @@ Publish Helm to Nexus Tag:
   stage: apply
   script:
     - env
+    - export ECR_PASSWORD=$(aws ecr get-login-password --region $ECRRegion)
     - cd helmfile
     - helmfile -e $Environment -n $Namespace $SELECTOR sync
   after_script:

@@ -6,9 +6,9 @@ import sbtassembly.AssemblyPlugin.autoImport._
 import sbtdocker.DockerPlugin.autoImport._
 
 object DockerSettings {
-  val pushDockerRegistry = sys.env.getOrElse("NexusUploadRegistry", "nexus-uploads.dtc.prod.williamhill.plc")
+  val pushDockerRegistry = sys.env.getOrElse("ECRRegistry", "491326712076.dkr.ecr.eu-west-1.amazonaws.com")
   val pullDockerRegistry = sys.env.getOrElse("NexusDownloadRegistry", "docker-registry.prod.williamhill.plc")
-  val dockerNamespace    = sys.env.getOrElse("Docker_Namespace", "platform")
+  val dockerNamespace    = sys.env.getOrElse("ECRNamespace", "pam")
   def dockerSettings(imageName: String, mainFQCN: String) = {
 
     List(

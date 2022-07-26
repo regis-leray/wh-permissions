@@ -1,6 +1,11 @@
 repositories:
   - name: nexus
     url: '{{ env "HELM_REPOSITORY" | default "https://nexus.dtc.prod.williamhill.plc:8443/repository/be-helm/" }}'
+  - name: ecr
+    url: '{{ env "ECRRegistry" | default "491326712076.dkr.ecr.eu-west-1.amazonaws.com" }}/{{ env "HelmNamespace" | default "pam" }}'
+    oci: true
+    username: 'AWS'
+    password: '{{ env "ECR_PASSWORD" }}'
 
 environments:
   default:
@@ -62,7 +67,7 @@ releases:
     installed: {{ .Values | getOrNil "permissions.installed" | default "false" }}
     <<: *generic
     version: '{{ env "RELEASE_VERSION" | default (.Values | getOrNil "permissions-ep.version") | default "0.0.0-develop" | replace "/" "-" | lower }}'
-    chart: 'nexus/permissions'
+    chart: 'ecr/permissions'
     labels:
       project: unity
       slack_url_var: UNITY_TEAM_D_SLACK_HOOK_URL
