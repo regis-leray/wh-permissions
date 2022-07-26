@@ -1,7 +1,7 @@
 base:
   serviceName: permissions
   version: develop
-  registry: docker-registry.prod.williamhill.plc/platform
+  registry: 491326712076.dkr.ecr.eu-west-1.amazonaws.com/pam
 
   services:
     permissions-ep:
