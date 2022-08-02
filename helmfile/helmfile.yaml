@@ -40,9 +40,6 @@ environments:
   sit:
     <<: *templated-environment
 
-  mtt-sit:
-    <<: *templated-environment
-
   oat:
     <<: *templated-environment
 
