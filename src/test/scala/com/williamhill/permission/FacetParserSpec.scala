@@ -153,6 +153,30 @@ object FacetParserSpec extends DefaultRunnableSpec {
       val inputEvent = FileReader.fromResources[InputEvent](s"functional-tests/payments_events_v2/in/lifetime-limit-exceeded.json")
       assert(parser.parse("payments_events_v2", inputEvent))(isRight(equalTo(expected)))
     },
+    test("payments/cdd-threshold-breached") {
+      val expected = FacetContext(
+        Header(
+          id = "1b00ec09-cc5d-4ac9-ba0c-a5612b63aafd",
+          who = anonymous("wh-mga"),
+          universe = "wh-mga",
+          when = "2021-12-08T20:03:55.812585Z",
+          traceContext = None,
+        ),
+        Vector.empty,
+        "EXW",
+        "wh-mga",
+        "cdd-threshold-breached",
+        PermissionStatus(
+          Vector("activated"),
+          None,
+          None,
+        ),
+        None,
+      )
+
+      val inputEvent = FileReader.fromResources[InputEvent](s"functional-tests/payments_events_v2/in/cdd-threshold-breached.json")
+      assert(parser.parse("payments_events_v2", inputEvent))(isRight(equalTo(expected)))
+    },
     test("payments_limits_v1/deposit-limit") {
       val expected = FacetContext(
         Header(

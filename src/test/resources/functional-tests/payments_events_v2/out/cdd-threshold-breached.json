@@ -1,0 +1,45 @@
+{
+  "header": {
+    "id": "1b00ec09-cc5d-4ac9-ba0c-a5612b63aafd",
+    "universe": "wh-mga",
+    "when": "2021-12-08T20:03:55.812585Z",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "127.0.0.1",
+      "universe": "wh-mga",
+      "allowedUniverses": [
+        "wh-mga"
+      ]
+    }
+  },
+  "body": {
+    "type": "cdd-threshold-breached",
+    "newValues": {
+      "id": "EXW",
+      "universe": "wh-mga",
+      "data": {
+        "permissionDenials": {
+          "canWithdraw": [
+            {
+              "reasonCode": "cdd-threshold-breached",
+              "description": "Withdrawal permission blocked because CDD Threshold has been breached"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "notification",
+            "name": "block-cdd-threshold-breached",
+            "reasonCode": "cdd-threshold-breached",
+            "relatesToPermissions": [
+              "canWithdraw"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
+
