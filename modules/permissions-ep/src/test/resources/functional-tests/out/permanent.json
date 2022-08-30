@@ -1,0 +1,65 @@
+{
+  "header": {
+    "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "127.0.0.1",
+      "universe": "wh-mga",
+      "allowedUniverses" : [ "wh-mga" ]
+    },
+    "universe": "wh-mga",
+    "when": "2021-01-06T11:13:12.441799Z"
+  },
+  "body": {
+    "type": "selfexclusion",
+    "newValues": {
+      "id": "U00004336",
+      "universe": "wh-mga",
+      "data": {
+        "context": {},
+        "permissionDenials": {
+          "canLoginWithPassword": [
+            {
+              "reasonCode": "SelfExclusionRule",
+              "description": "SelfExclusionRule"
+            }
+          ],
+          "canWithdraw": [
+            {
+              "reasonCode": "SelfExclusionRule",
+              "description": "SelfExclusionRule"
+            }
+          ],
+          "canDeposit": [
+            {
+              "reasonCode": "SelfExclusionRule",
+              "description": "SelfExclusionRule"
+            }
+          ],
+          "canBet": [
+            {
+              "reasonCode": "SelfExclusionRule",
+              "description": "SelfExclusionRule"
+            }
+          ],
+          "canGame": [
+            {
+              "reasonCode": "SelfExclusionRule",
+              "description": "SelfExclusionRule"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "notification",
+            "name": "SelfExclusionRule",
+            "relatesToPermissions": ["canLoginWithPassword", "canWithdraw", "canDeposit", "canBet", "canGame"],
+            "reasonCode": "SelfExclusionRule"
+          }
+        ]
+      }
+    }
+  }
+}

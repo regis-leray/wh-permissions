@@ -1,0 +1,57 @@
+{
+  "header": {
+    "id": "c321d02c-9544-4aca-ba6e-6ad404ea32c9",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "universe" : "wh-mga",
+      "ip": "127.0.0.1",
+      "allowedUniverses" : [ "wh-mga" ]
+    },
+    "universe": "wh-mga",
+    "when": "2022-07-08T15:41:13.217051Z"
+  },
+  "body": {
+    "type": "prohibition",
+    "newValues": {
+      "id": "U000002Z3C",
+      "universe": "wh-mga",
+      "data": {
+        "context": {},
+        "permissionDenials": {
+          "canBet": [
+            {
+              "reasonCode": "ProhibitionRule",
+              "description": "ProhibitionRule"
+            }
+          ],
+          "canGame": [
+            {
+              "reasonCode": "ProhibitionRule",
+              "description": "ProhibitionRule"
+            }
+          ],
+          "canLoginWithPassword": [
+            {
+              "reasonCode": "ProhibitionRule",
+              "description": "ProhibitionRule"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "notification",
+            "name": "ProhibitionRule",
+            "relatesToPermissions": [
+              "canBet",
+              "canGame",
+              "canLoginWithPassword"
+            ],
+            "reasonCode": "ProhibitionRule"
+          }
+        ]
+      }
+    }
+  }
+}

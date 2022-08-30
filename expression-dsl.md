@@ -1,4 +1,4 @@
-# Expression DSL
+#  DSL
 
 ### Motivation
 
@@ -8,197 +8,375 @@ we designed a lightweight DSL to enable the extraction and evaluation of data st
 
 ### Design
 
-The core of the DSL is modelled as `Expression[T]`.  
-An `Expression[T]` can be evaluated in order to extract data 
-(of type `T`, `Option[T]` or `Vector[T]`) from any JSON.
+The core of the DSL is modelled as `Expr[A, B]` or as a function `A => B`
+`A` represents input type (ex: Json, String, ...)
+`B` represents output type (ex: Boolean)
 
-In its simpler form, an expression looks like:
+An `Expr[A, B]` can be evaluated in order to extract data and evaluate a test condition (ex: "a" == "a" )
 
+
+How to create a rule
+---
+
+1. Extract field value from json event by using json path syntax
+2. Specify the data type String / Int / Boolean / Date / Array / Instant / Locale / etc.
+3. Create a rule base on the field type
+
+```scala
+//json path syntax
+val fieldPath = $.body.account.active
+//lift json path into a record type, in this case a boolean
+val field = boolean(fieldPath)
+// create an expression
+val rule = field === true
 ```
-expr = "this is a hardcoded string!"
-```
-or
-```
-expr = 99.99
-```
 
-Expressions can also refer to data included in the JSON body of the incoming message:
-```
-expr = "$.json.*.path[0].to[1:3].some.field"
-```
+By convention, a json path starts with `$.` 
 
-By convention, if the value of a `String` expression starts with `$.`, 
-it is assumed to represent a JSON path.
+Supported types
+---
+
+Here all the type supported in the language
+
+| type            | function                 | description                         |
+|-----------------|--------------------------|-------------------------------------|
+| Boolean         | boolean($.path)          | boolean (true or false)             |
+| String          | string($.path)           | 0 or many characters (can be empty) |
+| Int             | int($.path)              | integer number                      |
+| Date            | date($.path)             | java.time.LocalDate                 |
+| Instant         | instant($.path)          | java.time.Instant                   |
+| List[Boolean]   | booleans($.path)         | 0 or many boolean                   |
+| List[Int]       | ints($.path)             | 0 or many integer                   |
+| List[String]    | strings($.path)          | 0 or many String                    |
+| List[Date]      | dates($.path)            | 0 or many date                      |
+| List[Instant]   | instants($.path)         | 0 or many instant                   |
+| Option[Boolean] | boolean($.path).optional | optional boolean (null value)       |
+| Option[String]  | string($.path).optional  | optional string (null value)        |
+| Option[Int]     | int($.path).optional     | optional integer (null value)       |
+| Option[Date]    | date($.path).optional    | optional date (null value)          |
+| Option[Instant] | instant($.path).optional | optional instant (null value)       |
 
 
-#### Conditional evaluation
+Boolean operators
+---
 
-An expression can be conditionally evaluated:
+| Function   | Result type | Description               |
+|------------|------------|---------------------------|
+| ===        | Boolean    | equal the specific boolean |
+| !          | Boolean    | negate the value          |
+| &&         | Boolean    | And operator              |
+| <>         | Boolean    | Not Equal                 |
+| \|\|       | Boolean    | Or operator                |
 
-**equals**
 
-```
-name = {
-  value = "Jack"
-  when = { src = "$.userId", equals = 99 }
+**Examples**
+
+```json
+{
+  "header": {
+    "isAdmin": true,
+    "isValidated": true
+  }
 }
 ```
+
 ```scala
-val name = if ($.userId == 99) "Jack"
+val isAdmin = int($.header.isAdmin)
+
+val isValidated = int($.header.isValidated)
+
+isAdmin === true
+
+isAdmin <> true
+
+!isAdmin
+
+isAdmin && isValidated
+
+isAdmin || isValidated
 ```
 
-**defined**
 
-```
-loggedIn = {
-  value = true
-  when = { defined = "$.userId" }
+Int operators
+---
+
+| Function      | Result type | Description                 |
+|---------------|-------------|-----------------------------|
+| ===           | Boolean     | equal the specific boolean  |
+| >             | Boolean     | greater                     |
+| >=            | Boolean     | greater and equal           |
+| <             | Boolean     | lower                       |
+| <=            | Boolean     | lower and equal             |
+| <>            | Boolean     | not equal                   |
+| -             | Int         | maths substraction          |
+| between(a, b) | Boolean     | value is included in range  |
+
+**Examples**
+
+```json
+{
+  "header": {
+    "logAttempt": 10
+  }
 }
 ```
+
 ```scala
-val loggedIn = $.userId != null
+val attempt = int($.header.logAttempt)
+
+attempt === 10
+
+attempt <> 10
+
+attempt >= 10
+
+attempt < 10
+
+attempt <= 10
+
+attempt - 1
+
+attempt.between(0, 10)
 ```
 
-**one-of**
 
-```
-redOrBlue = {
-  value = true
-  when = { src = "$.color", one-of = ["red", "blue"] }
+String operators
+---
+
+| Function           | Result type | Description                          |
+|--------------------|-------------|--------------------------------------|
+| ===                | Boolean     | equal                                |
+| <>                 | Boolean     | not equal                            |
+| lowercase          | String      | lower case of the string             |
+| oneOf("a", "b")    | Boolean     | check if contains at least one value |
+| allOf("a", "b")    | Boolean     | check if contains all values         |
+| length             | Number      | number of characters                 |
+| matching("regexp") | Boolean     | match with a regular expression      |
+| between(a, b)      | Boolean     | value is included in range           |
+
+**Examples**
+```json
+{
+  "header": {
+    "universe": "wh-us"
+  }
 }
 ```
+
+
 ```scala
-val redOrBlue = List("red", "blue").contains($.color)
+val universe = string($.header.universe)
+
+universe === "wh-us"
+
+universe <> "wh-ca"
+
+universe.lowercase
+
+universe.oneOf("wh")
+
+universe.allOf("wh-us", "us")
+
+universe.length
+
+universe.matching("[0-9]".r)
+
+universe.between("a", "z")
 ```
 
-**all**
 
+Date / Instant operators
+---
+
+
+| Function | Result type | Description             |
+|----------|-------------|-------------------------|
+| ===      | Boolean     | equal the specific date |
+| >        | Boolean     | greater                 |
+| >=       | Boolean     | greater and equal       |
+| <        | Boolean     | lower                   |
+| <=       | Boolean     | lower and equal         |
+| <>       | Boolean     | not equal               |
+| year     | Int         | year of the date        |
+
+**Examples**
 ```
-blueBox = {
-  value = true
-  when = {
-    all = [
-      { src = "$.color", equals = "blue" },
-      { src = "$.shape", equals = "box" }
+```json
+{
+   "header":{      
+      "when":"2021-12-08",    
+      "trace": "2021-12-08T20:03:55.812585Z"
+    }
+}
+```
+
+```scala
+val when = date($.header.when)
+when === LocalDate.now()
+
+when > LocalDate.now()
+when >= LocalDate.now()
+when < LocalDate.now()
+when <= LocalDate.now()
+
+//2021
+when.year === 2021
+
+val trace = instant($.header.trace)
+
+trace > Instant.now()
+trace >= Instant.now()
+trace < Instant.now()
+trace <= Instant.now()
+```
+
+List operators (available for all primitive types such as : String, Boolean, Int, Date, Instant)
+---
+
+| Function | Result type | Description                          |
+|----------|-------------|--------------------------------------|
+| ===      | Boolean     | equal the specific list              |
+| oneOf(a) | Boolean     | check if contains at least one value |
+| allOf(b) | Boolean     | check if contains all values         |
+
+**Examples**
+
+
+```json
+{
+  "header": {
+    "universes": [
+      "wh-mga",
+      "wh-us",
+      "wh-eur"
     ]
   }
 }
 ```
+
 ```scala
-val blueBox = ($.color == "blue") && ($.shape == "box")
+val universes = strings($.header.universes)
+
+universes === List("wh-mga","wh-us","wh-eur")
+
+universes.oneOf("wh-mga","wh-us")
+
+universes.allOf("wh-us","wh-eur")
 ```
 
-**any**
 
+Optional operators
+---
+
+| Function                      | Result type | Description                                                         |
+|-------------------------------|-------------|---------------------------------------------------------------------|
+| ifPresent(expr)(e => Boolean) | Boolean     | equal the specific list, by default return true if field don't exist |
+
+**Examples**
+
+```scala 
+val optionalField = string($.body.newValues.account.blockState.reason).optional
+//check if field exist with a value "blocked"
+val blockedRule   = ifPresent(optionalField)(_ === "blocked")
 ```
-blueOrBox = {
-  value = true
-  when = {
-    any = [
-      { src = "$.color", equals = "blue" },
-      { src = "$.shape", equals = "box" }
-    ]
+
+
+How to create a rule ?
+---
+
+
+
+1. Open the file `com.wh.permission.rule.dslRules.scala` inside module `permission-rule`
+2. Create a rule by extending the trait `PermissionRule` (don't forget to add in the static array `Rules.All`)
+
+
+```json
+{
+   "header":{
+      "id":"1b00ec09-cc5d-4ac9-ba0c-a5612b63aafd",
+      "universe":"WH-MGA",
+      "when":"2021-12-08T20:03:55.812585Z",
+      "who":{
+         "id":"-1",
+         "name":"anonymous",
+         "type":"program",
+         "ip":"127.0.0.1"
+      },
+      "allowUniverses":[
+         "wh-mga",
+         "wh-us",
+         "wh-eur"
+      ]
+   },
+   "body":{
+      "type":"limit-exceeded-lifetime-deposit",
+      "newValues":{
+         "detailedPaymentType":"DJgvTAmaL",
+         "provider":"ZiSziKoOiZ",
+         "paymentStatus":"authorised",
+         "maskedAccountId":"669703******2782",
+         "providerFeeBaseCurrency":"GIP",
+         "paymentType":"deposit",
+         "amount":400,
+         "lifetimeSummary":{
+            "deposits":{
+               "pendingTotal":1000,
+               "pendingCount":1,
+               "completedTotal":2000,
+               "completedCount":5
+            },
+            "withdrawals":{
+               "pendingTotal":0,
+               "pendingCount":0,
+               "completedTotal":1500,
+               "completedCount":4
+            }
+         },
+         "creationDate":"2021-12-08T20:03:55.803Z",
+         "currency":"TMT",
+         "fee":80,
+         "paymentReference":"mbvGilXud",
+         "accountId":"EXW",
+         "providerFeeBase":30,
+         "providerService":"u0WhLWOpIK4z0mTjVf5SERj8KKsgZaXWhIZqN3ebr2q2Sp2hFIFzpWEgx4utVo8awQ2v9",
+         "universe":"wh-mga",
+         "account":{
+            "blockState":{
+               "reason":"blocked"
+            },
+            "closeState":{
+               "reason":"closed"
+            }
+         }
+      }
+   }
+}
+```
+
+
+```scala
+import com.wh.permission.rule.dsl.Expr.Export.*
+import com.wh.permission.rule.dsl.Permission.{Permissions, deny}
+
+object LifeTimeExceedPermissionRule extends PermissionRule("Test") {
+
+  val rule: Expr[Json, Boolean] = {
+    val universeRule       = string($.header.universe).lowercase === "wh-mga"
+    val allowUniversesRule = strings($.header.allowUniverses).allOf("wh-mga", "wh-eur")
+    // val allowUniversesRule = strings($.header.allowUniverses) === List("wh-mga", "wh-us", "wh-eur")
+    
+    val eventTypeRule = string($.body.`type`) === "limit-exceeded-lifetime-deposit"
+    val amountRule    = int($.body.newValues.amount) <= 400
+    val blockedRule   = ifPresent(string($.body.newValues.account.blockState.reason).optional)(_ === "blocked")
+    val closedRule    = ifPresent(string($.body.newValues.account.closeState.reason).optional)(_ === "closed")
+
+    (universeRule && allowUniversesRule && eventTypeRule && amountRule) && (blockedRule || closedRule)
   }
+
+  val accountId: JsonPath = $.body.newValues.accountId
+
+  val permissions: (Facet, Permissions) = Facet.Payment -> deny(Permission.CanVerify, Permission.CanBet)
 }
 ```
-```scala
-val blueOrBox = ($.color == "blue") || ($.shape == "box")
-```
 
-
-#### Default value
-
-Expressions can have a default sub-expression,
-which will be used in case the evaluation yields no results.
-
-This happens in 2 cases:
-- when a JSON path is undefined
-- when the "when" condition returns `false`
-
-```
-personName = {
-  value = "$.person.name"
-  default-to = "Anonymous"
-}
-```
-```scala
-val personName = if ($.person.name != null) $.person.name else "Anonymous"
-```
-
-```
-expr = {
-  value = "$.person.name"
-  when = { src = "$.isLoggedIn", equals = true }
-  default-to = "Anonymous"
-}
-```
-```scala
-val expr = if ($.isLoggedIn && $.person.name != null) $.person.name else "Anonymous"
-```
-
-
-Please note that `default-to` can be any expression,
-which allows for nested `if-then-else` cases:
-
-```
-personName = {
-  value = "$.person.name"
-  default-to = {
-    value = "$.account.name"
-    default-to = "Anonymous"
-  }
-}
-```
-```scala
-val personName =
-  if ($.personName != null) $.personName
-  else if ($.account.name != null) $.account.name
-  else "Anonymous"
-```
-
-
-#### List of expressions
-
-A list of expressions of type `T` is also a valid expression,
-and its evaluation will produce a sequence of type `T`:
-
-```
-expr = [1, 2, 3]
-```
-
-```
-expr = [
-  "$.hello.world",
-  {
-    value = "foo"
-    when = { src = "$.bar", any-of = ["bar", "baz"] }
-  }
-]
-```
-
-### How to use this
-
-This service is responsible for mapping generic events in input to permission events in output.
-
-This is a 2 steps process:
-1. Information extraction
-2. Rules application
-
-#### Mappings.conf
-
-In order to configure the mappings for a new event type, add an entry to [mappings.conf](src/main/resources/mappings.conf) including:
-
-- event: `Expression[String]` - this *must be* a conditional expression
-- status: `Expression[String]` (multiple values allowed, potentially empty)
-- player-id: `Expression[String]` (required, single value)
-- actions-start: `Expression[Instant]` (optional)
-- actions-end: `Expression[Instant]` (optional)
-
-This will instruct the service on when and how to extract piece of information from an event in input.
-
-
-#### Rules.conf
-
-Specific events need to be bound to specific actions by adding entries to [rules.conf](src/main/resources/rules.conf).
-Entries in the rules list are evaluated as list of action names (`String`)
-and can refer to any of the following fields: `$.event`, `$.status`, `$.universe`.
+3. Validate the new rule by adding a json event example in permission-ep/src/test/resources/functional-tests/<in> & <out>

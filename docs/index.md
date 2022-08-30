@@ -1,24 +1,22 @@
 permission-service
 -----------------
 
-This application consumes different events for the purpose of computing permissions and actions to be published as output events.
+This application consumes different events for the purpose of computing permissions to be published as output events.
 
 # Testing
 
-Run unit tests using `sbt test`; integration tests can be run using `sbt it:test`.
+Run unit tests using `sbt test`;
 
 #  Lint
 
 FMT and Scalafix are used (see `.sbtrc`)
 
-Run `sbt lint-checks`  to check if the code is compliant with the linter rules.
+Run `sbt fmt-check`  to check if the code is compliant with the linter rules.
 
-Run sbt `sbt lint` to apply linting.
+Run sbt `sbt fmt` to apply linting.
 
 # CI / CD
 
-TBD
+Config file of Gitlab
 
-# Monitoring
-
-TBD
+`.gitlab-ci.yml`

@@ -18,14 +18,12 @@ ThisBuild / javaOptions ++= Seq(
 )
 
 //TODO migrate to ZIO.2.0
-val ZioVersion = "1.0.15"
-
+val ZioVersion             = "1.0.15"
 val CirceVersion           = "0.14.1"
 val KafkaSerdeCirceVersion = "0.6.5"
 val ZioTracingVersion      = "0.1.1"
 val JsonSchemaVersion      = "0.7.8"
 val KamonVersion           = "2.2.2"
-val MonocleVersion         = "3.1.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := scala213,
@@ -56,6 +54,7 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= List(
     "dev.zio"                            %% "zio"                          % ZioVersion,
     "dev.zio"                            %% "zio-streams"                  % ZioVersion,
+    "dev.zio"                            %% "zio-nio"                      % "1.0.0-RC12",
     "dev.zio"                            %% "zio-test-sbt"                 % ZioVersion % Test,
     "dev.zio"                            %% "zio-test-scalacheck"          % ZioVersion % Test,
     "dev.zio"                            %% "zio-test"                     % ZioVersion % Test,
@@ -65,6 +64,7 @@ lazy val commonSettings = Seq(
     "io.circe"                           %% "circe-core"                   % CirceVersion,
     "io.circe"                           %% "circe-generic"                % CirceVersion,
     "io.circe"                           %% "circe-jawn"                   % CirceVersion,
+    "io.circe"                           %% "circe-optics"                 % CirceVersion,
     "io.github.azhur"                    %% "kafka-serde-circe"            % "0.6.5",
     "io.confluent"                        % "kafka-json-schema-serializer" % "7.0.1",
     "io.confluent"                        % "kafka-schema-registry-client" % "5.3.0",
@@ -89,8 +89,6 @@ lazy val commonSettings = Seq(
     "org.http4s"                       %% "http4s-blaze-client"  % "0.23.7", // TODO replace by ZIO http
 
     "net.logstash.logback" % "logstash-logback-encoder" % "7.2",
-    "dev.optics"          %% s"monocle-core"            % MonocleVersion,
-    "dev.optics"          %% s"monocle-macro"           % MonocleVersion,
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
   ),
 )
@@ -143,13 +141,32 @@ lazy val assemblySettings = List(
   publish / skip  := true,
 )
 
+lazy val `permissions-rule` = project
+  .in(file("modules") / "permissions-rule")
+  .settings(commonSettings)
+  .settings(testSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core"    % CirceVersion,
+      "io.circe" %% "circe-generic" % CirceVersion,
+      "io.circe" %% "circe-jawn"    % CirceVersion,
+      "io.circe" %% "circe-optics"  % CirceVersion,
+    ),
+  )
+
 lazy val `permissions-ep` = project
-  .in(file("."))
+  .in(file("modules") / "permissions-ep")
   .settings(commonSettings: _*)
   .settings(testSettings: _*)
   .settings(assemblySettings: _*)
   .settings(Compile / mainClass := Some("com.williamhill.permission.PermissionEp"))
   .settings(dockerSettings("permissions-ep", "com.williamhill.permission.PermissionEp"): _*)
   .enablePlugins(DockerPlugin)
+  .dependsOn(`permissions-rule`)
+
+lazy val `permission` = (project in file(".")).aggregate(
+  `permissions-rule`,
+  `permissions-ep`,
+)
 
 Global / onChangedBuildSource := ReloadOnSourceChanges

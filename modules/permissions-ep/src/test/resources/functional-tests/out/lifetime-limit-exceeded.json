@@ -1,0 +1,93 @@
+{
+  "header": {
+    "id": "1b00ec09-cc5d-4ac9-ba0c-a5612b63aafd",
+    "universe": "wh-mga",
+    "when": "2021-12-08T20:03:55.812585Z",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "127.0.0.1",
+      "universe": "wh-mga",
+      "allowedUniverses": ["wh-mga"]
+    }
+  },
+  "body": {
+    "type": "payment",
+    "newValues": {
+      "id": "EXW",
+      "universe": "wh-mga",
+      "data": {
+        "permissionDenials": {
+          "canLoginWithPassword": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ],
+          "canWithdraw": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ],
+          "canDeposit": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ],
+          "canBet": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ],
+          "canGame": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ],
+          "canVerify": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ],
+          "canResetPassword": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ],
+          "canGetBonus": [
+            {
+              "reasonCode": "LifeTimeExceedRule",
+              "description": "LifeTimeExceedRule"
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "notification",
+            "name": "LifeTimeExceedRule",
+            "reasonCode": "LifeTimeExceedRule",
+            "relatesToPermissions": [
+              "canLoginWithPassword",
+              "canWithdraw",
+              "canDeposit",
+              "canBet",
+              "canGame",
+              "canVerify",
+              "canResetPassword",
+              "canGetBonus"
+            ]
+          }
+        ]
+      }
+    }
+
+  }
+}
+

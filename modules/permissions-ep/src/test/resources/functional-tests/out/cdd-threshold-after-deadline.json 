@@ -1,0 +1,94 @@
+{
+  "header": {
+    "id": "1b00ec09-cc5d-4ac9-ba0c-a5612b63aafd",
+    "universe": "wh-mga",
+    "when": "2021-12-08T20:03:55.812585Z",
+    "who": {
+      "id": "-1",
+      "name": "anonymous",
+      "type": "program",
+      "ip": "127.0.0.1",
+      "universe": "wh-mga",
+      "allowedUniverses": [
+        "wh-mga"
+      ]
+    }
+  },
+  "body": {
+    "type": "payment",
+    "newValues": {
+      "id": "EXW",
+      "universe": "wh-mga",
+      "data": {
+        "permissionDenials": {
+          "canBet": [
+                      {
+                        "reasonCode": "CddThresholdAfterDeadlineRule",
+                        "description": "CddThresholdAfterDeadlineRule"
+                      }
+           ],
+          "canDeposit": [
+            {
+              "reasonCode": "CddThresholdAfterDeadlineRule",
+              "description": "CddThresholdAfterDeadlineRule"
+            }
+          ],
+
+          "canGame": [
+            {
+              "reasonCode": "CddThresholdAfterDeadlineRule",
+              "description": "CddThresholdAfterDeadlineRule"
+            }
+          ],
+           "canGetBonus": [
+                      {
+                        "reasonCode": "CddThresholdAfterDeadlineRule",
+                        "description": "CddThresholdAfterDeadlineRule"
+                      }
+           ],
+          "canLoginWithPassword": [
+                      {
+                        "reasonCode": "CddThresholdAfterDeadlineRule",
+                        "description": "CddThresholdAfterDeadlineRule"
+                      }
+           ],
+          "canResetPassword": [
+                      {
+                        "reasonCode": "CddThresholdAfterDeadlineRule",
+                        "description": "CddThresholdAfterDeadlineRule"
+                      }
+           ],
+          "canVerify": [
+            {
+              "reasonCode": "CddThresholdAfterDeadlineRule",
+              "description": "CddThresholdAfterDeadlineRule"
+            }
+          ],
+          "canWithdraw": [
+                      {
+                        "reasonCode": "CddThresholdAfterDeadlineRule",
+                        "description": "CddThresholdAfterDeadlineRule"
+                      }
+          ]
+        },
+        "actions": [
+          {
+            "type": "notification",
+            "name": "CddThresholdAfterDeadlineRule",
+            "reasonCode": "CddThresholdAfterDeadlineRule",
+            "relatesToPermissions": [
+              "canBet",
+              "canDeposit",
+              "canGame",
+              "canGetBonus",
+              "canLoginWithPassword",
+              "canResetPassword",
+              "canVerify",
+              "canWithdraw"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
