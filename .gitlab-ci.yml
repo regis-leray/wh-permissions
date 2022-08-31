@@ -144,7 +144,7 @@ Run Tests:
     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-    KAFKA_CREATE_TOPICS: "exclusion_events_v1:1:1,permission_facet_events_v1:1:1,payments_events_v2:1:1,player_events_v4:1:1,dormancy_events_v1:1:1,prohibited_player_events_v1:1:1"
+    KAFKA_CREATE_TOPICS: "exclusion_events_v1:1:1,permission_facet_events_v1:1:1,payments_events_v2:1:1,player_events_v4:1:1,dormancy_events_v1:1:1,prohibited_player_events_v1:1:1,gpp_events_v1:1:1"
 
     SCHEMA_REGISTRY_URL: http://schema-registry:8081
     SCHEMA_REGISTRY_HOST_NAME: schema-registry
@@ -267,6 +267,7 @@ Publish Helm to ECR:
 
 # notify
 notify:
+  extends: .eks-dev-gitlab-runner
   image: $NexusDownloadRegistry/mirrors/curlimages/curl:7.77.0
   stage: notify
   script: |

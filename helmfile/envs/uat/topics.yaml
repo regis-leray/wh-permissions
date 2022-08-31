@@ -6,3 +6,8 @@ topics:
       retention.ms: 86400000
     partitions: 3
     replication_factor: 3
+  gpp_events_v1:
+    config:
+      retention.ms: 86400000
+    partitions: 3
+    replication_factor: 3

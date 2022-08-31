@@ -6,3 +6,8 @@ topics:
     replication_factor: 3
     config:
       retention.ms: 15778800000 # 6months
+  gpp_events_v1:
+    partitions: 16
+    replication_factor: 3
+    config:
+      retention.ms: 15778800000 # 6months
