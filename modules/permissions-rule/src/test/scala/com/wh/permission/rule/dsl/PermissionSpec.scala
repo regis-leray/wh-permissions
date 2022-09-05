@@ -1,7 +1,7 @@
 package com.wh.permission.rule.dsl
 
 import cats.data.NonEmptySet
-import Permission.{denied, deny, denyAll, grantAll, granted, order}
+import Permission.{denied, deny, denyAll, grant, grantAll, granted, order}
 import zio.random.Random
 import zio.test.environment.TestEnvironment
 import zio.test.{DefaultRunnableSpec, Gen, ZSpec}
@@ -36,7 +36,19 @@ object PermissionSpec extends DefaultRunnableSpec {
   }
 
   private def grantedSpec =
-    test("grant all permissions should return all granted permissions & empty denied permissions") {
+    testM("grant should return some grant permissions") {
+      check(genNonEmptySet(Permission.All)) { perms =>
+        val grantPerms = grant(perms)
+        assert(granted(grantPerms))(equalTo(perms.toSortedSet))
+      }
+    } + testM("grant should return some deny permissions") {
+      check(genNonEmptySet(Permission.All)) { perms =>
+        val denies     = perms.diff(Permission.All)
+        val grantPerms = grant(perms)
+
+        assert(denied(grantPerms))(equalTo(denies))
+      }
+    } + test("grant all permissions should return all granted permissions & empty denied permissions") {
       val grantPerms = grantAll
       assert(granted(grantPerms))(equalTo(Permission.All.toSortedSet)) && assert(denied(grantPerms))(isEmpty)
     }

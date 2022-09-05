@@ -44,16 +44,6 @@ sealed trait Rule {
 
 object Rules extends Rule {
 
-  object LifeTimeExceedRule extends PermissionRule("LifeTimeExceedRule") {
-    val rule: Expr[Json, Boolean] = {
-      val universeRule  = string($.header.universe).lowercase === "wh-mga"
-      val eventTypeRule = string($.body.`type`).lowercase === "limit-exceeded-lifetime-deposit"
-      universeRule && eventTypeRule
-    }
-    val accountId: JsonPath               = $.body.newValues.accountId
-    val permissions: (Facet, Permissions) = Facet.Payment -> denyAll
-  }
-
   object SelfExclusionRule extends PermissionRule("SelfExclusionRule") {
     val rule: Expr[Json, Boolean] = {
       val universeRule  = string($.header.universe).lowercase.oneOf("wh-mga", "wh-libertonia", "wh-eu-de", "wh-eu-dk")
@@ -89,9 +79,7 @@ object Rules extends Rule {
     }
     val accountId: JsonPath = $.body.newValues.id
 
-    // TODO use Facet.Dormancy -> grant(CanLoginWithPassword, CanBet, CanGame)
-    // Since grant(<specific_permission>) is not available, we are reactive all existing rules for now.
-    val permissions: (Facet, Permissions) = Facet.Dormancy -> grantAll
+    val permissions: (Facet, Permissions) = Facet.Dormancy -> grant(CanLoginWithPassword, CanBet, CanGame)
   }
 
   object ProhibitionRule extends PermissionRule("ProhibitionRule") {
@@ -163,6 +151,16 @@ object Rules extends Rule {
     }
     override val accountId: JsonPath               = $.body.newValues.accountId
     override val permissions: (Facet, Permissions) = Facet.Payment -> denyAll
+  }
+
+  object LifeTimeExceedRule extends PermissionRule("LifeTimeExceedRule") {
+    val rule: Expr[Json, Boolean] = {
+      val universeRule  = string($.header.universe).lowercase === "wh-mga"
+      val eventTypeRule = string($.body.`type`).lowercase === "limit-exceeded-lifetime-deposit"
+      universeRule && eventTypeRule
+    }
+    val accountId: JsonPath               = $.body.newValues.accountId
+    val permissions: (Facet, Permissions) = Facet.Payment -> denyAll
   }
 
   val All: NonEmptySet[PermissionRule] = NonEmptySet.of(

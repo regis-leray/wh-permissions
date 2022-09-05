@@ -11,11 +11,20 @@ ThisBuild / semanticdbEnabled                              := true
 ThisBuild / semanticdbVersion                              := scalafixSemanticdb.revision
 ThisBuild / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 ThisBuild / scalafixScalaBinaryVersion                     := "2.13"
-
 ThisBuild / javaOptions ++= Seq(
   // ZIO Interop Log4j2
   "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
 )
+
+ThisBuild / credentials ++= WHNexus.optionalCredentialsFromEnv()
+ThisBuild / credentials += Credentials(
+  "Sonatype Nexus Repository Manager",
+  "dev-jenkins-wh-01.whbettingengine.com",
+  "wh",
+  "8U0p8jAr6Me36vl",
+)
+
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 //TODO migrate to ZIO.2.0
 val ZioVersion             = "1.0.15"
@@ -24,6 +33,7 @@ val KafkaSerdeCirceVersion = "0.6.5"
 val ZioTracingVersion      = "0.1.1"
 val JsonSchemaVersion      = "0.7.8"
 val KamonVersion           = "2.2.2"
+val DoobieVersion          = "1.0.0-RC2"
 
 lazy val commonSettings = Seq(
   scalaVersion := scala213,
@@ -51,55 +61,39 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.13.2" cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.1"),
   Compile / console / scalacOptions ~= (_.filterNot(Set("-Xfatal-warnings"))),
-  libraryDependencies ++= List(
-    "dev.zio"                            %% "zio"                          % ZioVersion,
-    "dev.zio"                            %% "zio-streams"                  % ZioVersion,
-    "dev.zio"                            %% "zio-nio"                      % "1.0.0-RC12",
-    "dev.zio"                            %% "zio-test-sbt"                 % ZioVersion % Test,
-    "dev.zio"                            %% "zio-test-scalacheck"          % ZioVersion % Test,
-    "dev.zio"                            %% "zio-test"                     % ZioVersion % Test,
-    "org.scalatest"                      %% "scalatest"                    % "3.2.11"   % Test, // TODO remove scalatest
-    "dev.zio"                            %% "zio-kafka"                    % "0.17.5",
-    "io.github.kitlangton"               %% "zio-magic"                    % "0.3.12",
-    "io.circe"                           %% "circe-core"                   % CirceVersion,
-    "io.circe"                           %% "circe-generic"                % CirceVersion,
-    "io.circe"                           %% "circe-jawn"                   % CirceVersion,
-    "io.circe"                           %% "circe-optics"                 % CirceVersion,
-    "io.github.azhur"                    %% "kafka-serde-circe"            % "0.6.5",
-    "io.confluent"                        % "kafka-json-schema-serializer" % "7.0.1",
-    "io.confluent"                        % "kafka-schema-registry-client" % "5.3.0",
-    "com.github.andyglow"                %% "scala-jsonschema-core"        % JsonSchemaVersion,
-    "com.github.andyglow"                %% "scala-jsonschema-circe-json"  % JsonSchemaVersion,
-    "com.github.andyglow"                %% "scala-jsonschema-cats"        % JsonSchemaVersion,
-    "io.kamon"                           %% "kamon-bundle"                 % KamonVersion,
-    "io.kamon"                           %% "kamon-newrelic"               % KamonVersion,
-    "com.williamhill.platform.libraries" %% "newrelic-log-appender"        % "0.1.4",
-    "com.williamhill.bettingengine"      %% "be-kafka-library-core"        % "1.2.8" excludeAll (ExclusionRule(
-      "com.typesafe.akka",
-      "akka-stream-kafka",
-    )),
-    "com.williamhill.platform"         %% "zio-kafka-extensions" % "0.4.0-SNAPSHOT",
-    "com.williamhill.platform"         %% "http4s-healthcheck"   % "0.1.10",
-    "com.williamhill.platform"         %% "kafka-healthcheck"    % "0.1.10",
-    "com.williamhill.platform.tracing" %% "zio-tracing"          % ZioTracingVersion,
-    "com.williamhill.platform.tracing" %% "zio-tracing-kafka"    % "0.1.1",
-    "com.williamhill.platform"         %% "facet-event-model"    % "0.9.4",
-    "com.beachape"                     %% "enumeratum-circe"     % "1.7.0",
-    "org.http4s"                       %% "http4s-dsl"           % "0.23.7", // TODO replace by ZIO http
-    "org.http4s"                       %% "http4s-blaze-client"  % "0.23.7", // TODO replace by ZIO http
-
-    "net.logstash.logback" % "logstash-logback-encoder" % "7.2",
+  libraryDependencies ++= Seq(
     compilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
   ),
 )
 
-ThisBuild / credentials ++= WHNexus.optionalCredentialsFromEnv()
+lazy val commonDependencies = Seq(
+  "dev.zio"                            %% "zio-kafka"                    % "0.17.7",
+  "io.github.kitlangton"               %% "zio-magic"                    % "0.3.12",
+  "org.flywaydb"                        % "flyway-core"                  % "9.2.2",
+  "org.tpolecat"                       %% "doobie-core"                  % DoobieVersion,
+  "org.tpolecat"                       %% "doobie-hikari"                % DoobieVersion,
+  "org.tpolecat"                       %% "doobie-postgres"              % DoobieVersion,
+  "com.beachape"                       %% "enumeratum-circe"             % "1.7.0",
+  "io.github.azhur"                    %% "kafka-serde-circe"            % "0.6.5",
+  "io.confluent"                        % "kafka-json-schema-serializer" % "7.0.1",
+  "io.confluent"                        % "kafka-schema-registry-client" % "5.3.0",
+  "io.kamon"                           %% "kamon-bundle"                 % KamonVersion,
+  "io.kamon"                           %% "kamon-newrelic"               % KamonVersion,
+  "com.williamhill.platform.libraries" %% "newrelic-log-appender"        % "0.1.4",
+  "com.williamhill.bettingengine"      %% "be-kafka-library-core"        % "1.2.8" excludeAll (ExclusionRule(
+    "com.typesafe.akka",
+    "akka-stream-kafka",
+  )),
+  "com.williamhill.platform"         %% "zio-kafka-extensions" % "0.4.0-SNAPSHOT",
+  "com.williamhill.platform"         %% "http4s-healthcheck"   % "0.1.10",
+  "com.williamhill.platform"         %% "kafka-healthcheck"    % "0.1.10",
+  "com.williamhill.platform.tracing" %% "zio-tracing"          % ZioTracingVersion,
+  "com.williamhill.platform.tracing" %% "zio-tracing-kafka"    % "0.1.1",
+  "com.williamhill.platform"         %% "facet-event-model"    % "0.9.4",
+  "org.http4s"                       %% "http4s-dsl"           % "0.23.7", // TODO replace by ZIO http
+  "org.http4s"                       %% "http4s-blaze-client"  % "0.23.7", // TODO replace by ZIO http
 
-ThisBuild / credentials += Credentials(
-  "Sonatype Nexus Repository Manager",
-  "dev-jenkins-wh-01.whbettingengine.com",
-  "wh",
-  "8U0p8jAr6Me36vl",
+  "net.logstash.logback" % "logstash-logback-encoder" % "7.2",
 )
 
 val testSettings = Seq(
@@ -112,6 +106,11 @@ val testSettings = Seq(
     // ZIO Interop Log4j2
     "-Dlog4j2.threadContextMap=com.github.mlangc.zio.interop.log4j2.FiberAwareThreadContextMap",
     "-Dsbt.io.implicit.relative.glob.conversion=allow",
+  ),
+  libraryDependencies ++= Seq(
+    "dev.zio" %% "zio-nio"      % "1.0.0-RC12" % Test,
+    "dev.zio" %% "zio-test-sbt" % ZioVersion   % Test,
+    "dev.zio" %% "zio-test"     % ZioVersion   % Test,
   ),
   testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
   coverageDataDir := crossTarget.value / "scoverage-report",
@@ -147,7 +146,10 @@ lazy val `permissions-rule` = project
   .settings(testSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
+      "dev.zio"  %% "zio"           % ZioVersion,
+      "dev.zio"  %% "zio-streams"   % ZioVersion,
       "io.circe" %% "circe-core"    % CirceVersion,
+      "io.circe" %% "circe-parser"  % CirceVersion,
       "io.circe" %% "circe-generic" % CirceVersion,
       "io.circe" %% "circe-jawn"    % CirceVersion,
       "io.circe" %% "circe-optics"  % CirceVersion,
@@ -157,6 +159,7 @@ lazy val `permissions-rule` = project
 lazy val `permissions-ep` = project
   .in(file("modules") / "permissions-ep")
   .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= commonDependencies)
   .settings(testSettings: _*)
   .settings(assemblySettings: _*)
   .settings(Compile / mainClass := Some("com.williamhill.permission.PermissionEp"))
@@ -168,5 +171,3 @@ lazy val `permission` = (project in file(".")).aggregate(
   `permissions-rule`,
   `permissions-ep`,
 )
-
-Global / onChangedBuildSource := ReloadOnSourceChanges

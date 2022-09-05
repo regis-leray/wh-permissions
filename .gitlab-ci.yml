@@ -127,6 +127,7 @@ Run Tests:
       junit:
         - ./**/target/**/TEST*.xml
   variables:
+    DB_URL: "jdbc:postgresql://postgres:5432/player_permissions"
     no_proxy: "localhost,postgres,kafka,zookeeper,schema-registry"
     JAVA_TOOL_OPTIONS: -Dhttp.nonProxyHosts=localhost|postgres|kafka|zookeeper|schema-registry -Dhttps.nonProxyHosts=localhost|postgres|kafka|zookeeper|schema-registry
     # Sadly, `variables` scoped per service are only supported from gitlab 14.5
@@ -134,6 +135,10 @@ Run Tests:
     # TODO: move them into the appropriate services once we have a gitlab runner >= 14.5
     ZOOKEEPER_CLIENT_PORT: 2181
     ZOOKEEPER_TICK_TIME: 2000
+
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: player_permissions
 
     KAFKA_SERVERS: kafka:9092
     KAFKA_BROKER_ID: 1
@@ -161,6 +166,8 @@ Run Tests:
       alias: kafka
     - name: ${NexusDownloadRegistry}/mirrors/confluentinc/cp-schema-registry:5.5.1
       alias: schema-registry
+    - name: ${NexusDownloadRegistry}/mirrors/postgres:12.8-alpine
+      alias: postgres
 
 # build
 Build docker images:

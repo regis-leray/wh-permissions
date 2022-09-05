@@ -2,13 +2,23 @@ package com.wh.permission.rule.dsl
 
 import cats.Order
 import cats.data.NonEmptySet
+import cats.instances.order.*
 import com.wh.permission.rule.dsl.Permission.Permissions
-import io.circe.Json
 import io.circe.optics.JsonPath
+import io.circe.{Codec, Decoder, Encoder, Json}
 
 sealed abstract class Permission(val name: String)
 
 object Permission {
+  implicit val codec: Codec[Permission] = {
+    Codec.from(
+      Decoder.decodeString.emap(s =>
+        Permission.from(s).toRight(s"Cannot decode Permission with value $s. Accepted values are ${ByName.keys}"),
+      ),
+      Encoder.encodeString.contramap(_.name),
+    )
+  }
+
   final case object CanLoginWithPassword extends Permission("canLoginWithPassword")
   final case object CanBet               extends Permission("canBet")
   final case object CanDeposit           extends Permission("canDeposit")
@@ -22,6 +32,8 @@ object Permission {
 
   val All: NonEmptySet[Permission] =
     NonEmptySet.of(CanLoginWithPassword, CanBet, CanDeposit, CanWithdraw, CanResetPassword, CanVerify, CanGame, CanGetBonus)
+
+  val ByName: Map[String, Permission] = All.toSortedSet.map(a => a.->(a.name.toLowerCase).swap).toMap
 
   /** Permissions represents Deny permissions or Grant Permissions
     *
@@ -46,17 +58,18 @@ object Permission {
 
   val denyAll: Permissions = deny(Permission.All)
 
-  /** Ensure backward compatibility we don't allow to grant specific permissions until permission state is available
-    */
-  // def grant(set: NonEmptySet[Permission]): Permissions = Right(set)
+  def grant(set: NonEmptySet[Permission]): Permissions = Right(set)
 
-  /** Ensure backward compatibility we don't allow to grant specific permissions until permission state is available
-    */
-  // def grant(p: Permission, other: Permission*): Permissions = Right(NonEmptySet.of(p, other: _*))
+  def grant(p: Permission, other: Permission*): Permissions = Right(NonEmptySet.of(p, other: _*))
 
   def deny(p: Permission, other: Permission*): Permissions = Left(NonEmptySet.of(p, other: _*))
 
   def deny(set: NonEmptySet[Permission]): Permissions = Left(set)
+
+  def from(s: String): Option[Permission] =
+    Option(s)
+      .map(_.toLowerCase)
+      .flatMap(ByName.get)
 }
 
 sealed abstract class Facet(val name: String)

@@ -2,8 +2,8 @@ package com.williamhill.permission
 
 import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
 import com.williamhill.permission.application.Env
-import com.williamhill.permission.application.Env.Processor
-import com.williamhill.permission.config.AppConfig
+import com.williamhill.permission.config.{AppConfig, DbConfig, ProcessorConfig}
+import com.williamhill.permission.db.flyway.{Flyway, migrateDb}
 import com.williamhill.permission.endpoints.HealthcheckApi
 import org.http4s.server.Server
 import zio.*
@@ -22,7 +22,10 @@ object PermissionEp extends App {
   val server: ZManaged[Blocking & Clock & Logging & Has[AppConfig], Throwable, Server] =
     ZManaged.service[AppConfig].flatMap(cfg => HealthcheckApi.asResource(cfg.healthcheck))
 
-  val ep: ZManaged[Processor & Console, Throwable, Unit] = Kamon.asResource
+  val dbMigration: RManaged[Has[DbConfig] & Blocking, Unit] =
+    migrateDb.provideSomeLayer(ZLayer.wireSome[Has[DbConfig] & Blocking, Flyway](Flyway.live)).toManaged_.unit
+
+  val ep: ZManaged[Env.Core & Has[ProcessorConfig] & Clock & Blocking & Console, Throwable, Unit] = Kamon.asResource
     .use_(
       Log.warnIO("START consuming input events") *>
         Processor.run
@@ -36,5 +39,7 @@ object PermissionEp extends App {
     .toManaged_
 
   override def run(args: List[String]): URIO[ZEnv, ExitCode] =
-    (server <*> ep.fork).useForever.injectSome[ZEnv](Env.layer).exitCode
+    (dbMigration *> server <*> ep.fork).useForever
+      .injectSome[ZEnv](ZLayer.wireSome[Clock & Blocking, Env.Config & Env.Core](Env.config, Env.core))
+      .exitCode
 }

@@ -12,6 +12,7 @@ final case class AppConfig(
     consumerSettings: ConsumerSettings,
     producerSettings: ProducerSettings,
     processorSettings: ProcessorConfig,
+    dbConfig: DbConfig,
 )
 
 object AppConfig {

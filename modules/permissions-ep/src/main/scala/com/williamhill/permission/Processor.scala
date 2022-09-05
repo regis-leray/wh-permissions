@@ -3,7 +3,8 @@ package com.williamhill.permission
 import cats.implicits.catsSyntaxEitherId
 import com.github.mlangc.slf4zio.api.{Logging, logging as Log}
 import com.williamhill.permission.application.{AppError, Env}
-import com.williamhill.permission.config.AppConfig
+import com.williamhill.permission.config.ProcessorConfig
+import com.williamhill.permission.db.postgres.Postgres
 import com.williamhill.permission.kafka.Record.{OutputCommittable, StringRecord}
 import com.williamhill.permission.kafka.events.generic.InputEvent
 import com.williamhill.permission.kafka.{EventPublisher, HasKey}
@@ -14,14 +15,15 @@ import zio.*
 import zio.kafka.consumer.*
 import zio.kafka.serde.Serde as ZioSerde
 import zio.stream.*
-import io.circe.syntax.*
+import zio.blocking.Blocking
+import zio.clock.Clock
 
 object Processor {
 
-  val inputRecordEvents: ZStream[Has[Consumer] & Has[AppConfig], AppError, StringRecord] = {
+  val inputRecordEvents: ZStream[Has[Consumer] & Has[ProcessorConfig], AppError, StringRecord] = {
 
     (for {
-      config <- ZStream.service[AppConfig].map(_.processorSettings)
+      config <- ZStream.service[ProcessorConfig]
       subscription = Subscription.topics(config.inputEvents.topics.head, config.inputEvents.topics.tail*)
       rec <- Consumer
         .subscribeAnd(subscription)
@@ -40,7 +42,8 @@ object Processor {
 
   }
 
-  val inputToOutput: ZTransducer[Has[EventRuleProcessor] & Logging, AppError, StringRecord, OutputCommittable] =
+  val inputToOutput
+      : ZTransducer[Has[EventRuleProcessor] & Clock & Blocking & Postgres & Logging, AppError, StringRecord, OutputCommittable] =
     Committable
       .filterMapCommittableRecordM { (inputRecord: StringRecord) =>
         (for {
@@ -49,22 +52,12 @@ object Processor {
 
           outputEvent <- processor
             .handle(inputEvent)
-            .flatMap {
-              case output :: Nil => ZIO.some(output._2)
-              case Nil           => ZIO.none
-              case others =>
-                ZIO.fail(
-                  new Exception(
-                    s"Error in permissions rules definition ! Duplicate rules ${others.map(_._1.name)} applies for same event : ${inputEvent.asJson.noSpaces}",
-                  ),
-                )
-            }
             .mapError(AppError.fromThrowable)
         } yield outputEvent).tapError(err => Log.warnIO(err.logMessage))
       }
       .mapError(AppError.fromThrowable)
 
-  val publishEvent: ZTransducer[Has[EventPublisher] & Has[AppConfig] & Has[
+  val publishEvent: ZTransducer[Has[EventPublisher] & Has[ProcessorConfig] & Has[
     ZioSerde[Any, OutputEvent],
   ], AppError, OutputCommittable, OutputCommittable] = {
     implicit val facetKey: HasKey[OutputEvent] = (_: OutputEvent).body.newValues.id
@@ -72,7 +65,7 @@ object Processor {
       .mapValueM((event: OutputEvent) =>
         for {
           publisher <- ZIO.service[EventPublisher]
-          cfg       <- ZIO.service[AppConfig].map(_.processorSettings)
+          cfg       <- ZIO.service[ProcessorConfig]
           _         <- publisher.publish(cfg.outputEvents.topics.head, event)
         } yield event.asRight[AppError],
       )
@@ -89,10 +82,7 @@ object Processor {
       }
       .mapError(AppError.fromThrowable)
 
-  val pipeline: ZSink[Env.Processor, AppError, StringRecord, OutputCommittable, Unit] =
-    inputToOutput >>> publishEvent >>> commit
-
-  val run: ZIO[Env.Processor, AppError, Unit] =
-    inputRecordEvents >>> pipeline
+  val run: ZIO[Env.Core & Has[ProcessorConfig] & Clock & Blocking, AppError, Unit] =
+    inputRecordEvents.run(inputToOutput >>> publishEvent >>> commit)
 
 }

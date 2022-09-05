@@ -5,6 +5,7 @@ import com.whbettingengine.kafka.serialization.TopicNameStrategy
 import com.whbettingengine.kafka.serialization.json.JsonSerializerConfig
 import com.williamhill.permission.application.Env
 import com.williamhill.permission.config.AppConfig
+import com.williamhill.permission.db.TestDb
 import com.williamhill.permission.kafka.events.generic.OutputEvent.OutputEvent
 import com.williamhill.permission.kafka.events.generic.{InputEvent, InputHeader, Who}
 import com.williamhill.platform.kafka.JsonSerialization
@@ -27,7 +28,7 @@ import zio.test.Assertion.*
 import java.time.Instant
 import java.util.UUID
 
-object ProcessorSpec extends DefaultRunnableSpec {
+object ProcessorSpec extends DefaultRunnableSpec with TestDb {
 
   private val event = InputEvent(
     InputHeader(
@@ -51,7 +52,7 @@ object ProcessorSpec extends DefaultRunnableSpec {
               """.stripMargin).toOption.get,
   )
 
-  private val testConfig: ZLayer[Blocking & Random, Throwable, Has[AppConfig]] = ZIO
+  val appConfig: ZLayer[Blocking & Random, Throwable, Has[AppConfig]] = ZIO
     .service[Random.Service]
     .flatMap(_.nextLongBetween(1, 1000000).map("Test_" + _))
     .toLayer
@@ -63,36 +64,36 @@ object ProcessorSpec extends DefaultRunnableSpec {
       }
     }
 
-  def spec: ZSpec[Environment, Failure] = {
-    {
-      suite("ProcessorSpec")(
-        testM("should process a dormant message") {
-          for {
-            fiber    <- Processor.run.fork
-            config   <- ZIO.service[AppConfig]
-            producer <- InputEventProducer.producer(config.producerSettings, "dormancy_events_v1")
-            _        <- producer.publish(UUID.randomUUID().toString, event)
-            consumer <- OutputEventConsumer.consumer(
-              config.consumerSettings.withClientId(UUID.randomUUID().toString),
-              config.processorSettings.outputEvents.schemaRegistrySettings.schemaRegistryUrl,
-              config.processorSettings.outputEvents.topics.head,
-            )
-            queue <- Queue.unbounded[OutputEvent]
-            _     <- consumer.stream(r => queue.offer(r.value()).as(())).take(1).runDrain
-            list  <- queue.takeAll
-            _     <- fiber.interrupt
-          } yield assert(list)(hasSize(equalTo(1)))
-        },
+  override def spec: ZSpec[Environment, Failure] = {
+    suite("ProcessorSpec")(processSpec)
+      .@@(TestAspect.beforeAll(cleanMigrateDb))
+      .injectShared(
+        Blocking.live ++ Random.live ++ Clock.live,
+        postgresFlywayLayer ++ Env.core,
+        appConfig ++ appConfig.map(c => Has(c.get.processorSettings)) ++ testDbConfigLayer,
       )
-    }.injectShared(
-      Clock.live,
-      Blocking.live,
-      Random.live,
-      testConfig,
-      Env.core,
-    ).mapError(TestFailure.fail)
-      .@@(TestAspect.timeout(10.seconds))
+      .mapError(TestFailure.fail)
+      .@@(TestAspect.timeout(15.seconds))
   }
+
+  private val processSpec = testM("should process a dormant message") {
+    for {
+      fiber    <- Processor.run.fork
+      config   <- ZIO.service[AppConfig]
+      producer <- InputEventProducer.producer(config.producerSettings, "dormancy_events_v1")
+      _        <- producer.publish(UUID.randomUUID().toString, event)
+      consumer <- OutputEventConsumer.consumer(
+        config.consumerSettings.withClientId(UUID.randomUUID().toString),
+        config.processorSettings.outputEvents.schemaRegistrySettings.schemaRegistryUrl,
+        config.processorSettings.outputEvents.topics.head,
+      )
+      queue <- Queue.unbounded[OutputEvent]
+      _     <- consumer.stream(r => queue.offer(r.value()).as(())).take(1).runDrain
+      list  <- queue.takeAll
+      _     <- fiber.interrupt
+    } yield assert(list)(hasSize(equalTo(1)))
+  }
+
 }
 
 object OutputEventConsumer {
